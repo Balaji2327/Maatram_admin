@@ -192,6 +192,9 @@ export default function AdminSettingsScreen() {
     setTwoFaErrorMsg("");
 
     if (!is2FAEnabled) {
+      if (!qrCodeUrl) {
+        await fetchSettingsData();
+      }
       setShowQrModal(true);
     } else {
       if (!confirm("Are you sure you want to disable Two-Factor Authentication?")) {
