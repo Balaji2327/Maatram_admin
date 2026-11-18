@@ -114,7 +114,7 @@ export default function SignUpScreen() {
           Student Registration
         </h1>
         <p className="font-primary text-xs sm:text-sm text-slate-600 leading-relaxed mt-1.5 text-center">
-          Create your student account to apply for higher education scholarships.
+          Create your student account to apply for higher education support.
         </p>
 
         {errorMessage && (

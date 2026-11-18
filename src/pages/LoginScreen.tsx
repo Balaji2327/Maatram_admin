@@ -12,26 +12,28 @@ import {
   ArrowRightIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
-import { authApi } from "../lib/api";
+import { authApi, getAuthToken } from "../lib/api";
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams?.get("registered") === "true";
   const loginRequired = searchParams?.get("loginRequired") === "true";
-  const emailParam = searchParams?.get("email") || searchParams?.get("target") || "";
-
-  const [email, setEmail] = useState(emailParam);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    if (emailParam) {
-      setEmail(emailParam);
+    if (getAuthToken()) {
+      router.replace("/dashboard");
+      return;
     }
-  }, [emailParam]);
+
+    setEmail("");
+    setPassword("");
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +93,7 @@ function LoginContent() {
         Student Sign In
       </h1>
       <p className="font-primary text-xs sm:text-sm text-slate-600 leading-relaxed mt-1.5 text-center">
-        Sign in with your registered email and password to access your scholarship portal.
+        Sign in with your registered email and password to access your student portal.
       </p>
 
       {/* Registration Success Banner */}
@@ -107,7 +109,7 @@ function LoginContent() {
       {/* Login Required Notice */}
       {loginRequired && !registered && (
         <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 text-center font-medium">
-          Please sign in to access the scholarship application portal.
+          Please sign in to access the student application portal.
         </div>
       )}
 
@@ -119,7 +121,7 @@ function LoginContent() {
       )}
 
       {/* Credentials Form */}
-      <form onSubmit={handleLogin} className="mt-6 space-y-4" autoComplete="off">
+      <form onSubmit={handleLogin} className="mt-6 space-y-4" autoComplete="new-password">
         {/* Email Address */}
         <div>
           <label className="block text-xs font-heading font-bold text-slate-800 tracking-wide">
@@ -134,7 +136,7 @@ function LoginContent() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete="off"
               placeholder="scholar.name@example.com"
               className="w-full bg-slate-50/70 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:border-[#F7BC0F] focus:bg-white focus:ring-2 focus:ring-[#F7BC0F]/40 transition font-primary"
             />
@@ -155,7 +157,7 @@ function LoginContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
               placeholder="••••••••••••"
               className="w-full bg-slate-50/70 border border-slate-200 rounded-xl pl-10 pr-10 py-3 text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:border-[#F7BC0F] focus:bg-white focus:ring-2 focus:ring-[#F7BC0F]/40 transition font-primary"
             />

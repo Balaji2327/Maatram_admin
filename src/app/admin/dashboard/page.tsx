@@ -2,7 +2,7 @@ import AdminDashboardScreen from "../../../pages/admin/AdminDashboardScreen";
 
 export const metadata = {
   title: "Admin Dashboard Overview | Maatram Foundation",
-  description: "High level statistics and scholarship metrics.",
+  description: "High level statistics and application metrics.",
 };
 
 export default function AdminDashboardPage() {

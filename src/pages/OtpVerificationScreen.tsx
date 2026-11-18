@@ -195,7 +195,7 @@ function OtpVerificationContent() {
             Registration Completed!
           </h2>
           <p className="font-primary text-xs sm:text-sm text-slate-600 mt-2 max-w-sm mx-auto leading-relaxed">
-            Welcome{studentName ? `, ${studentName}` : ""}! Your account has been registered with Maatram Foundation. Please sign in with your credentials to access your scholarship dashboard.
+            Welcome{studentName ? `, ${studentName}` : ""}! Your account has been registered with Maatram Foundation. Please sign in with your credentials to access your student dashboard.
           </p>
 
           <div className="mt-5 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs text-slate-700 text-left space-y-1.5">

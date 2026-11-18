@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Squares2X2Icon,
-  DocumentCheckIcon,
   UserCircleIcon,
   ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/outline";
@@ -34,13 +33,7 @@ export default function StudentSidebar({
       id: "dashboard" as StudentNavTab,
       label: "DASHBOARD",
       icon: Squares2X2Icon,
-      description: "Application Form",
-    },
-    {
-      id: "status" as StudentNavTab,
-      label: "STATUS",
-      icon: DocumentCheckIcon,
-      description: "Application Status",
+      description: "Application Dashboard",
     },
   ];
 

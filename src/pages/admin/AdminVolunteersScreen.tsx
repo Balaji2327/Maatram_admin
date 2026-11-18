@@ -57,6 +57,12 @@ export default function AdminVolunteersScreen() {
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "reviewed" | "pending">("all");
+  const [events, setEvents] = useState<any[]>([]);
+  const [eventFilter, setEventFilter] = useState("all");
+  const [assigningVolunteerId, setAssigningVolunteerId] = useState<string | null>(null);
+  const [assignmentMessage, setAssignmentMessage] = useState("");
+  const [volunteerPendingAssignment, setVolunteerPendingAssignment] = useState<any | null>(null);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
 
   // Inline Note Editing
   const [editingVolunteerId, setEditingVolunteerId] = useState<string | null>(null);
@@ -102,6 +108,70 @@ export default function AdminVolunteersScreen() {
     }
   };
 
+  const fetchEvents = async () => {
+    try {
+      const res = await adminApi.getEvents();
+      if (res.success && Array.isArray(res.data)) {
+        setEvents(res.data);
+      }
+    } catch (err: any) {
+      console.error("fetchEvents error:", err);
+    }
+  };
+
+  const handleAssignVolunteer = (volunteer: any) => {
+    if (!volunteer.email && !volunteer.name) {
+      setAssignmentMessage("This volunteer does not have valid identification for assignment.");
+      return;
+    }
+
+    setVolunteerPendingAssignment(volunteer);
+    setSelectedApplicationId(null);
+  };
+
+  const confirmAssignVolunteer = async () => {
+    const volunteer = volunteerPendingAssignment;
+    const application = candidateApplications.find(
+      (item) => String(item.id) === String(selectedApplicationId)
+    );
+    if (!volunteer || !application) {
+      setAssignmentMessage("Select a student application before assigning.");
+      return;
+    }
+
+    setAssigningVolunteerId(String(volunteer.id || volunteer.email));
+    setAssignmentMessage("");
+    try {
+      if (application.status === "submitted" || application.status === "draft") {
+        const statusRes = await adminApi.updateStatus(application.id, "under_review");
+        if (!statusRes.success) {
+          throw new Error(statusRes.message || "Failed to update the application status.");
+        }
+      }
+      const res = await adminApi.updateVolunteerSuggestion(
+        application.id,
+        application.volunteer_suggestion || "",
+        volunteer.name || volunteer.email
+      );
+      if (!res.success) {
+        throw new Error(res.message || "Failed to assign the student application.");
+      }
+
+      setAssignmentMessage(
+        `${application.full_name || "Student application"} was assigned to ${volunteer.name || volunteer.email}. Switched to Volunteer Applications view.`
+      );
+      setVolunteerPendingAssignment(null);
+      setSelectedApplicationId(null);
+      await fetchApplications();
+      // Automatically change view into volunteer verification applications tab
+      setActiveSubTab("verification");
+    } catch (err: any) {
+      setAssignmentMessage(err.message || "Failed to assign the student application.");
+    } finally {
+      setAssigningVolunteerId(null);
+    }
+  };
+
   useEffect(() => {
     const cachedVolunteers = getAdminCachedData<any[]>("volunteers");
     const cachedApplications = getAdminCachedData<any>("applications")?.data;
@@ -118,6 +188,7 @@ export default function AdminVolunteersScreen() {
     });
     fetchVolunteers();
     fetchApplications();
+    fetchEvents();
     return () => {
       unsubscribeVolunteers();
       unsubscribeApplications();
@@ -132,7 +203,11 @@ export default function AdminVolunteersScreen() {
         a.status === "selected" ||
         a.status === "scholarship_awarded" ||
         (a.application_number && a.application_number.includes("SCH-"));
-      return !isAdmittedStudent;
+      const isRejectedStudent =
+        a.status === "rejected" ||
+        a.current_stage === "rejected" ||
+        a.stage_status === "rejected";
+      return !isAdmittedStudent && !isRejectedStudent;
     });
   }, [applications]);
 
@@ -152,6 +227,36 @@ export default function AdminVolunteersScreen() {
   // Filtered Registered Volunteers
   const filteredVolunteers = useMemo(() => {
     let result = [...volunteers];
+    if (eventFilter !== "all") {
+      const selectedEvent = events.find((event) => String(event.id) === eventFilter);
+      const acceptedVolunteers = [
+        ...(selectedEvent?.accepted_students || selectedEvent?.acceptedStudents || []),
+        ...(selectedEvent?.accepted_alumni || selectedEvent?.acceptedAlumni || []),
+      ];
+      const assignedVolunteerEmails = Object.keys(
+        selectedEvent?.volunteer_assignments || selectedEvent?.volunteerAssignments || {}
+      ).map((email) => email.toLowerCase());
+      const acceptedVolunteerKeys = acceptedVolunteers.flatMap((volunteer: any) => [
+        volunteer.id,
+        volunteer.volunteer_id,
+        volunteer.user_id,
+        volunteer.email,
+        volunteer.volunteer_email,
+        volunteer.name,
+      ]).filter(Boolean).map((value: unknown) => String(value).toLowerCase());
+
+      result = result.filter((volunteer) => {
+        const volunteerKeys = [
+          volunteer.id,
+          volunteer.user_id,
+          volunteer.email,
+          volunteer.name,
+        ].filter(Boolean).map((value: unknown) => String(value).toLowerCase());
+        return volunteerKeys.some(
+          (key) => acceptedVolunteerKeys.includes(key) || assignedVolunteerEmails.includes(key)
+        );
+      });
+    }
     if (roleFilter !== "all") {
       result = result.filter((v) => (v.role || "student").toLowerCase() === roleFilter);
     }
@@ -169,7 +274,7 @@ export default function AdminVolunteersScreen() {
       );
     }
     return result;
-  }, [volunteers, roleFilter, searchQuery]);
+  }, [volunteers, roleFilter, searchQuery, eventFilter, events]);
 
   // Filter applications
   const filteredApplications = useMemo(() => {
@@ -182,6 +287,23 @@ export default function AdminVolunteersScreen() {
         (a.application_number && a.application_number.includes("SCH-"));
       return !isAdmittedStudent;
     });
+
+    if (eventFilter !== "all") {
+      const selectedEvent = events.find((event) => String(event.id) === eventFilter);
+      const eventTitle = selectedEvent?.title?.toLowerCase();
+      result = result.filter((application) => {
+        const applicationEvent = String(
+          application.event_id ||
+          application.eventId ||
+          application.event_name ||
+          application.eventName ||
+          application.event_title ||
+          application.eventTitle ||
+          ""
+        ).toLowerCase();
+        return applicationEvent === eventFilter.toLowerCase() || applicationEvent === eventTitle;
+      });
+    }
 
     if (statusFilter === "reviewed") {
       result = result.filter((a) => a.volunteer_suggestion && a.volunteer_suggestion.trim() !== "");
@@ -202,7 +324,7 @@ export default function AdminVolunteersScreen() {
     }
 
     return result;
-  }, [applications, statusFilter, searchQuery]);
+  }, [applications, statusFilter, searchQuery, eventFilter, events]);
 
   // Export Excel with complete details and Volunteer Suggestion column
   const handleExportExcel = () => {
@@ -447,9 +569,56 @@ export default function AdminVolunteersScreen() {
             </div>
           </div>
 
+          {/* SubTab Switcher: Volunteer Directory Grid vs Volunteer Verification Applications */}
+          <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-3">
+            <button
+              type="button"
+              onClick={() => setActiveSubTab("directory")}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-heading font-bold text-xs sm:text-sm transition cursor-pointer ${
+                activeSubTab === "directory"
+                  ? "bg-[#F7BC0F] text-slate-950 shadow-xs border border-amber-400 font-extrabold"
+                  : "bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200"
+              }`}
+            >
+              <UserGroupIcon className="w-4 h-4 stroke-[2.2]" />
+              <span>Registered Volunteers Directory</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] ${
+                  activeSubTab === "directory"
+                    ? "bg-amber-900/15 text-slate-950 font-black"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {volunteers.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSubTab("verification")}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-heading font-bold text-xs sm:text-sm transition cursor-pointer ${
+                activeSubTab === "verification"
+                  ? "bg-[#F7BC0F] text-slate-950 shadow-xs border border-amber-400 font-extrabold"
+                  : "bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200"
+              }`}
+            >
+              <DocumentTextIcon className="w-4 h-4 stroke-[2.2]" />
+              <span>Volunteer Verification Applications</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] ${
+                  activeSubTab === "verification"
+                    ? "bg-amber-900/15 text-slate-950 font-black"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {candidateApplications.length}
+              </span>
+            </button>
+          </div>
+
           {/* Search & Filter Bar */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="relative flex-1">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col lg:flex-row lg:items-center gap-3">
+            <div className="relative w-full lg:flex-1">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />
               </div>
@@ -468,7 +637,7 @@ export default function AdminVolunteersScreen() {
 
             {/* SubTab Specific Filters */}
             {activeSubTab === "directory" ? (
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <span className="text-xs font-bold text-slate-500">Role:</span>
                 <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-bold">
                   {(["all", "student", "alumni"] as const).map((r) => (
@@ -487,7 +656,7 @@ export default function AdminVolunteersScreen() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <span className="text-xs font-bold text-slate-500">Review:</span>
                 <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-bold">
                   {(["all", "reviewed", "pending"] as const).map((s) => (
@@ -506,7 +675,27 @@ export default function AdminVolunteersScreen() {
                 </div>
               </div>
             )}
+
+            <select
+              value={eventFilter}
+              onChange={(e) => setEventFilter(e.target.value)}
+              className="w-full lg:w-56 shrink-0 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#F7BC0F] focus:bg-white focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+              aria-label="Filter by event"
+            >
+              <option value="all">All Events</option>
+              {events.map((event) => (
+                <option key={event.id} value={String(event.id)}>
+                  {event.title}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {assignmentMessage && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-900">
+              {assignmentMessage}
+            </div>
+          )}
 
           {/* VIEW A: REGISTERED VOLUNTEERS DIRECTORY */}
           {activeSubTab === "directory" && (
@@ -611,14 +800,27 @@ export default function AdminVolunteersScreen() {
 
                           {/* Action */}
                           <td className="py-3.5 px-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedVolunteer(vol)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-[#F7BC0F] hover:text-slate-950 transition cursor-pointer"
-                            >
-                              <EyeIcon className="w-3.5 h-3.5" />
-                              <span>Details</span>
-                            </button>
+                            <div className="inline-flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleAssignVolunteer(vol)}
+                                disabled={assigningVolunteerId === String(vol.id || vol.email)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                <UserGroupIcon className="w-3.5 h-3.5" />
+                                <span>
+                                  {assigningVolunteerId === String(vol.id || vol.email) ? "Assigning..." : "Assign"}
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedVolunteer(vol)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-[#F7BC0F] hover:text-slate-950 transition cursor-pointer"
+                              >
+                                <EyeIcon className="w-3.5 h-3.5" />
+                                <span>Details</span>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -869,6 +1071,85 @@ export default function AdminVolunteersScreen() {
         </div>
       )}
 
+      {volunteerPendingAssignment && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-xs">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                <UserGroupIcon className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-heading text-base font-bold text-slate-900">
+                  Confirm Application Assignment
+                </h3>
+                <p className="mt-1 text-sm leading-5 text-slate-600">
+                  Select a registered student application to assign to{" "}
+                  <strong className="text-slate-900">
+                    {volunteerPendingAssignment.name || volunteerPendingAssignment.email}
+                  </strong>
+                  .
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 max-h-80 space-y-2 overflow-y-auto">
+              {candidateApplications.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-xs text-slate-500">
+                  No registered student applications are available.
+                </p>
+              ) : (
+                candidateApplications.map((application) => {
+                  const isSelected = String(selectedApplicationId) === String(application.id);
+                  return (
+                    <button
+                      key={application.id}
+                      type="button"
+                      onClick={() => setSelectedApplicationId(String(application.id))}
+                      className={`w-full rounded-xl border p-3 text-left transition ${
+                        isSelected
+                          ? "border-amber-500 bg-amber-50 ring-2 ring-amber-200"
+                          : "border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">
+                            {application.full_name || "Unnamed Student"}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-slate-500">
+                            {application.application_number || "Application"} · {application.district || "District not provided"}
+                          </p>
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-600">
+                          {application.preferred_degree || application.twelfth_stream || "Applicant"}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setVolunteerPendingAssignment(null)}
+                disabled={Boolean(assigningVolunteerId)}
+                className="rounded-xl border border-slate-300 px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmAssignVolunteer()}
+                disabled={Boolean(assigningVolunteerId) || !selectedApplicationId}
+                className="rounded-xl bg-[#F7BC0F] px-4 py-2.5 text-xs font-black text-slate-950 transition hover:bg-[#e5ad0c] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {assigningVolunteerId ? "Assigning..." : "Assign Selected Student"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Volunteer Details Modal */}
       {selectedVolunteer && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -980,7 +1261,7 @@ export default function AdminVolunteersScreen() {
                 type="button"
                 onClick={() => setSelectedVolunteer(null)}
                 className="px-5 py-2.5 rounded-xl text-xs font-heading font-bold text-slate-900 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
-              >
+               >
                 Close
               </button>
             </div>

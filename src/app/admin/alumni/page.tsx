@@ -2,7 +2,7 @@ import AdminAlumniScreen from "../../../pages/admin/AdminAlumniScreen";
 
 export const metadata = {
   title: "Alumni Directory | Maatram Foundation Admin",
-  description: "Manage graduated scholarship students.",
+  description: "Manage graduated students.",
 };
 
 export default function AdminAlumniPage() {

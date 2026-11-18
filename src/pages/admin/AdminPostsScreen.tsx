@@ -441,7 +441,7 @@ export default function AdminPostsScreen() {
                   required
                   value={postTitle}
                   onChange={(e) => setPostTitle(e.target.value)}
-                  placeholder="e.g. Annual Scholarship Orientation Day 2026"
+                  placeholder="e.g. Annual Education Orientation Day 2026"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
                 />
               </div>
@@ -474,7 +474,7 @@ export default function AdminPostsScreen() {
                   >
                     <option value="Announcement">Announcement</option>
                     <option value="Orientation">Orientation</option>
-                    <option value="Scholarship">Scholarship</option>
+                    <option value="Education Support">Education Support</option>
                     <option value="Alumni Story">Alumni Story</option>
                     <option value="Workshop">Workshop</option>
                     <option value="Placement & Careers">Placement & Careers</option>

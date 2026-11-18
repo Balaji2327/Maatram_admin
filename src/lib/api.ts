@@ -247,7 +247,7 @@ export const applicationApi = {
     return callApi(() => apiClient.post("/application/save-draft", formData));
   },
 
-  // Final submission of scholarship application
+  // Final submission of student application
   submitApplication: async (formData: any): Promise<ApiResponse> => {
     return callApi(() => apiClient.post("/application/submit", formData));
   },
@@ -358,20 +358,67 @@ export const adminApi = {
     return callApi(() => apiClient.get(`/admin/applications/${id}`));
   },
 
-  updateStatus: async (id: string, status: string): Promise<ApiResponse> => {
-    return callApi(() => apiClient.patch(`/admin/applications/${id}/status`, { status }));
+  updateStatus: async (
+    id: string,
+    status: string,
+    reason?: string,
+    email?: string,
+    name?: string,
+    rejectionStage?: number
+  ): Promise<ApiResponse> => {
+    return callApi(() =>
+      apiClient.patch(`/admin/applications/${id}/status`, {
+        status,
+        reason,
+        email,
+        name,
+        rejectionStage,
+      })
+    );
   },
 
   updateVolunteerSuggestion: async (
     id: string,
     suggestion: string,
-    volunteer_name?: string
+    volunteer_name?: string,
+    options?: {
+      phase?: "tele" | "physical";
+      volunteer_email?: string;
+      volunteer_phone?: string;
+      volunteer_role?: string;
+      volunteer_affiliation?: string;
+    }
   ): Promise<ApiResponse> => {
     return callApi(() =>
       apiClient.patch(`/admin/applications/${id}/volunteer-suggestion`, {
         suggestion,
+        volunteer_suggestion: suggestion,
         volunteer_name,
+        volunteerName: volunteer_name,
+        phase: options?.phase || "tele",
+        volunteer_email: options?.volunteer_email,
+        volunteer_phone: options?.volunteer_phone,
+        volunteer_role: options?.volunteer_role,
+        volunteer_affiliation: options?.volunteer_affiliation,
       })
+    );
+  },
+
+  assignVolunteer: async (
+    id: string,
+    payload: {
+      phase: "tele" | "physical";
+      name: string;
+      email?: string;
+      phone?: string;
+      role?: string;
+      affiliation?: string;
+      eventId?: string;
+      eventTitle?: string;
+    }
+  ): Promise<ApiResponse> => {
+    return callApi(() =>
+      apiClient.patch(`/admin/applications/${id}/assign-volunteer`, payload)
     );
   },
 

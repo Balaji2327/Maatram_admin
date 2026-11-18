@@ -7,31 +7,41 @@ import { useRouter } from "next/navigation";
 import SignOutModal from "../components/SignOutModal";
 import { applicationApi } from "../lib/api";
 import {
-  PhoneIcon,
-  MapPinIcon,
-  VideoCameraIcon,
-  CheckBadgeIcon,
   ArrowLeftOnRectangleIcon,
-  DocumentTextIcon,
-  InformationCircleIcon,
-  ClockIcon,
-  ShieldCheckIcon,
+  CheckIcon,
+  ArrowLeftIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 export default function SelectionProcessScreen() {
   const router = useRouter();
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [appNumber, setAppNumber] = useState("MF-2025-001");
+  const [status, setStatus] = useState("submitted");
+  const [stageStatus, setStageStatus] = useState("In Progress");
+  const [rejectionStage, setRejectionStage] = useState(1);
 
   useEffect(() => {
     async function loadStatus() {
       try {
         const res = await applicationApi.getStatus();
-        if (res.data?.applicationNumber) {
-          setAppNumber(res.data.applicationNumber);
-        } else if (res.applicationNumber) {
-          setAppNumber(res.applicationNumber);
-        }
+        const appNum = res.data?.applicationNumber || res.applicationNumber || "MF-2025-001";
+        setAppNumber(appNum);
+        if (res.data?.status || res.status) setStatus(res.data?.status || res.status);
+        if (res.data?.stageStatus || res.stageStatus) setStageStatus(res.data?.stageStatus || res.stageStatus);
+
+        const rStage =
+          res.data?.rejectionStage ||
+          res.rejectionStage ||
+          (typeof window !== "undefined"
+            ? (window.localStorage.getItem(`maatram_application_rejection_stage_${appNum}`)
+                ? parseInt(window.localStorage.getItem(`maatram_application_rejection_stage_${appNum}`)!, 10)
+                : undefined) ||
+              (window.localStorage.getItem("maatram_application_rejection_stage_latest")
+                ? parseInt(window.localStorage.getItem("maatram_application_rejection_stage_latest")!, 10)
+                : 1)
+            : 1);
+        setRejectionStage(rStage);
       } catch (err) {
         console.warn("Failed to load status:", err);
       }
@@ -39,60 +49,233 @@ export default function SelectionProcessScreen() {
     loadStatus();
   }, []);
 
-  const stages = [
+  const statusLevelMap: Record<string, number> = {
+    draft: 0,
+    submitted: 1,
+    under_review: 1,
+    telephonic_done: 2,
+    televerification_done: 2,
+    physical_verification_in_progress: 2,
+    physical_verification_done: 3,
+    home_visit_done: 3,
+    video_interview_in_progress: 3,
+    video_interview_done: 4,
+    shortlisted: 4,
+    direct_interview_in_progress: 4,
+    direct_interview_done: 5,
+    selected: 6,
+    scholarship_awarded: 6,
+    rejected: -1,
+  };
+
+  const currentLevel = statusLevelMap[status] ?? 1;
+
+  const flowSteps = [
     {
-      step: "Stage 01",
-      title: "Televerification",
-      desc: "Our Maatram counseling team initiates phone verification to cross-check initial academic marks, contact details, family background, and eligibility criteria.",
-      status: "In Progress",
-      statusColor: "bg-amber-100 text-amber-800 border-amber-300",
-      badgeText: "Current Stage",
-      icon: PhoneIcon,
-      actionText: "Keep phone reachable for counselor call",
-      highlight: true,
+      id: 1,
+      title: "Application Applied & Received",
+      desc: "Your complete application, family details, and academic marks have been registered in the Maatram Portal.",
+      completed: currentLevel >= 1,
+      isCurrentWaiting: currentLevel === 0,
+      waitingText: "Complete application form and submit to initiate review",
     },
     {
-      step: "Stage 02",
-      title: "Physical Verification",
-      desc: "Maatram Foundation field volunteers visit the applicant's home location to review original certificates (10th, 11th, 12th, Aadhaar) and understand socio-economic conditions.",
-      status: "Upcoming",
-      statusColor: "bg-slate-100 text-slate-600 border-slate-200",
-      badgeText: "Awaiting Stage 1",
-      icon: MapPinIcon,
-      actionText: "Original certificates verification at student's home",
-      highlight: false,
+      id: 2,
+      title: "First Phase: Televerification",
+      desc: "Telephonic verification conducted by assigned volunteer counselor to verify student academic interest, family circumstances, and contact details.",
+      completed: currentLevel >= 2,
+      isCurrentWaiting: currentLevel === 1,
+      waitingText: "Telephonic verification in progress. Our assigned volunteer counselor will contact you over phone.",
     },
     {
-      step: "Stage 03",
-      title: "Video Interview",
-      desc: "A one-on-one virtual interaction session with Maatram advisory panel to discuss career aspirations, engineering/arts stream interests, and personal motivation.",
-      status: "Upcoming",
-      statusColor: "bg-slate-100 text-slate-600 border-slate-200",
-      badgeText: "Pending",
-      icon: VideoCameraIcon,
-      actionText: "Online video meeting link will be shared via SMS/Email",
-      highlight: false,
+      id: 3,
+      title: "Second Phase: Physical Verification",
+      desc: "In-person/home verification conducted by field verification team to inspect student residential and socioeconomic conditions.",
+      completed: currentLevel >= 3,
+      isCurrentWaiting: currentLevel === 2,
+      waitingText: "Waiting for physical verification / field visit by Maatram verification team.",
     },
     {
-      step: "Stage 04",
-      title: "Final Interview",
-      desc: "Final selection round with the Board of Trustees and Partner College authorities. Successful candidates are awarded 100% cost-free college seat sponsorship letters.",
-      status: "Upcoming",
-      statusColor: "bg-slate-100 text-slate-600 border-slate-200",
-      badgeText: "Final Stage",
-      icon: CheckBadgeIcon,
-      actionText: "Official sponsorship letter issued upon selection",
-      highlight: false,
+      id: 4,
+      title: "Third Phase: Video Call Interview",
+      desc: "Virtual panel interaction and academic counseling conducted with the Maatram advisory committee.",
+      completed: currentLevel >= 4,
+      isCurrentWaiting: currentLevel === 3,
+      waitingText: "Waiting for video call interview scheduling. Advisory panel will send the interview video link.",
+    },
+    {
+      id: 5,
+      title: "Fourth Phase: Direct Interview (Final Stage)",
+      desc: "In-person direct panel interview with senior trustees, academic leaders, and corporate sponsors at Maatram Central Office.",
+      completed: currentLevel >= 5,
+      isCurrentWaiting: currentLevel === 4,
+      waitingText: "Waiting for direct interview call letter & in-person panel scheduling at Maatram Trust.",
+    },
+    {
+      id: 6,
+      title: "Final Selection & 100% Free Scholarship Awarded",
+      desc: "Approved by Board of Trustees. Official 100% free higher education sponsorship admission letter granted (College tuition, hostel & books fully funded).",
+      completed: currentLevel >= 6,
+      isCurrentWaiting: currentLevel === 5,
+      waitingText: "Waiting for final trustee committee approval & college seat allotment.",
     },
   ];
 
+  let visibleSteps: Array<{
+    id: number;
+    title: string;
+    desc: string;
+    completed?: boolean;
+    isCurrentWaiting?: boolean;
+    waitingText?: string;
+    isRejected?: boolean;
+  }> = [];
+
+  if (status === "rejected") {
+    const reasonText = "Application not shortlisted based on verification criteria.";
+
+    if (rejectionStage === 5) {
+      // Case 5: Rejected during/after Fourth Phase (Direct Interview)
+      visibleSteps = [
+        {
+          id: 1,
+          title: "Application Applied & Received",
+          desc: "Your complete application and academic marks were received and registered.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 2,
+          title: "First Phase: Televerification - Completed",
+          desc: "Telephonic verification successfully verified student eligibility and background.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 3,
+          title: "Second Phase: Physical Verification - Completed",
+          desc: "Physical and residential verification verified by field team.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 4,
+          title: "Third Phase: Video Call Interview - Completed",
+          desc: "Virtual interaction with advisory committee completed.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 5,
+          title: "Fourth Phase: Direct Interview (Final Stage) - Not Shortlisted",
+          desc: reasonText,
+          completed: false,
+          isRejected: true,
+        },
+      ];
+    } else if (rejectionStage === 4) {
+      // Case 4: Rejected during/after Third Phase (Video Call Interview)
+      visibleSteps = [
+        {
+          id: 1,
+          title: "Application Applied & Received",
+          desc: "Your complete application and academic marks were received and registered.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 2,
+          title: "First Phase: Televerification - Completed",
+          desc: "Telephonic verification successfully verified student eligibility and background.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 3,
+          title: "Second Phase: Physical Verification - Completed",
+          desc: "Physical and residential verification verified by field team.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 4,
+          title: "Third Phase: Video Call Interview - Not Shortlisted",
+          desc: reasonText,
+          completed: false,
+          isRejected: true,
+        },
+      ];
+    } else if (rejectionStage === 3) {
+      // Case 3: Rejected during/after Second Phase (Physical Verification)
+      visibleSteps = [
+        {
+          id: 1,
+          title: "Application Applied & Received",
+          desc: "Your complete application and academic marks were received and registered.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 2,
+          title: "First Phase: Televerification - Completed",
+          desc: "Telephonic verification successfully verified student eligibility and background.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 3,
+          title: "Second Phase: Physical Verification - Not Shortlisted",
+          desc: reasonText,
+          completed: false,
+          isRejected: true,
+        },
+      ];
+    } else if (rejectionStage === 2) {
+      // Case 2: Rejected during/after First Phase (Televerification)
+      visibleSteps = [
+        {
+          id: 1,
+          title: "Application Applied & Received",
+          desc: "Your complete application and academic marks were received and registered.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 2,
+          title: "First Phase: Televerification - Not Shortlisted",
+          desc: reasonText,
+          completed: false,
+          isRejected: true,
+        },
+      ];
+    } else {
+      // Case 1: Rejected at initial application review
+      visibleSteps = [
+        {
+          id: 1,
+          title: "Application Submitted",
+          desc: "Your complete application and academic marks were received and registered.",
+          completed: true,
+          isRejected: false,
+        },
+        {
+          id: 2,
+          title: "Application Not Shortlisted",
+          desc: reasonText,
+          completed: false,
+          isRejected: true,
+        },
+      ];
+    }
+  } else {
+    visibleSteps = flowSteps.filter((s) => s.completed || s.isCurrentWaiting);
+  }
+
   return (
     <div className="min-h-screen w-full bg-[#F8FAFC] text-[#0F172A] font-primary selection:bg-[#F7BC0F] selection:text-black">
-      {/* ================= TOP NAVIGATION BAR ================= */}
+      {/* Top Navigation Bar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
         <div className="w-full px-4 sm:px-8 lg:px-12 h-18 flex items-center justify-between gap-4">
-          
-          {/* Left: Brand Logo + Portal Tag */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             <Link href="/dashboard" className="flex items-center focus:outline-none">
               <Image
@@ -104,11 +287,7 @@ export default function SelectionProcessScreen() {
                 className="h-10 sm:h-11 w-auto object-contain"
               />
             </Link>
-
-            {/* Vertical Divider */}
             <div className="hidden md:block h-7 w-px bg-slate-200" />
-
-            {/* Portal Title & Batch Tag */}
             <div className="hidden md:flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="font-heading font-black text-xs text-slate-900 tracking-tight">
@@ -124,153 +303,134 @@ export default function SelectionProcessScreen() {
             </div>
           </div>
 
-          {/* Right: Student Profile Pill + Sign Out */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-
-            {/* Student Profile Capsule */}
-            <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 pl-1.5 pr-3 py-1.5 rounded-2xl transition">
-              {/* Initials Avatar */}
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#F7BC0F] to-amber-300 text-slate-950 font-heading font-black text-xs flex items-center justify-center shadow-2xs">
-                S
-              </div>
-
-              <div className="flex flex-col text-left">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-900 leading-tight max-w-[120px] sm:max-w-[160px] truncate">
-                    Student Applicant
-                  </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Active Session" />
-                </div>
-                <span className="text-[10px] text-slate-500 font-mono">
-                  {appNumber}
-                </span>
-              </div>
-            </div>
-
-            {/* Sign Out Button */}
+            <Link
+              href="/dashboard?tab=status"
+              className="inline-flex items-center gap-1.5 text-xs font-heading font-bold text-slate-700 hover:text-slate-950 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+            >
+              <ArrowLeftIcon className="w-3.5 h-3.5" />
+              <span>Back to Dashboard</span>
+            </Link>
             <button
               type="button"
               onClick={() => setShowSignOutModal(true)}
-              className="inline-flex items-center gap-1.5 text-xs font-heading font-bold text-slate-600 hover:text-red-600 px-3 py-2 rounded-xl border border-slate-200 hover:border-red-200 hover:bg-red-50/80 transition cursor-pointer shadow-2xs"
-              title="Sign Out of Portal"
+              className="inline-flex items-center gap-1.5 text-xs font-heading font-bold text-slate-600 hover:text-red-600 px-3 py-2 rounded-xl border border-slate-200 hover:border-red-200 hover:bg-red-50/80 transition cursor-pointer"
             >
               <ArrowLeftOnRectangleIcon className="w-4 h-4 text-slate-500" />
               <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
-
         </div>
       </header>
 
-      {/* ================= MAIN CONTENT CONTAINER ================= */}
-      <main className="w-full px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
-        
-        {/* Header Overview Card */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+      {/* Main Process Content */}
+      <main className="w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-12 space-y-6">
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-            <div className="flex items-center gap-4">
-              <Image
-                src="/assets/images/logo.png"
-                alt="Maatram Foundation"
-                width={140}
-                height={70}
-                priority
-                className="h-12 w-auto object-contain rounded-md shrink-0"
-              />
-              <div className="h-10 w-px bg-slate-200 hidden sm:block"></div>
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                  Admission Track 2025 - 2026
-                </span>
-                <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 mt-2">
-                  Maatram Selection Stages
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  Your application has been received. Track the real-time progress of each selection stage below.
-                </p>
-              </div>
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                Admission Track 2025 - 2026
+              </span>
+              <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 mt-2">
+                Application Progress Tracker
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Real-time step-by-step verification milestones for your application.
+              </p>
             </div>
-
-            <div className="flex flex-col sm:items-end bg-slate-50 border border-slate-200 p-4 rounded-2xl text-xs space-y-1">
+            <div className="flex flex-col sm:items-end bg-slate-50 border border-slate-200 p-4 rounded-2xl text-xs space-y-1 shrink-0">
               <span className="text-slate-500">Application Number:</span>
               <span className="font-mono font-bold text-slate-900 text-sm">{appNumber}</span>
               <span className="inline-flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Application Received
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                {stageStatus || "In Progress"}
               </span>
             </div>
           </div>
 
-          {/* Sequential One-By-One Stage Cards */}
-          <div className="mt-8 space-y-5">
-            {stages.map((item, index) => {
-              const ItemIcon = item.icon;
-              const isCurrent = item.highlight;
+          {/* Sequential Process Circles Flow */}
+          <div className="mt-8 pt-4">
+            {visibleSteps.length === 0 ? (
+              <div className="p-6 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center text-xs text-slate-500">
+                Submit your application to start tracking your verification progress.
+              </div>
+            ) : (
+              <div className="flex flex-col max-w-lg mx-auto sm:mx-4">
+                {visibleSteps.map((step, idx) => {
+                  const isLast = idx === visibleSteps.length - 1;
 
-              return (
-                <div
-                  key={index}
-                  className={`relative p-5 sm:p-6 rounded-2xl border transition-all ${
-                    isCurrent
-                      ? "bg-white border-[#F7BC0F] shadow-md shadow-[#F7BC0F]/10 ring-2 ring-[#F7BC0F]/30"
-                      : "bg-slate-50/70 border-slate-200"
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    
-                    <div className="flex items-start gap-4">
-                      {/* Step Number & Icon */}
-                      <div
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
-                          isCurrent
-                            ? "bg-[#F7BC0F] text-slate-950 border-[#e5ad0c] shadow-sm font-black"
-                            : "bg-white text-slate-500 border-slate-200"
-                        }`}
-                      >
-                        <ItemIcon className="w-6 h-6 stroke-[2]" />
+                  return (
+                    <div key={step.id} className="flex items-start group">
+                      <div className="flex flex-col items-center mr-4 sm:mr-5 shrink-0">
+                        {step.isRejected ? (
+                          <div className="w-10 h-10 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-700/20 ring-4 ring-rose-50 transition-all duration-300">
+                            <XMarkIcon className="w-6 h-6 stroke-[3]" />
+                          </div>
+                        ) : step.completed ? (
+                          <div className="w-10 h-10 rounded-full bg-[#107c41] text-white flex items-center justify-center shadow-md shadow-emerald-700/20 ring-4 ring-emerald-50 transition-all duration-300">
+                            <CheckIcon className="w-6 h-6 stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-white border-2 border-dashed border-slate-400 text-slate-500 flex items-center justify-center shadow-xs ring-4 ring-slate-100 animate-pulse">
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                          </div>
+                        )}
+
+                        {!isLast && (
+                          <div
+                            className={`w-[3.5px] min-h-[56px] sm:min-h-[64px] transition-all duration-300 ${
+                              step.completed
+                                ? "bg-[#107c41]"
+                                : step.isRejected
+                                  ? "bg-rose-300"
+                                  : "bg-slate-200"
+                            }`}
+                          />
+                        )}
                       </div>
 
-                      <div>
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-[11px] font-mono font-bold uppercase text-slate-500">
-                            {item.step}
-                          </span>
-                          <h2 className="font-heading font-extrabold text-base sm:text-lg text-slate-900">
-                            {item.title}
-                          </h2>
-                        </div>
-                        <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
-                          {item.desc}
-                        </p>
-                        <div className="mt-2 text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#F7BC0F]"></span>
-                          <span>{item.actionText}</span>
-                        </div>
+                      <div className={`pb-7 pt-1 ${isLast ? "pb-2" : ""}`}>
+                        {step.isRejected ? (
+                          <div>
+                            <h4 className="font-heading font-black text-sm sm:text-base text-rose-700 leading-snug">
+                              {step.title}
+                            </h4>
+                            <p className="text-xs text-rose-600 mt-0.5 leading-relaxed font-medium">
+                              {step.desc}
+                            </p>
+                          </div>
+                        ) : step.completed ? (
+                          <div>
+                            <h4 className="font-heading font-black text-sm sm:text-base text-slate-900 leading-snug">
+                              {step.title}
+                            </h4>
+                            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                              {step.desc}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-3 sm:p-3.5 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                              <h4 className="font-heading font-black text-xs sm:text-sm text-amber-950">
+                                {step.waitingText}
+                              </h4>
+                            </div>
+                            <p className="text-[11px] text-amber-900/80 leading-relaxed pl-4">
+                              Next stage in progress. Once this process is completed by our counseling team, the verification circle will activate and progress automatically.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    {/* Status Badge */}
-                    <div className="sm:text-right shrink-0">
-                      <span
-                        className={`inline-block text-xs font-heading font-bold px-3 py-1 rounded-full border ${item.statusColor}`}
-                      >
-                        {item.status}
-                      </span>
-                      <span className="block text-[10px] text-slate-400 mt-1 font-mono">
-                        {item.badgeText}
-                      </span>
-                    </div>
-
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
-
       </main>
 
-      {/* ================= SIGN OUT CONFIRMATION MODAL ================= */}
       <SignOutModal
         isOpen={showSignOutModal}
         onClose={() => setShowSignOutModal(false)}

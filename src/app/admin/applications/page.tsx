@@ -3,7 +3,7 @@ import AdminApplicationsScreen from "../../../pages/admin/AdminApplicationsScree
 
 export const metadata = {
   title: "Applications Management | Maatram Foundation",
-  description: "View, filter and manage all student scholarship applications.",
+  description: "View, filter and manage all student applications.",
 };
 
 export default function AdminApplicationsPage() {

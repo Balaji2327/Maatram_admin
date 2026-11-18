@@ -316,7 +316,7 @@ export default function AdminDashboardScreen() {
                   Student Applications
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Screen student scholarship forms, filter by cutoff mark, and manage status transitions.
+                  Screen student application forms, filter by cutoff mark, and manage status transitions.
                 </p>
               </Link>
 
@@ -373,7 +373,7 @@ export default function AdminDashboardScreen() {
                   Community Posts & Updates
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Broadcast notices, achievement stories, and scholarship opportunities to alumni & students.
+                  Broadcast notices, achievement stories, and education opportunities to alumni & students.
                 </p>
               </Link>
             </div>
@@ -386,7 +386,7 @@ export default function AdminDashboardScreen() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="font-heading font-extrabold text-base text-slate-900">
-                    Scholarship Admission Funnel
+                    Admission Funnel
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Live stage conversion of applicants
@@ -477,7 +477,7 @@ export default function AdminDashboardScreen() {
                 {/* 4. Selected */}
                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
                   <div className="flex justify-between text-xs font-bold mb-1.5">
-                    <span className="text-slate-800">4. Selected / Scholarship Awarded</span>
+                    <span className="text-slate-800">4. Selected / Support Awarded</span>
                     <span className="text-slate-900 font-mono">{stats.selected}</span>
                   </div>
                   <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -506,7 +506,7 @@ export default function AdminDashboardScreen() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div>
                     <h2 className="font-heading font-extrabold text-base text-slate-900">
-                      Recent Scholarship Applicants
+                      Recent Applicants
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
                       Latest submissions awaiting screening

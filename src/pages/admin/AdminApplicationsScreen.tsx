@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -28,14 +28,77 @@ import {
   ArrowUpTrayIcon,
   ChatBubbleLeftEllipsisIcon,
   TableCellsIcon,
-  SparklesIcon,
   CheckBadgeIcon,
   ArrowTopRightOnSquareIcon,
+  UserPlusIcon,
+  XCircleIcon,
+  VideoCameraIcon,
+  ArrowRightIcon,
+  CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
 import * as XLSX from "xlsx";
 import { adminApi, getAdminToken, getAdminCachedData, setAdminCachedData } from "../../lib/api";
 import SignOutModal from "../../components/SignOutModal";
 import AdminSidebar, { AdminTab } from "../../components/AdminSidebar";
+
+// Default Active Volunteers Roster for Televerification
+const DEFAULT_VOLUNTEERS = [
+  {
+    id: "vol-1",
+    name: "Karthik Raja",
+    email: "karthik.alumni@maatram.org",
+    role: "alumni",
+    phone: "9840123456",
+    company: "Zoho Corporation",
+    designation: "Senior Software Engineer",
+    batch: "2018 - 2022",
+    assigned_count: 3,
+  },
+  {
+    id: "vol-2",
+    name: "Priyadharshini S",
+    email: "priya.alumni@maatram.org",
+    role: "alumni",
+    phone: "9789123456",
+    company: "Tata Consultancy Services",
+    designation: "Systems Engineer",
+    batch: "2019 - 2023",
+    assigned_count: 5,
+  },
+  {
+    id: "vol-3",
+    name: "Vigneshwaran M",
+    email: "vignesh.student@maatram.org",
+    role: "student",
+    phone: "9444123456",
+    college: "Anna University (CEG)",
+    department: "Mechanical Engineering",
+    year_of_study: "Final Year",
+    assigned_count: 2,
+  },
+  {
+    id: "vol-4",
+    name: "Ananya Ramesh",
+    email: "ananya.student@maatram.org",
+    role: "student",
+    phone: "9884123456",
+    college: "PSG College of Technology",
+    department: "Electronics & Communication",
+    year_of_study: "3rd Year",
+    assigned_count: 1,
+  },
+  {
+    id: "vol-5",
+    name: "Saravanan K",
+    email: "saravanan.alumni@maatram.org",
+    role: "alumni",
+    phone: "9600123456",
+    company: "Freshworks",
+    designation: "Product Associate",
+    batch: "2017 - 2021",
+    assigned_count: 4,
+  },
+];
 
 export default function AdminApplicationsScreen() {
   const router = useRouter();
@@ -72,6 +135,7 @@ export default function AdminApplicationsScreen() {
 
   // Detail View state (Full-Page Document View)
   const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
+  const [isRestoringApplicant, setIsRestoringApplicant] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [statusUpdateMessage, setStatusUpdateMessage] = useState("");
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
@@ -85,6 +149,78 @@ export default function AdminApplicationsScreen() {
   const [volunteerNoteInput, setVolunteerNoteInput] = useState("");
   const [isSavingVolunteerNote, setIsSavingVolunteerNote] = useState(false);
 
+  // Volunteer Televerification & Physical Verification Assignment Modal States
+  const [isAssignVolunteerModalOpen, setIsAssignVolunteerModalOpen] = useState(false);
+  const [assignVolunteerPhase, setAssignVolunteerPhase] = useState<"televerification" | "physical">("televerification");
+  const [volunteersList, setVolunteersList] = useState<any[]>([]);
+  const [eventsList, setEventsList] = useState<any[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>("all");
+  const [isLoadingVolunteers, setIsLoadingVolunteers] = useState(false);
+  const [volunteerSearchQuery, setVolunteerSearchQuery] = useState("");
+  const [volunteerRoleFilter, setVolunteerRoleFilter] = useState<"all" | "alumni" | "student">("all");
+  const [selectedVolunteerId, setSelectedVolunteerId] = useState<string | null>(null);
+  const [isAssigningVolunteer, setIsAssigningVolunteer] = useState(false);
+
+  // Reject Application Modal States
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isAdvancingPhase, setIsAdvancingPhase] = useState(false);
+
+  const openVolunteerAssignment = async (phase: "televerification" | "physical" = "televerification") => {
+    setAssignVolunteerPhase(phase);
+    setSelectedVolunteerId(null);
+    setVolunteerSearchQuery("");
+    setVolunteerRoleFilter("all");
+    setIsAssignVolunteerModalOpen(true);
+
+    // Immediate check against session cache or current eventsList to pick the best matching event
+    let currentEvents = eventsList;
+    if (!currentEvents || currentEvents.length === 0) {
+      try {
+        const cached = sessionStorage.getItem("maatram_admin_events_cache");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            currentEvents = parsed;
+            setEventsList(parsed);
+          }
+        }
+      } catch {}
+    }
+
+    const applicantEventId =
+      phase === "physical"
+        ? (selectedApplicant?.physical_event_id || selectedApplicant?.event_id)
+        : (selectedApplicant?.tele_event_id || selectedApplicant?.event_id);
+
+    const applicantEventTitle =
+      phase === "physical"
+        ? (selectedApplicant?.physical_event_title || selectedApplicant?.event_title)
+        : (selectedApplicant?.tele_event_title || selectedApplicant?.event_title);
+
+    const matched = currentEvents.find((ev) =>
+      (applicantEventId && String(ev.id) === String(applicantEventId)) ||
+      (applicantEventTitle && (
+        ev.title?.toLowerCase() === String(applicantEventTitle).toLowerCase() ||
+        ev.name?.toLowerCase() === String(applicantEventTitle).toLowerCase()
+      ))
+    ) || currentEvents[0];
+
+    if (matched) {
+      setSelectedEventId(String(matched.id));
+    } else {
+      setSelectedEventId("");
+    }
+
+    await Promise.all([loadVolunteers(), loadEvents()]);
+  };
+
+  const selectedApplicantRef = useRef<any | null>(null);
+  useEffect(() => {
+    selectedApplicantRef.current = selectedApplicant;
+  }, [selectedApplicant]);
+
   // Fetch all applications
   const fetchApplications = async () => {
     setIsRefreshing(true);
@@ -96,24 +232,26 @@ export default function AdminApplicationsScreen() {
         setAdminCachedData("applications", res);
         if (res.stats) setStats(res.stats);
 
-        // Check if an applicant ID was in the URL or sessionStorage to restore on reload
-        const urlApplicantId =
+        // Check if an applicant ID was in the URL or sessionStorage or currently selected
+        const currentTargetId =
           searchParams?.get("applicantId") ||
           searchParams?.get("id") ||
-          (typeof window !== "undefined" ? sessionStorage.getItem("admin_selected_applicant_id") : null);
+          (typeof window !== "undefined" ? sessionStorage.getItem("admin_selected_applicant_id") : null) ||
+          selectedApplicantRef.current?.id ||
+          selectedApplicantRef.current?.application_number;
 
-        if (urlApplicantId) {
+        if (currentTargetId) {
           const found = res.data.find(
             (a: any) =>
-              String(a.id) === String(urlApplicantId) ||
-              String(a.application_number) === String(urlApplicantId)
+              String(a.id) === String(currentTargetId) ||
+              String(a.application_number) === String(currentTargetId)
           );
           if (found) {
             setSelectedApplicant(found);
           } else {
             // Try fetching by ID directly if not in list
             try {
-              const singleRes = await adminApi.getApplicationById(urlApplicantId);
+              const singleRes = await adminApi.getApplicationById(currentTargetId);
               if (singleRes.success && singleRes.data) {
                 setSelectedApplicant(singleRes.data);
               }
@@ -129,15 +267,40 @@ export default function AdminApplicationsScreen() {
       setErrorMessage(err.message || "Network error loading applications");
     } finally {
       setIsRefreshing(false);
+      setIsRestoringApplicant(false);
     }
   };
 
   useEffect(() => {
+    const urlApplicantId =
+      searchParams?.get("applicantId") ||
+      searchParams?.get("id") ||
+      (typeof window !== "undefined" ? sessionStorage.getItem("admin_selected_applicant_id") : null);
+
+    if (urlApplicantId) {
+      setIsRestoringApplicant(true);
+    }
+
     const cachedApplications = getAdminCachedData<any>("applications")?.data;
     if (cachedApplications) setApplications(cachedApplications);
 
     fetchApplications();
-  }, []);
+    loadEvents();
+
+    const handleFocus = () => {
+      fetchApplications();
+    };
+    window.addEventListener("focus", handleFocus);
+
+    const interval = setInterval(() => {
+      fetchApplications();
+    }, 10000);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      clearInterval(interval);
+    };
+  }, [searchParams]);
 
   // Helper to open applicant details and persist in URL & sessionStorage
   const handleSelectApplicant = (app: any) => {
@@ -247,6 +410,544 @@ export default function AdminApplicationsScreen() {
     }
   };
 
+  // Load registered volunteers from backend (with default fallback)
+  const loadVolunteers = async () => {
+    setIsLoadingVolunteers(true);
+    try {
+      const res = await adminApi.getRegisteredVolunteers();
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        setVolunteersList(res.data);
+      } else {
+        setVolunteersList(DEFAULT_VOLUNTEERS);
+      }
+    } catch {
+      setVolunteersList(DEFAULT_VOLUNTEERS);
+    } finally {
+      setIsLoadingVolunteers(false);
+    }
+  };
+
+  const loadEvents = async () => {
+    try {
+      const res = await adminApi.getEvents();
+      if (res.success && Array.isArray(res.data)) {
+        setEventsList(res.data);
+        if (
+          !selectedEventId ||
+          !res.data.some((event: any) => String(event.id) === String(selectedEventId))
+        ) {
+          setSelectedEventId(res.data[0]?.id ? String(res.data[0].id) : "");
+        }
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("maatram_admin_events_cache", JSON.stringify(res.data));
+          } catch {}
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load events for volunteer assignment:", err);
+    }
+  };
+
+  // Only events returned by the backend are available for assignment.
+  const phaseEvents = useMemo(() => {
+    return Array.isArray(eventsList) ? eventsList : [];
+  }, [eventsList]);
+
+  // Filtered volunteers for assignment modal
+  const filteredVolunteers = useMemo(() => {
+    let list = volunteersList.length > 0 ? [...volunteersList] : [...DEFAULT_VOLUNTEERS];
+
+    const getAssignmentMap = (event: any) =>
+      event.volunteer_assignments ||
+      event.volunteerAssignments ||
+      event.assignments ||
+      {};
+
+    const getRegisteredEntries = (event: any) => [
+      ...(event.accepted_students || event.acceptedStudents || []),
+      ...(event.accepted_alumni || event.acceptedAlumni || []),
+      ...(event.accepted_volunteers || event.acceptedVolunteers || []),
+      ...(event.registered_volunteers || event.registeredVolunteers || []),
+      ...(event.participants || event.volunteers || []),
+    ];
+
+    const getEntryKeys = (entry: any) => {
+      if (typeof entry === "string") return [entry.toLowerCase().trim()];
+      return [
+        entry?.id,
+        entry?.volunteer_id,
+        entry?.user_id,
+        entry?.email,
+        entry?.volunteer_email,
+        entry?.name,
+      ].filter(Boolean).map((value: unknown) => String(value).toLowerCase().trim());
+    };
+
+    if (!selectedEventId) {
+      return [];
+    }
+
+    // Filter strictly by the chosen event from the dropdown
+    if (selectedEventId && selectedEventId !== "general_pool") {
+      if (selectedEventId === "all") {
+        // Show volunteers registered across any phase event
+        const targetEvents = phaseEvents.length > 0 ? phaseEvents : eventsList;
+        const allRegisteredEntries = targetEvents.flatMap(getRegisteredEntries);
+        const allRegisteredKeys = allRegisteredEntries.flatMap(getEntryKeys);
+        const allAssignedEmails = targetEvents
+          .flatMap((ev) => Object.keys(getAssignmentMap(ev)))
+          .map((em) => em.toLowerCase().trim());
+
+        // Synthesize any registered entry not already in list
+        const existingEmails = new Set(list.map((v) => (v.email || "").toLowerCase().trim()));
+        allRegisteredEntries.forEach((entry: any) => {
+          const entryEmail = (entry.email || entry.volunteer_email || (typeof entry === "string" ? entry : "")).toLowerCase().trim();
+          if (entryEmail && !existingEmails.has(entryEmail)) {
+            existingEmails.add(entryEmail);
+            list.push({
+              id: entry.id || entry.user_id || `vol_ev_${entryEmail}`,
+              name: entry.name || entryEmail.split("@")[0] || "Registered Volunteer",
+              email: entryEmail,
+              phone: entry.phone || "+91 98765 43210",
+              college: entry.college || "Anna University",
+              department: entry.department || "Engineering",
+              role: entry.role || "student",
+              year_of_study: entry.year_of_study || entry.year || "1st Year",
+            });
+          }
+        });
+
+        if (allRegisteredKeys.length > 0 || allAssignedEmails.length > 0) {
+          list = list.filter((volunteer) => {
+            const volunteerKeys = [
+              volunteer.id,
+              volunteer.user_id,
+              volunteer.email,
+              volunteer.name,
+            ].filter(Boolean).map((value: unknown) => String(value).toLowerCase().trim());
+            return volunteerKeys.some(
+              (key) => allRegisteredKeys.includes(key) || allAssignedEmails.includes(key)
+            );
+          });
+        }
+      } else {
+        // A specific event is selected from the dropdown: THAT event alone's registered volunteers will show!
+        const chosenEvent = eventsList.find((ev) => String(ev.id) === String(selectedEventId));
+        if (chosenEvent) {
+          const registeredEntries = getRegisteredEntries(chosenEvent);
+          const registeredKeys = registeredEntries.flatMap(getEntryKeys);
+          const assignedVolunteerEmails = Object.keys(getAssignmentMap(chosenEvent))
+            .map((email) => email.toLowerCase().trim());
+
+          // Synthesize any registered entry from this event not yet in list
+          const existingEmails = new Set(list.map((v) => (v.email || "").toLowerCase().trim()));
+          registeredEntries.forEach((entry: any) => {
+            const entryEmail = (entry.email || entry.volunteer_email || (typeof entry === "string" ? entry : "")).toLowerCase().trim();
+            if (entryEmail && !existingEmails.has(entryEmail)) {
+              existingEmails.add(entryEmail);
+              list.push({
+                id: entry.id || entry.user_id || `vol_ev_${entryEmail}`,
+                name: entry.name || entryEmail.split("@")[0] || "Registered Volunteer",
+                email: entryEmail,
+                phone: entry.phone || "+91 98765 43210",
+                college: entry.college || "Anna University",
+                department: entry.department || "Engineering",
+                role: entry.role || (chosenEvent.accepted_alumni?.some((a: any) => (a.email || a) === entryEmail) ? "alumni" : "student"),
+                year_of_study: entry.year_of_study || entry.year || "1st Year",
+              });
+            }
+          });
+
+          list = list.filter((volunteer) => {
+            const volunteerKeys = [
+              volunteer.id,
+              volunteer.user_id,
+              volunteer.email,
+              volunteer.name,
+            ].filter(Boolean).map((value: unknown) => String(value).toLowerCase().trim());
+            return volunteerKeys.some(
+              (key) => registeredKeys.includes(key) || assignedVolunteerEmails.includes(key)
+            );
+          });
+        } else {
+          list = [];
+        }
+      }
+    }
+
+    if (volunteerRoleFilter !== "all") {
+      list = list.filter((v) => v.role?.toLowerCase() === volunteerRoleFilter);
+    }
+    if (volunteerSearchQuery.trim()) {
+      const q = volunteerSearchQuery.toLowerCase().trim();
+      list = list.filter(
+        (v) =>
+          v.name?.toLowerCase().includes(q) ||
+          v.email?.toLowerCase().includes(q) ||
+          v.phone?.includes(q) ||
+          v.company?.toLowerCase().includes(q) ||
+          v.college?.toLowerCase().includes(q) ||
+          v.designation?.toLowerCase().includes(q) ||
+          v.department?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [volunteersList, volunteerRoleFilter, volunteerSearchQuery, selectedEventId, phaseEvents, eventsList]);
+
+  // Handle Volunteer Assignment
+  const handleAssignVolunteer = async () => {
+    if (!selectedApplicant || !selectedVolunteerId) return;
+    const vol = (volunteersList.length > 0 ? volunteersList : DEFAULT_VOLUNTEERS).find(
+      (v) => String(v.id) === String(selectedVolunteerId)
+    ) || filteredVolunteers.find((v) => String(v.id) === String(selectedVolunteerId));
+    if (!vol) return;
+
+    setIsAssigningVolunteer(true);
+    try {
+      const volAffiliation = vol.company || vol.college || (vol.role === "alumni" ? "Maatram Alumni Network" : "Maatram Scholar");
+      const volRole = vol.role === "alumni" ? "Alumni Volunteer" : "Student Volunteer";
+
+      const selectedEv = eventsList.find((ev) => String(ev.id) === String(selectedEventId));
+      const eventIdToAssign = selectedEv ? String(selectedEv.id) : undefined;
+      const eventTitleToAssign = selectedEv ? (selectedEv.title || selectedEv.name) : undefined;
+
+      if (assignVolunteerPhase === "physical") {
+        const nextStatus = "physical_verification_in_progress";
+        await adminApi.assignVolunteer(selectedApplicant.id, {
+          phase: "physical",
+          name: vol.name,
+          email: vol.email || "",
+          phone: vol.phone || "",
+          role: volRole,
+          affiliation: volAffiliation,
+          eventId: eventIdToAssign,
+          eventTitle: eventTitleToAssign,
+        });
+
+        const updatedApp = {
+          ...selectedApplicant,
+          status: nextStatus,
+          current_stage: "Phase 2: Physical Verification",
+          stage_status: "Physical Verification In Progress",
+          physical_volunteer_name: vol.name,
+          physical_volunteer_email: vol.email || "",
+          physical_volunteer_phone: vol.phone || "",
+          physical_volunteer_role: volRole,
+          physical_volunteer_affiliation: volAffiliation,
+          physical_event_id: eventIdToAssign || selectedApplicant.physical_event_id,
+          physical_event_title: eventTitleToAssign || selectedApplicant.physical_event_title,
+          event_id: eventIdToAssign || selectedApplicant.event_id,
+          event_title: eventTitleToAssign || selectedApplicant.event_title,
+        };
+
+        setSelectedApplicant(updatedApp);
+        setApplications((prev) =>
+          prev.map((a) => (a.id === selectedApplicant.id ? updatedApp : a))
+        );
+
+        if (typeof window !== "undefined") {
+          const keysToSync = [
+            selectedApplicant.email,
+            selectedApplicant.mobile_number,
+            selectedApplicant.user_id,
+            selectedApplicant.id,
+            selectedApplicant.application_number,
+          ].filter(Boolean);
+
+          keysToSync.forEach((k) => {
+            window.localStorage.setItem(`maatram_application_status_${k}`, nextStatus);
+            window.localStorage.setItem(`maatram_application_stage_${k}`, "Phase 2: Physical Verification");
+            window.localStorage.setItem(`maatram_application_stagestatus_${k}`, "Physical Verification In Progress");
+          });
+          window.localStorage.setItem("maatram_application_status_latest", nextStatus);
+          window.localStorage.setItem("maatram_application_stage_latest", "Phase 2: Physical Verification");
+          window.localStorage.setItem("maatram_application_stagestatus_latest", "Physical Verification In Progress");
+        }
+
+        setStatusUpdateMessage(`Volunteer ${vol.name} successfully assigned for Physical Verification!`);
+      } else {
+        let nextStatus = selectedApplicant.status;
+        if (selectedApplicant.status === "submitted" || selectedApplicant.status === "draft") {
+          nextStatus = "under_review";
+        }
+
+        await adminApi.assignVolunteer(selectedApplicant.id, {
+          phase: "tele",
+          name: vol.name,
+          email: vol.email || "",
+          phone: vol.phone || "",
+          role: volRole,
+          affiliation: volAffiliation,
+          eventId: eventIdToAssign,
+          eventTitle: eventTitleToAssign,
+        });
+
+        const updatedApp = {
+          ...selectedApplicant,
+          status: nextStatus,
+          current_stage: "Phase 1: Televerification",
+          stage_status: "Televerification In Progress",
+          volunteer_name: vol.name,
+          tele_volunteer_name: vol.name,
+          tele_volunteer_email: vol.email || "",
+          tele_volunteer_phone: vol.phone || "",
+          tele_volunteer_role: volRole,
+          tele_volunteer_affiliation: volAffiliation,
+          tele_event_id: eventIdToAssign || selectedApplicant.tele_event_id,
+          tele_event_title: eventTitleToAssign || selectedApplicant.tele_event_title,
+          event_id: eventIdToAssign || selectedApplicant.event_id,
+          event_title: eventTitleToAssign || selectedApplicant.event_title,
+        };
+
+        setSelectedApplicant(updatedApp);
+        setApplications((prev) =>
+          prev.map((a) => (a.id === selectedApplicant.id ? updatedApp : a))
+        );
+
+        if (typeof window !== "undefined") {
+          const keysToSync = [
+            selectedApplicant.email,
+            selectedApplicant.mobile_number,
+            selectedApplicant.user_id,
+            selectedApplicant.id,
+            selectedApplicant.application_number,
+          ].filter(Boolean);
+
+          keysToSync.forEach((k) => {
+            window.localStorage.setItem(`maatram_application_status_${k}`, nextStatus);
+            window.localStorage.setItem(`maatram_application_stage_${k}`, "Phase 1: Televerification");
+            window.localStorage.setItem(`maatram_application_stagestatus_${k}`, "Televerification In Progress");
+          });
+          window.localStorage.setItem("maatram_application_status_latest", nextStatus);
+          window.localStorage.setItem("maatram_application_stage_latest", "Phase 1: Televerification");
+          window.localStorage.setItem("maatram_application_stagestatus_latest", "Televerification In Progress");
+        }
+
+        setStatusUpdateMessage(`Volunteer ${vol.name} successfully assigned for Televerification!`);
+      }
+
+      setTimeout(() => setStatusUpdateMessage(""), 5000);
+      setIsAssignVolunteerModalOpen(false);
+      setSelectedVolunteerId(null);
+    } catch (err: any) {
+      alert("Error assigning volunteer: " + (err.message || "Unknown error"));
+    } finally {
+      setIsAssigningVolunteer(false);
+    }
+  };
+
+  // Helper to determine the next phase action based on current applicant status:
+  // Phase 1: Televerification
+  // Phase 2: Physical Verification
+  // Phase 3: Video Call Interview
+  // Phase 4: Direct Interview (Final Stage)
+  const getNextPhaseAction = (status: string) => {
+    switch (status) {
+      case "submitted":
+      case "under_review":
+      case "draft":
+        return {
+          nextStatus: "telephonic_done",
+          buttonText: "Move to Phase 2 (Physical Verification)",
+          icon: HomeModernIcon,
+          badgeText: "Phase 1: Televerification Cleared",
+          nextStage: "Phase 2: Physical Verification",
+          nextStageStatus: "Waiting for Physical Verification",
+        };
+      case "telephonic_done":
+      case "televerification_done":
+      case "physical_verification_in_progress":
+        return {
+          nextStatus: "physical_verification_done",
+          buttonText: "Move to Phase 3 (Video Call Interview)",
+          icon: VideoCameraIcon,
+          badgeText: "Phase 2: Physical Verification Cleared",
+          nextStage: "Phase 3: Video Call Interview",
+          nextStageStatus: "Waiting for Video Call Interview",
+        };
+      case "physical_verification_done":
+      case "home_visit_done":
+      case "video_interview_in_progress":
+        return {
+          nextStatus: "video_interview_done",
+          buttonText: "Move to Phase 4 (Direct Interview - Final Stage)",
+          icon: BuildingLibraryIcon,
+          badgeText: "Phase 3: Video Call Interview Cleared",
+          nextStage: "Phase 4: Direct Interview",
+          nextStageStatus: "Waiting for Direct Interview (Final Stage)",
+        };
+      case "video_interview_done":
+      case "shortlisted":
+      case "direct_interview_in_progress":
+      case "direct_interview_done":
+        return {
+          nextStatus: "selected",
+          buttonText: "Approve & Award Scholarship (Final Selection)",
+          icon: CheckBadgeIcon,
+          badgeText: "Phase 4: Direct Interview Cleared",
+          nextStage: "Final Selection",
+          nextStageStatus: "Scholarship Awarded",
+        };
+      default:
+        return null;
+    }
+  };
+
+  // Handle Move to Next Phase (Sequential progression across 4 phases)
+  const handleMoveNextPhase = async () => {
+    if (!selectedApplicant) return;
+    const action = getNextPhaseAction(selectedApplicant.status);
+    if (!action) return;
+
+    setIsAdvancingPhase(true);
+    try {
+      const res = await adminApi.updateStatus(selectedApplicant.id, action.nextStatus);
+      if (res.success) {
+        const updatedApp = {
+          ...selectedApplicant,
+          status: action.nextStatus,
+          current_stage: action.nextStage,
+          stage_status: action.nextStageStatus,
+        };
+
+        setSelectedApplicant(updatedApp);
+        setApplications((prev) =>
+          prev.map((a) => (a.id === selectedApplicant.id ? updatedApp : a))
+        );
+
+        // Optimistically sync to localStorage for instantaneous student dashboard transition
+        if (typeof window !== "undefined") {
+          const keysToSync = [
+            selectedApplicant.email,
+            selectedApplicant.mobile_number,
+            selectedApplicant.user_id,
+            selectedApplicant.id,
+            selectedApplicant.application_number,
+          ].filter(Boolean);
+
+          keysToSync.forEach((k) => {
+            window.localStorage.setItem(`maatram_application_status_${k}`, action.nextStatus);
+            window.localStorage.setItem(`maatram_application_stage_${k}`, action.nextStage);
+            window.localStorage.setItem(`maatram_application_stagestatus_${k}`, action.nextStageStatus);
+          });
+          window.localStorage.setItem("maatram_application_status_latest", action.nextStatus);
+          window.localStorage.setItem("maatram_application_stage_latest", action.nextStage);
+          window.localStorage.setItem("maatram_application_stagestatus_latest", action.nextStageStatus);
+        }
+
+        setStatusUpdateMessage(
+          `Application ${selectedApplicant.application_number} advanced: ${action.buttonText}!`
+        );
+        setTimeout(() => setStatusUpdateMessage(""), 5000);
+      } else {
+        alert(res.message || "Failed to advance application phase");
+      }
+    } catch (err: any) {
+      alert("Error moving to next phase: " + (err.message || "Unknown error"));
+    } finally {
+      setIsAdvancingPhase(false);
+    }
+  };
+
+  // Handle Reject Application
+  const handleConfirmReject = async () => {
+    if (!selectedApplicant) return;
+    setIsRejecting(true);
+    try {
+      const defaultReason = rejectionReason.trim() || "Application not shortlisted based on verification criteria.";
+
+      // Determine rejection stage across the 4 phases:
+      // 1: Initial Application Review
+      // 2: First Phase: Televerification
+      // 3: Second Phase: Physical Verification
+      // 4: Third Phase: Video Call Interview
+      // 5: Fourth Phase: Direct Interview (Final Stage)
+      const currentStatus = selectedApplicant.status;
+      let rejectionStage = 1;
+      if (
+        currentStatus === "video_interview_done" ||
+        currentStatus === "shortlisted" ||
+        currentStatus === "direct_interview_in_progress" ||
+        currentStatus === "direct_interview_done"
+      ) {
+        rejectionStage = 5;
+      } else if (
+        currentStatus === "physical_verification_done" ||
+        currentStatus === "home_visit_done" ||
+        currentStatus === "video_interview_in_progress"
+      ) {
+        rejectionStage = 4;
+      } else if (
+        currentStatus === "telephonic_done" ||
+        currentStatus === "televerification_done" ||
+        currentStatus === "physical_verification_in_progress"
+      ) {
+        rejectionStage = 3;
+      } else if (
+        currentStatus === "under_review" ||
+        selectedApplicant.volunteer_suggestion ||
+        (selectedApplicant.volunteer_name && selectedApplicant.volunteer_name !== "Admin Review")
+      ) {
+        rejectionStage = 2;
+      } else {
+        rejectionStage = 1;
+      }
+
+      const res = await adminApi.updateStatus(
+        selectedApplicant.id,
+        "rejected",
+        defaultReason,
+        selectedApplicant.email,
+        selectedApplicant.full_name,
+        rejectionStage
+      );
+      if (res.success) {
+        const updatedApp = {
+          ...selectedApplicant,
+          status: "rejected",
+          rejectionReason: defaultReason,
+          rejectionStage,
+        };
+
+        setSelectedApplicant(updatedApp);
+        setApplications((prev) =>
+          prev.map((a) => (a.id === selectedApplicant.id ? updatedApp : a))
+        );
+
+        // Optimistically sync rejection reason and stage to local storage for instant student dashboard reflection
+        if (typeof window !== "undefined") {
+          const keysToSync = [
+            selectedApplicant.email,
+            selectedApplicant.mobile_number,
+            selectedApplicant.user_id,
+            selectedApplicant.id,
+            selectedApplicant.application_number,
+          ].filter(Boolean);
+
+          keysToSync.forEach((k) => {
+            window.localStorage.setItem(`maatram_application_rejection_reason_${k}`, defaultReason);
+            window.localStorage.setItem(`maatram_application_rejection_stage_${k}`, String(rejectionStage));
+            window.localStorage.setItem(`maatram_application_status_${k}`, "rejected");
+          });
+          window.localStorage.setItem("maatram_application_rejection_reason_latest", defaultReason);
+          window.localStorage.setItem("maatram_application_rejection_stage_latest", String(rejectionStage));
+          window.localStorage.setItem("maatram_application_status_latest", "rejected");
+        }
+
+        setStatusUpdateMessage(`Application ${selectedApplicant.application_number} has been rejected.`);
+        setTimeout(() => setStatusUpdateMessage(""), 5000);
+        setIsRejectModalOpen(false);
+      } else {
+        alert(res.message || "Failed to reject application");
+      }
+    } catch (err: any) {
+      alert("Error rejecting application: " + (err.message || "Unknown error"));
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
   // Build all details rows for Excel/CSV export
   const buildFullApplicantRows = () => {
     return filteredApplications.map((a) => {
@@ -276,7 +977,6 @@ export default function AdminApplicationsScreen() {
         "Aadhaar Number": a.aadhaar_number || "",
         "Community": a.community || "",
         "Nationality": a.nationality || "Indian",
-        "Marital Status": a.maritalStatus || "Single",
 
         // B. Family Information
         "Father Name": a.father_name || "",
@@ -309,7 +1009,7 @@ export default function AdminApplicationsScreen() {
         "State": a.state || "Tamil Nadu",
         "Pincode": a.pincode || "",
         "Residence Type": a.residenceType || a.housing_status || "Own",
-        "Distance to Nearest College": a.collegeDistance || "",
+        "Monthly Rent": (a.residenceType || a.housing_status) === "Rented" ? a.rentAmount || a.rent_amount || "" : "",
 
         // E. Educational Information
         "10th School": a.tenth_school_name || a.tenthSchool || "",
@@ -446,6 +1146,44 @@ export default function AdminApplicationsScreen() {
         setVolunteerNoteInput("");
       } else {
         alert(res.message || "Failed to save volunteer suggestion");
+      }
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    } finally {
+      setIsSavingVolunteerNote(false);
+    }
+  };
+
+  // Save physical verification report from Dashboard
+  const handleSavePhysicalVolunteerNote = async (applicantId: string) => {
+    if (!volunteerNoteInput.trim() && volunteerNoteInput !== "") return;
+    setIsSavingVolunteerNote(true);
+    try {
+      const volName = selectedApplicant?.physical_volunteer_name || "Admin Review";
+      const res = await adminApi.updateVolunteerSuggestion(
+        applicantId,
+        volunteerNoteInput.trim(),
+        volName,
+        { phase: "physical" }
+      );
+      if (res.success) {
+        setApplications((prev) =>
+          prev.map((app) =>
+            app.id === applicantId ? { ...app, physical_volunteer_suggestion: volunteerNoteInput.trim() } : app
+          )
+        );
+        if (selectedApplicant && selectedApplicant.id === applicantId) {
+          setSelectedApplicant((prev: any) => ({
+            ...prev,
+            physical_volunteer_suggestion: volunteerNoteInput.trim(),
+          }));
+        }
+        setEditingVolunteerId(null);
+        setVolunteerNoteInput("");
+        setStatusUpdateMessage("Physical verification remarks saved successfully!");
+        setTimeout(() => setStatusUpdateMessage(""), 5000);
+      } else {
+        alert(res.message || "Failed to save physical verification remarks");
       }
     } catch (err: any) {
       alert("Error: " + err.message);
@@ -638,19 +1376,44 @@ export default function AdminApplicationsScreen() {
           </span>
         );
       case "under_review":
-      case "telephonic_done":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-800 border border-amber-300">
             <ClockIcon className="w-3.5 h-3.5 text-amber-600" />
-            Under Review
+            Phase 1: Televerification
           </span>
         );
-      case "shortlisted":
+      case "telephonic_done":
+      case "televerification_done":
+      case "physical_verification_in_progress":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <ClockIcon className="w-3.5 h-3.5 text-indigo-600" />
+            Phase 2: Physical Verification
+          </span>
+        );
+      case "physical_verification_done":
       case "home_visit_done":
+      case "video_interview_in_progress":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
+            <ClockIcon className="w-3.5 h-3.5 text-sky-600" />
+            Phase 3: Video Call Interview
+          </span>
+        );
+      case "video_interview_done":
+      case "shortlisted":
+      case "direct_interview_in_progress":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200">
-            <CheckCircleIcon className="w-3.5 h-3.5 text-purple-600" />
-            Shortlisted
+            <ClockIcon className="w-3.5 h-3.5 text-purple-600" />
+            Phase 4: Direct Interview (Final)
+          </span>
+        );
+      case "direct_interview_done":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-teal-50 text-teal-800 border border-teal-300">
+            <CheckCircleIcon className="w-3.5 h-3.5 text-teal-600" />
+            Phase 4 Cleared
           </span>
         );
       case "selected":
@@ -658,7 +1421,7 @@ export default function AdminApplicationsScreen() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300">
             <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-600" />
-            Selected
+            Selected & Awarded
           </span>
         );
       case "rejected":
@@ -710,44 +1473,43 @@ export default function AdminApplicationsScreen() {
       <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC]">
         {/* Main Content Area */}
         <main className="w-full px-6 lg:px-10 py-8 space-y-6 flex-1">
-          {selectedApplicant ? (
+          {isRestoringApplicant && !selectedApplicant ? (
+            <div className="min-h-[60vh] flex items-center justify-center">
+              <div className="text-sm font-semibold text-slate-500">Loading application...</div>
+            </div>
+          ) : selectedApplicant ? (
             /* ================= FULL PAGE APPLICATION DOCUMENT VIEW ================= */
             <div className="w-full space-y-6 animate-in fade-in duration-200">
-              {/* Top Navigation & Action Strip */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
-                <div className="flex items-center gap-3">
+              {/* Status Update Banner */}
+              {statusUpdateMessage && (
+                <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between animate-in fade-in">
+                  <div className="flex items-center gap-2.5 text-emerald-800 text-xs font-bold">
+                    <CheckCircleIcon className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>{statusUpdateMessage}</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={handleCloseApplicant}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 transition cursor-pointer shadow-2xs"
+                    onClick={() => setStatusUpdateMessage("")}
+                    className="text-emerald-700 hover:text-emerald-900 text-xs font-bold cursor-pointer"
                   >
-                    <ArrowLeftIcon className="w-4 h-4 text-slate-600" />
-                    <span>Back to Applicants List</span>
-                  </button>
-                  <span className="text-slate-300 hidden sm:inline">|</span>
-                  <span className="text-xs text-slate-500 font-mono hidden sm:inline">
-                    {selectedApplicant.application_number || "MF-2025-001"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={handlePrint}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition cursor-pointer shadow-2xs"
-                    title="Print official application form"
-                  >
-                    <PrinterIcon className="w-4 h-4 text-slate-500" />
-                    <span>Print Form</span>
+                    Dismiss
                   </button>
                 </div>
-              </div>
+              )}
 
               {/* Official Trust Application Sheet */}
               <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm space-y-7">
                 {/* Trust Letterhead Header */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b-2 border-slate-900 gap-4">
                   <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={handleCloseApplicant}
+                      className="p-2 -ml-2 text-slate-400 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition cursor-pointer shrink-0"
+                      title="Back to Applicants List"
+                    >
+                      <ArrowLeftIcon className="w-5 h-5" />
+                    </button>
                     <Image
                       src="/assets/images/logo.png"
                       alt="Maatram Foundation"
@@ -761,107 +1523,706 @@ export default function AdminApplicationsScreen() {
                         Maatram Educational & Charitable Trust
                       </h3>
                       <p className="text-xs text-slate-600 font-medium">
-                        Higher Education 100% Free Scholarship Sponsorship Program (Academic Year 2025 - 2026)
+                        Higher Education 100% Free Sponsorship Program (Academic Year 2025 - 2026)
                       </p>
                       <p className="text-[11px] text-slate-400">
                         Zero Donation • Zero Tuition Fee • Free Higher Education
                       </p>
                     </div>
                   </div>
-                  <div className="sm:text-right bg-slate-50 border border-slate-200 p-3 rounded-2xl">
-                    <span className="block font-mono text-xs font-bold text-slate-900">
-                      Application ID: {selectedApplicant.application_number || "MF-2025-001"}
-                    </span>
-                    <span className="inline-block mt-1">
-                      {getStatusBadge(selectedApplicant.status)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Volunteer Telephonic / Home Verification Suggestion Box */}
-                <div className="p-5 bg-linear-to-r from-amber-50/70 to-orange-50/60 border border-amber-300 rounded-2xl">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
-                          Volunteer Suggestion / Remarks
-                        </h4>
-                        <p className="text-xs text-slate-600">
-                          Notes entered by volunteer during phone verification or home visit.
-                        </p>
-                      </div>
-                    </div>
-                    {selectedApplicant.volunteer_suggestion && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-300">
-                        ✓ Volunteer Feedback Recorded
+                  <div className="flex items-center justify-end gap-2.5">
+                    {selectedApplicant.status === "rejected" && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-300 text-rose-700 text-xs font-bold rounded-xl shadow-2xs">
+                        <XCircleIcon className="w-4 h-4 text-rose-600" />
+                        <span>Application Rejected</span>
                       </span>
                     )}
-                  </div>
-
-                  <div className="mt-4">
-                    {editingVolunteerId === selectedApplicant.id ? (
-                      <div className="space-y-3">
-                        <textarea
-                          value={volunteerNoteInput}
-                          onChange={(e) => setVolunteerNoteInput(e.target.value)}
-                          placeholder="Enter volunteer feedback (e.g., student verified via phone call, genuine financial need, mother is daily wage worker, strongly recommended for scholarship)..."
-                          rows={4}
-                          className="w-full text-xs p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] text-slate-900 font-medium"
-                        />
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingVolunteerId(null);
-                              setVolunteerNoteInput("");
-                            }}
-                            className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            disabled={isSavingVolunteerNote}
-                            onClick={() => handleSaveVolunteerNote(selectedApplicant.id)}
-                            className="px-4 py-1.5 text-xs font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-lg transition cursor-pointer shadow-xs"
-                          >
-                            {isSavingVolunteerNote ? "Saving..." : "Save Suggestion"}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-amber-200/80">
-                        <div className="flex-1">
-                          {selectedApplicant.volunteer_suggestion ? (
-                            <p className="text-xs font-semibold text-slate-900 leading-relaxed">
-                              "{selectedApplicant.volunteer_suggestion}"
-                            </p>
-                          ) : (
-                            <p className="text-xs text-slate-400 italic">
-                              No volunteer suggestion entered yet. Download the Excel, share with volunteers, or sync via Google Sheets.
-                            </p>
-                          )}
-                          {selectedApplicant.volunteer_name && (
-                            <p className="text-[10px] text-slate-500 mt-1 font-medium">
-                              Reviewed by Volunteer: <span className="font-bold text-slate-700">{selectedApplicant.volunteer_name}</span>
-                            </p>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingVolunteerId(selectedApplicant.id);
-                            setVolunteerNoteInput(selectedApplicant.volunteer_suggestion || "");
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-slate-900 text-xs font-bold rounded-lg transition cursor-pointer shrink-0"
-                        >
-                          <PencilSquareIcon className="w-3.5 h-3.5" />
-                          <span>{selectedApplicant.volunteer_suggestion ? "Edit Suggestion" : "Add Suggestion"}</span>
-                        </button>
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={handlePrint}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition cursor-pointer shadow-2xs"
+                      title="Print official application form"
+                    >
+                      <PrinterIcon className="w-4 h-4 text-slate-500" />
+                      <span>Print Form</span>
+                    </button>
                   </div>
                 </div>
+
+                {/* 4-PHASE SELECTION & VERIFICATION PIPELINE */}
+                {(() => {
+                  // Rule: Once admin rejects the application, NO verification box, NO suggestion, NO reassign volunteer option.
+                  // Only student details alone show.
+                  if (selectedApplicant.status === "rejected") {
+                    return null;
+                  }
+
+                  const isFinalSelected =
+                    selectedApplicant.status === "selected" ||
+                    selectedApplicant.status === "scholarship_awarded";
+
+                  if (isFinalSelected) {
+                    return (
+                      <div className="p-5 rounded-2xl border bg-gradient-to-r from-emerald-50 via-teal-50 to-white border-emerald-300 shadow-xs">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+                              <CheckBadgeIcon className="w-6 h-6 stroke-[2]" />
+                            </div>
+                            <div>
+                              <h4 className="font-heading font-black text-sm text-emerald-950 uppercase tracking-wider">
+                                Final Selection & 100% Free Higher Education Scholarship Awarded
+                              </h4>
+                              <p className="text-xs text-emerald-800/90 mt-0.5">
+                                Candidate has successfully cleared all 4 verification phases: Televerification, Physical Verification, Video Call Interview, and Direct Interview.
+                              </p>
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold rounded-xl shadow-2xs">
+                            <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
+                            Admission Letter Granted
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const currentAction = getNextPhaseAction(selectedApplicant.status);
+
+                  // ================= PHASE 2: PHYSICAL VERIFICATION =================
+                  if (
+                    selectedApplicant.status === "telephonic_done" ||
+                    selectedApplicant.status === "televerification_done" ||
+                    selectedApplicant.status === "physical_verification_in_progress"
+                  ) {
+                    const hasPhysicalVolunteer = Boolean(
+                      selectedApplicant.physical_volunteer_name &&
+                      selectedApplicant.physical_volunteer_name.trim() !== ""
+                    );
+                    const hasPhysicalSuggestion = Boolean(
+                      selectedApplicant.physical_volunteer_suggestion &&
+                      selectedApplicant.physical_volunteer_suggestion.trim() !== ""
+                    );
+
+                    return (
+                      <div className="p-6 rounded-3xl border bg-linear-to-r from-blue-50/70 via-indigo-50/40 to-white border-blue-200 shadow-sm space-y-5">
+                        {/* Header Banner */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-blue-200/70">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                                <HomeModernIcon className="w-5 h-5 text-indigo-600" />
+                                <span>Second Phase: Physical Verification</span>
+                              </h4>
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-100 border border-blue-300 text-blue-900 text-xs font-bold rounded-lg">
+                                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                                {hasPhysicalVolunteer ? "Phase 2 In Progress" : "Waiting for Volunteer Assignment"}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-600 mt-1">
+                              Phase 1 Televerification completed. Field / in-person verification of applicant residence, economic status, and documents.
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {hasPhysicalVolunteer ? (
+                              <button
+                                type="button"
+                                onClick={() => openVolunteerAssignment("physical")}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-blue-50 text-indigo-900 text-xs font-bold rounded-xl border border-indigo-200 shadow-2xs transition cursor-pointer"
+                                title="Change or reassign physical verification volunteer"
+                              >
+                                <UserPlusIcon className="w-3.5 h-3.5 text-indigo-600" />
+                                <span>Reassign Physical Volunteer</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => openVolunteerAssignment("physical")}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#F7BC0F] hover:bg-[#e5ad0c] text-slate-950 text-xs font-heading font-bold uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer"
+                              >
+                                <UserPlusIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                                <span>Assign Volunteer for Physical Verification</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* SECTION A: Phase 1 Televerification Report (Completed) */}
+                        <div className="bg-white p-4.5 rounded-2xl border border-emerald-200 shadow-2xs space-y-2.5">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                              Phase 1: Televerification Report (Completed)
+                            </span>
+                            <span className="text-[11px] text-slate-500">
+                              Verified by:{" "}
+                              <strong className="text-slate-900 font-bold">
+                                {selectedApplicant.tele_volunteer_name || selectedApplicant.volunteer_name || "Admin Review"}
+                              </strong>
+                              {selectedApplicant.tele_volunteer_role ? ` (${selectedApplicant.tele_volunteer_role})` : ""}
+                            </span>
+                          </div>
+
+                          <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl">
+                            <p className="text-xs font-bold text-slate-900 leading-relaxed italic">
+                              &quot;{selectedApplicant.tele_volunteer_suggestion || selectedApplicant.volunteer_suggestion || "Telephonic screening cleared. Recommended for physical verification."}&quot;
+                            </p>
+                          </div>
+
+                          {(selectedApplicant.tele_volunteer_affiliation || selectedApplicant.tele_volunteer_email || selectedApplicant.tele_volunteer_phone) && (
+                            <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
+                              {selectedApplicant.tele_volunteer_affiliation && (
+                                <span>Affiliation: <strong className="text-slate-700">{selectedApplicant.tele_volunteer_affiliation}</strong></span>
+                              )}
+                              {selectedApplicant.tele_volunteer_email && (
+                                <span>Email: <strong className="text-slate-700">{selectedApplicant.tele_volunteer_email}</strong></span>
+                              )}
+                              {selectedApplicant.tele_volunteer_phone && (
+                                <span>Contact: <strong className="text-slate-700">{selectedApplicant.tele_volunteer_phone}</strong></span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* SECTION B: Phase 2 Physical Verification Status & Actions */}
+                        {hasPhysicalVolunteer ? (
+                          <div className="bg-white p-4.5 rounded-2xl border border-indigo-200 shadow-2xs space-y-4">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs font-bold rounded-xl">
+                                  <UserIcon className="w-3.5 h-3.5 text-indigo-600" />
+                                  Assigned Physical Volunteer: {selectedApplicant.physical_volunteer_name}
+                                </span>
+                                {selectedApplicant.physical_volunteer_role && (
+                                  <span className="text-[11px] text-slate-500 font-medium">
+                                    • {selectedApplicant.physical_volunteer_role} {selectedApplicant.physical_volunteer_affiliation ? `(${selectedApplicant.physical_volunteer_affiliation})` : ""}
+                                  </span>
+                                )}
+                              </div>
+
+                              <span className="text-[11px] font-bold text-indigo-800">
+                                {hasPhysicalSuggestion ? "✓ Physical Findings Submitted" : "Waiting for Field Verification"}
+                              </span>
+                            </div>
+
+                            {/* Editing / Recording physical suggestion */}
+                            {editingVolunteerId === `physical_${selectedApplicant.id}` ? (
+                              <div className="space-y-3 bg-indigo-50/50 p-4 rounded-xl border border-indigo-200">
+                                <label className="block text-xs font-bold text-slate-700">
+                                  Enter Physical Verification Findings / Observations:
+                                </label>
+                                <textarea
+                                  value={volunteerNoteInput}
+                                  onChange={(e) => setVolunteerNoteInput(e.target.value)}
+                                  placeholder="Enter physical verification observations (e.g. visited residence, verified living conditions, confirmed family socio-economic status, student genuine need)..."
+                                  rows={3}
+                                  className="w-full text-xs p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 font-medium"
+                                />
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingVolunteerId(null);
+                                      setVolunteerNoteInput("");
+                                    }}
+                                    className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={isSavingVolunteerNote}
+                                    onClick={() => handleSavePhysicalVolunteerNote(selectedApplicant.id)}
+                                    className="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition cursor-pointer shadow-xs"
+                                  >
+                                    {isSavingVolunteerNote ? "Saving..." : "Save Physical Report"}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                                    Physical Verification Remarks / Report:
+                                  </span>
+                                  <p className="text-xs text-slate-800 font-medium">
+                                    {selectedApplicant.physical_volunteer_suggestion ? (
+                                      <span className="italic font-bold text-slate-900">
+                                        &quot;{selectedApplicant.physical_volunteer_suggestion}&quot;
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-500 italic">
+                                        Assigned volunteer is conducting in-person/home verification. You can also record remarks directly.
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingVolunteerId(`physical_${selectedApplicant.id}`);
+                                    setVolunteerNoteInput(selectedApplicant.physical_volunteer_suggestion || "");
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-indigo-50 text-indigo-900 border border-slate-200 hover:border-indigo-300 rounded-lg text-xs font-semibold shrink-0 cursor-pointer transition shadow-2xs"
+                                >
+                                  <PencilSquareIcon className="w-3.5 h-3.5 text-indigo-600" />
+                                  <span>{selectedApplicant.physical_volunteer_suggestion ? "Edit Report" : "Record Report"}</span>
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Phase 2 Decision Bar */}
+                            <div className="pt-2 border-t border-indigo-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                              <span className="text-xs text-slate-500 font-medium">
+                                Admin decision for Phase 2:
+                              </span>
+                              <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
+                                <button
+                                  type="button"
+                                  disabled={isAdvancingPhase || selectedApplicant.status === "rejected"}
+                                  onClick={handleMoveNextPhase}
+                                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                  title="Approve physical verification and move to Phase 3 (Video Call Interview)"
+                                >
+                                  {isAdvancingPhase ? (
+                                    <>
+                                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                      <span>Advancing...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <VideoCameraIcon className="w-4 h-4 text-white stroke-[2.5]" />
+                                      <span>Move to Phase 3 (Video Call Interview)</span>
+                                      <ArrowRightIcon className="w-3.5 h-3.5" />
+                                    </>
+                                  )}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setIsRejectModalOpen(true)}
+                                  disabled={selectedApplicant.status === "rejected"}
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                  title="Reject application based on physical verification"
+                                >
+                                  <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                  <span>Reject</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          /* No physical volunteer assigned yet */
+                          <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                              <span className="text-xs font-bold text-amber-900 block mb-0.5">
+                                Action Required: Assign Volunteer for Physical Verification
+                              </span>
+                              <p className="text-xs text-slate-600">
+                                Select a verified volunteer located near <strong>{selectedApplicant.district || "student residence"}</strong> to conduct physical field / home verification.
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => openVolunteerAssignment("physical")}
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F7BC0F] hover:bg-[#e5ad0c] text-slate-950 font-heading font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer"
+                              >
+                                <UserPlusIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                                <span>Assign Volunteer</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setIsRejectModalOpen(true)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+                              >
+                                <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                <span>Reject</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // ================= PHASE 3 OR PHASE 4 BANNER =================
+                  if (
+                    selectedApplicant.status === "physical_verification_done" ||
+                    selectedApplicant.status === "home_visit_done" ||
+                    selectedApplicant.status === "video_interview_in_progress" ||
+                    selectedApplicant.status === "video_interview_done" ||
+                    selectedApplicant.status === "shortlisted" ||
+                    selectedApplicant.status === "direct_interview_in_progress" ||
+                    selectedApplicant.status === "direct_interview_done"
+                  ) {
+                    let phaseTitle = "Third Phase: Video Call Interview";
+                    let phaseDesc = "Phase 2 Physical Verification cleared. Virtual advisory committee interaction in progress.";
+                    let phaseBadge = "Phase 3 Active";
+
+                    if (
+                      selectedApplicant.status === "video_interview_done" ||
+                      selectedApplicant.status === "shortlisted" ||
+                      selectedApplicant.status === "direct_interview_in_progress" ||
+                      selectedApplicant.status === "direct_interview_done"
+                    ) {
+                      phaseTitle = "Fourth Phase: Direct Interview (Final Stage)";
+                      phaseDesc = "Phase 3 Video Call cleared. Direct in-person panel interview with senior trustees at Maatram Central Office.";
+                      phaseBadge = "Phase 4 (Final Stage) Active";
+                    }
+
+                    return (
+                      <div className="p-5 rounded-2xl border bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-white border-blue-300 shadow-xs space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                                {phaseTitle}
+                              </h4>
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-100 border border-blue-300 text-blue-900 text-xs font-bold rounded-lg">
+                                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                                {phaseBadge}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-600 mt-0.5">{phaseDesc}</p>
+                          </div>
+                        </div>
+
+                        {/* Verification History / Remarks */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {selectedApplicant.tele_volunteer_suggestion && (
+                            <div className="bg-white p-3.5 rounded-xl border border-blue-200/80">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                                Phase 1 Televerification ({selectedApplicant.tele_volunteer_name || selectedApplicant.volunteer_name || "Volunteer"}):
+                              </span>
+                              <p className="text-xs font-bold text-slate-800 italic">
+                                &quot;{selectedApplicant.tele_volunteer_suggestion || selectedApplicant.volunteer_suggestion}&quot;
+                              </p>
+                            </div>
+                          )}
+                          {selectedApplicant.physical_volunteer_suggestion && (
+                            <div className="bg-white p-3.5 rounded-xl border border-indigo-200/80">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 block mb-1">
+                                Phase 2 Physical Verification ({selectedApplicant.physical_volunteer_name || "Volunteer"}):
+                              </span>
+                              <p className="text-xs font-bold text-slate-800 italic">
+                                &quot;{selectedApplicant.physical_volunteer_suggestion}&quot;
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Decision Bar */}
+                        <div className="pt-2 border-t border-blue-200/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+                          <span className="text-xs text-slate-600 font-medium">
+                            Admin decision for {phaseTitle}:
+                          </span>
+                          <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
+                            {currentAction && (
+                              <button
+                                type="button"
+                                disabled={isAdvancingPhase}
+                                onClick={handleMoveNextPhase}
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                              >
+                                {isAdvancingPhase ? (
+                                  <>
+                                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span>Advancing...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <currentAction.icon className="w-4 h-4 text-white stroke-[2.5]" />
+                                    <span>{currentAction.buttonText}</span>
+                                    <ArrowRightIcon className="w-3.5 h-3.5" />
+                                  </>
+                                )}
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => setIsRejectModalOpen(true)}
+                              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 hover:border-rose-400 font-heading font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs active:scale-98 cursor-pointer"
+                            >
+                              <XCircleIcon className="w-4 h-4 text-rose-500" />
+                              <span>Reject</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const isVolunteerAssigned = Boolean(
+                    selectedApplicant.volunteer_name &&
+                    selectedApplicant.volunteer_name.trim() !== "" &&
+                    selectedApplicant.volunteer_name !== "Admin Review"
+                  );
+                  const hasVolunteerFeedback = Boolean(
+                    selectedApplicant.volunteer_suggestion &&
+                    selectedApplicant.volunteer_suggestion.trim() !== "" &&
+                    !selectedApplicant.volunteer_suggestion.startsWith("Application rejected")
+                  );
+
+                  // 1. Fresh Application (Starting state): No volunteer assigned yet.
+                  if (!isVolunteerAssigned && !hasVolunteerFeedback) {
+                    return null;
+                  }
+
+                  // Phase 1: Volunteer Assigned, waiting for suggestion:
+                  if (!hasVolunteerFeedback) {
+                    return (
+                      <div className="p-5 rounded-2xl border bg-linear-to-r from-amber-50/70 to-orange-50/60 border-amber-300 shadow-2xs">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                                  First Phase: Volunteer Televerification
+                                </h4>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-lg">
+                                  <UserIcon className="w-3.5 h-3.5 text-amber-700" />
+                                  Assigned Volunteer: {selectedApplicant.volunteer_name}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-0.5">
+                                Telephonic verification in progress by assigned volunteer.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-900 text-[11px] font-bold rounded-lg border border-amber-300">
+                              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                              Waiting for Volunteer Suggestion
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => openVolunteerAssignment("televerification")}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-amber-100 text-slate-900 text-xs font-bold rounded-xl border border-amber-300 shadow-2xs transition cursor-pointer"
+                            >
+                              <UserPlusIcon className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Reassign Volunteer</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
+                          {editingVolunteerId === selectedApplicant.id ? (
+                            <div className="space-y-3 bg-white p-4 rounded-xl border border-amber-200">
+                              <label className="block text-xs font-bold text-slate-700">
+                                Enter Volunteer Feedback / Suggestion:
+                              </label>
+                              <textarea
+                                value={volunteerNoteInput}
+                                onChange={(e) => setVolunteerNoteInput(e.target.value)}
+                                placeholder="Enter volunteer suggestion (e.g., student verified via phone call, genuine financial need, mother is daily wage worker, strongly recommended for support)..."
+                                rows={3}
+                                className="w-full text-xs p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] text-slate-900 font-medium"
+                              />
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingVolunteerId(null);
+                                    setVolunteerNoteInput("");
+                                  }}
+                                  className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isSavingVolunteerNote}
+                                  onClick={() => handleSaveVolunteerNote(selectedApplicant.id)}
+                                  className="px-4 py-1.5 text-xs font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-lg transition cursor-pointer shadow-xs"
+                                >
+                                  {isSavingVolunteerNote ? "Saving..." : "Save Suggestion"}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-white p-4 rounded-xl border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block mb-1">
+                                  Telephonic Verification Status:
+                                </span>
+                                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                                  Waiting for volunteer suggestion. Assigned volunteer{" "}
+                                  <strong className="text-slate-900 font-bold">{selectedApplicant.volunteer_name}</strong>{" "}
+                                  is conducting telephonic verification. Once the suggestion is submitted, the decision options to Move to Phase 2 (Physical Verification) or Reject will appear here.
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingVolunteerId(selectedApplicant.id);
+                                  setVolunteerNoteInput(selectedApplicant.volunteer_suggestion || "");
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 rounded-lg text-xs font-semibold shrink-0 cursor-pointer transition"
+                                title="Enter volunteer feedback manually"
+                              >
+                                <PencilSquareIcon className="w-3.5 h-3.5 text-amber-600" />
+                                <span>Record Suggestion</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Phase 1: Volunteer Suggestion Submitted
+                  return (
+                    <div className="p-5 rounded-2xl border bg-linear-to-r from-emerald-50/80 via-amber-50/60 to-white border-emerald-300 shadow-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                                First Phase: Volunteer Verification & Remarks
+                              </h4>
+                              {selectedApplicant.volunteer_name && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-lg">
+                                  <UserIcon className="w-3.5 h-3.5" />
+                                  Verified by: {selectedApplicant.volunteer_name}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-600 mt-0.5">
+                              Telephonic verification feedback submitted by assigned volunteer.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-300">
+                            ✓ Phase 1 Feedback Recorded
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => openVolunteerAssignment("televerification")}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-amber-100 text-slate-900 text-xs font-bold rounded-xl border border-amber-300 shadow-2xs transition cursor-pointer"
+                          >
+                            <UserPlusIcon className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Reassign Volunteer</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        {editingVolunteerId === selectedApplicant.id ? (
+                          <div className="space-y-3 bg-white p-4 rounded-xl border border-emerald-200">
+                            <textarea
+                              value={volunteerNoteInput}
+                              onChange={(e) => setVolunteerNoteInput(e.target.value)}
+                              placeholder="Enter volunteer feedback..."
+                              rows={4}
+                              className="w-full text-xs p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] text-slate-900 font-medium"
+                            />
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingVolunteerId(null);
+                                  setVolunteerNoteInput("");
+                                }}
+                                className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isSavingVolunteerNote}
+                                onClick={() => handleSaveVolunteerNote(selectedApplicant.id)}
+                                className="px-4 py-1.5 text-xs font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-lg transition cursor-pointer shadow-xs"
+                              >
+                                {isSavingVolunteerNote ? "Saving..." : "Save Suggestion"}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* ================= VOLUNTEER SUGGESTION CARD WITH BOUND ACTIONS ================= */
+                          <div className="bg-white p-4.5 rounded-2xl border-2 border-emerald-300 shadow-xs space-y-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <span className="text-[11px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                  Volunteer Suggestion / Feedback:
+                                </span>
+                                <div className="flex items-center gap-3">
+                                  {selectedApplicant.volunteer_name && (
+                                    <span className="text-[11px] text-slate-600 font-medium">
+                                      Verified by Volunteer:{" "}
+                                      <strong className="text-slate-900 font-bold">
+                                        {selectedApplicant.volunteer_name}
+                                      </strong>
+                                    </span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingVolunteerId(selectedApplicant.id);
+                                      setVolunteerNoteInput(selectedApplicant.volunteer_suggestion || "");
+                                    }}
+                                    className="text-[11px] text-slate-500 hover:text-emerald-700 font-semibold cursor-pointer underline"
+                                  >
+                                    Edit
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl">
+                                <p className="text-sm font-bold text-slate-900 leading-relaxed italic">
+                                  &quot;{selectedApplicant.volunteer_suggestion}&quot;
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* BOUND ACTIONS: Move to Phase 2 (Physical Verification) & Reject */}
+                            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                              <span className="text-xs text-slate-500 font-medium">
+                                Admin decision for Phase 1:
+                              </span>
+                              <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
+                                <button
+                                  type="button"
+                                  disabled={isAdvancingPhase || selectedApplicant.status === "rejected"}
+                                  onClick={handleMoveNextPhase}
+                                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                  title="Approve televerification and advance applicant to Second Phase: Physical Verification"
+                                >
+                                  {isAdvancingPhase ? (
+                                    <>
+                                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                      <span>Advancing...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <HomeModernIcon className="w-4 h-4 text-white stroke-[2.5]" />
+                                      <span>Move to Phase 2 (Physical Verification)</span>
+                                      <ArrowRightIcon className="w-3.5 h-3.5" />
+                                    </>
+                                  )}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setIsRejectModalOpen(true)}
+                                  disabled={selectedApplicant.status === "rejected"}
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                  title="Reject application based on televerification"
+                                >
+                                  <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                  <span>Reject</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Quick Jump Navigation Strip */}
                 <div className="flex border border-slate-200 bg-slate-50/80 p-1.5 rounded-2xl gap-2 overflow-x-auto text-xs font-heading font-bold text-slate-700 shadow-2xs">
@@ -972,10 +2333,6 @@ export default function AdminApplicationsScreen() {
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
                         <span className="text-[10px] text-slate-500 uppercase font-bold">Nationality</span>
                         <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.nationality || "Indian"}</p>
-                      </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Marital Status</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.maritalStatus || "Single"}</p>
                       </div>
                     </div>
                   </section>
@@ -1096,10 +2453,12 @@ export default function AdminApplicationsScreen() {
                         <span className="text-[10px] text-slate-500 uppercase font-bold">Residence Type</span>
                         <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.residenceType || selectedApplicant.housing_status || "Own"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Distance from Nearest College</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.collegeDistance || "—"}</p>
-                      </div>
+                      {(selectedApplicant.residenceType || selectedApplicant.housing_status) === "Rented" && (
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold">Monthly Rent</span>
+                          <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.rentAmount || selectedApplicant.rent_amount || "—"}</p>
+                        </div>
+                      )}
                     </div>
                   </section>
 
@@ -1292,12 +2651,8 @@ export default function AdminApplicationsScreen() {
                         {[
                           { label: "Student Photograph", url: selectedApplicant.studentPhoto },
                           { label: "10th Marksheet", url: selectedApplicant.document10thMarksheet || selectedApplicant.document_10th_marksheet },
-                          { label: "11th Marksheet", url: selectedApplicant.document11thMarksheet || selectedApplicant.document_11th_marksheet },
                           { label: "12th Marksheet", url: selectedApplicant.document12thMarksheet || selectedApplicant.document_12th_marksheet },
-                          { label: "Community Certificate", url: selectedApplicant.documentCommunityCertificate },
-                          { label: "Income Certificate", url: selectedApplicant.documentIncomeCertificate },
                           { label: "Aadhaar Document", url: selectedApplicant.documentAadhaarCard || selectedApplicant.document_aadhaar_card },
-                          { label: "Parent / Guardian ID Proof", url: selectedApplicant.documentParentIdProof },
                         ].map((doc, idx) => (
                           <div key={idx} className="p-3 bg-white rounded-xl border border-slate-200 flex flex-col justify-between gap-2 shadow-2xs">
                             <span className="font-semibold text-slate-800 text-xs">{doc.label}</span>
@@ -1332,37 +2687,306 @@ export default function AdminApplicationsScreen() {
                       </p>
                     </div>
                   </section>
-                </div>
 
-                {/* Bottom Sheet Actions */}
-                <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedApplicant(null);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition cursor-pointer"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4" />
-                    <span>Back to Applicants List</span>
-                  </button>
+                  {/* End of Application Actions: Starting state vs Assigned vs Suggestion recorded */}
+                  {(() => {
+                    // 0. REJECTED STATE: Reject means reject done. No reassign volunteer, no suggestions.
+                    if (selectedApplicant.status === "rejected") {
+                      return (
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t-2 border-slate-200">
+                          <div className="text-xs text-rose-700 font-semibold flex items-center gap-2">
+                            <XCircleIcon className="w-5 h-5 text-rose-600 shrink-0" />
+                            <span>This application has been rejected by Admin. Notification email has been sent to the student.</span>
+                          </div>
+                          <div>
+                            <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-50 text-rose-700 border border-rose-300 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-2xs">
+                              <XCircleIcon className="w-4 h-4 text-rose-600 stroke-[2.5]" />
+                              <span>Application Rejected</span>
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
 
-                  <div className="flex items-center gap-2">
-                    <span className="font-heading font-bold text-xs text-slate-700">Update Applicant Status:</span>
-                    <select
-                      value={selectedApplicant.status}
-                      onChange={(e) => handleStatusChange(selectedApplicant.id, e.target.value)}
-                      className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#F7BC0F] cursor-pointer shadow-xs"
-                    >
-                      <option value="draft">Draft (In Progress)</option>
-                      <option value="submitted">Submitted (Ready for Stage 1)</option>
-                      <option value="under_review">Under Review (Telephonic)</option>
-                      <option value="shortlisted">Shortlisted (Home Visit)</option>
-                      <option value="selected">Selected (Scholarship Awarded)</option>
-                      <option value="rejected">Rejected (Not Eligible)</option>
-                    </select>
-                  </div>
+                    const isVolunteerAssigned = Boolean(
+                      selectedApplicant.volunteer_name &&
+                      selectedApplicant.volunteer_name.trim() !== "" &&
+                      selectedApplicant.volunteer_name !== "Admin Review"
+                    );
+                    const hasVolunteerFeedback = Boolean(
+                      selectedApplicant.volunteer_suggestion &&
+                      selectedApplicant.volunteer_suggestion.trim() !== "" &&
+                      !selectedApplicant.volunteer_suggestion.startsWith("Application rejected")
+                    );
+
+                    return (
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t-2 border-slate-200">
+                        <div className="text-xs text-slate-500">
+                          {!isVolunteerAssigned && !hasVolunteerFeedback && (
+                            <span className="font-semibold text-slate-700">
+                              Applicant Review: Review the complete application details above and assign a volunteer for televerification or reject.
+                            </span>
+                          )}
+                          {isVolunteerAssigned && !hasVolunteerFeedback && (
+                            <span className="font-semibold text-amber-800 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                              Waiting for volunteer suggestion from <strong className="text-slate-900">{selectedApplicant.volunteer_name}</strong>
+                            </span>
+                          )}
+                          {hasVolunteerFeedback && (
+                            <span className="font-semibold text-emerald-800 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                              Volunteer suggestion recorded — choose next action below:
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto justify-end">
+                          {/* 4-PHASE ACTIONS IN BOTTOM BAR */}
+                          {(() => {
+                            const isFinalSelected =
+                              selectedApplicant.status === "selected" ||
+                              selectedApplicant.status === "scholarship_awarded";
+
+                            if (isFinalSelected) {
+                              return (
+                                <span className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-900 border border-emerald-300 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-2xs">
+                                  <CheckBadgeIcon className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
+                                  <span>100% Free Scholarship Awarded</span>
+                                </span>
+                              );
+                            }
+
+                            const currentAction = getNextPhaseAction(selectedApplicant.status);
+
+                            // Active Phase 2 (Physical Verification):
+                            if (
+                              selectedApplicant.status === "telephonic_done" ||
+                              selectedApplicant.status === "televerification_done" ||
+                              selectedApplicant.status === "physical_verification_in_progress"
+                            ) {
+                              const hasPhysicalVol = Boolean(
+                                selectedApplicant.physical_volunteer_name &&
+                                selectedApplicant.physical_volunteer_name.trim() !== ""
+                              );
+
+                              if (!hasPhysicalVol) {
+                                return (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => openVolunteerAssignment("physical")}
+                                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#F7BC0F] hover:bg-[#e5ad0c] text-slate-950 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                    >
+                                      <UserPlusIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                                      <span>Assign Volunteer for Physical Verification</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsRejectModalOpen(true)}
+                                      className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                    >
+                                      <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                      <span>Reject</span>
+                                    </button>
+                                  </>
+                                );
+                              }
+
+                              return (
+                                <>
+                                  {currentAction && (
+                                    <button
+                                      type="button"
+                                      disabled={isAdvancingPhase}
+                                      onClick={handleMoveNextPhase}
+                                      className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                      title={currentAction.buttonText}
+                                    >
+                                      {isAdvancingPhase ? (
+                                        <>
+                                          <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                          <span>Advancing...</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <currentAction.icon className="w-4 h-4 text-white stroke-[2.5]" />
+                                          <span>{currentAction.buttonText}</span>
+                                          <ArrowRightIcon className="w-3.5 h-3.5 text-white/80" />
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => openVolunteerAssignment("physical")}
+                                    className="inline-flex items-center gap-1.5 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-300 transition cursor-pointer"
+                                    title="Reassign physical verification volunteer"
+                                  >
+                                    <UserPlusIcon className="w-3.5 h-3.5 text-slate-600" />
+                                    <span>Reassign Volunteer</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsRejectModalOpen(true)}
+                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                  >
+                                    <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                    <span>Reject</span>
+                                  </button>
+                                </>
+                              );
+                            }
+
+                            // Active Phase 3 or 4:
+                            if (
+                              selectedApplicant.status === "physical_verification_done" ||
+                              selectedApplicant.status === "home_visit_done" ||
+                              selectedApplicant.status === "video_interview_in_progress" ||
+                              selectedApplicant.status === "video_interview_done" ||
+                              selectedApplicant.status === "shortlisted" ||
+                              selectedApplicant.status === "direct_interview_in_progress" ||
+                              selectedApplicant.status === "direct_interview_done"
+                            ) {
+                              return (
+                                <>
+                                  {currentAction && (
+                                    <button
+                                      type="button"
+                                      disabled={isAdvancingPhase}
+                                      onClick={handleMoveNextPhase}
+                                      className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                      title={currentAction.buttonText}
+                                    >
+                                      {isAdvancingPhase ? (
+                                        <>
+                                          <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                          <span>Advancing...</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <currentAction.icon className="w-4 h-4 text-white stroke-[2.5]" />
+                                          <span>{currentAction.buttonText}</span>
+                                          <ArrowRightIcon className="w-3.5 h-3.5 text-white/80" />
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsRejectModalOpen(true)}
+                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                  >
+                                    <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                    <span>Reject</span>
+                                  </button>
+                                </>
+                              );
+                            }
+
+                            // Phase 1 Starting state: No volunteer assigned yet
+                            if (!isVolunteerAssigned && !hasVolunteerFeedback) {
+                              return (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => openVolunteerAssignment("televerification")}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#F7BC0F] hover:bg-[#e5ad0c] text-slate-950 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                  >
+                                    <UserPlusIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                                    <span>Assign Volunteer for Televerification</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsRejectModalOpen(true)}
+                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                  >
+                                    <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                    <span>Reject</span>
+                                  </button>
+                                </>
+                              );
+                            }
+
+                            // Phase 1 Volunteer assigned, waiting for suggestion
+                            if (isVolunteerAssigned && !hasVolunteerFeedback) {
+                              return (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => openVolunteerAssignment("televerification")}
+                                    className="inline-flex items-center gap-2 px-5 py-3 bg-amber-100 hover:bg-amber-200 text-amber-950 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border border-amber-300 shadow-2xs transition active:scale-98 cursor-pointer"
+                                  >
+                                    <UserPlusIcon className="w-4 h-4 text-amber-700 stroke-[2.5]" />
+                                    <span>Reassign Volunteer</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsRejectModalOpen(true)}
+                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                  >
+                                    <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                    <span>Reject</span>
+                                  </button>
+                                </>
+                              );
+                            }
+
+                            // Phase 1 Volunteer suggestion recorded
+                            return (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={isAdvancingPhase}
+                                  onClick={handleMoveNextPhase}
+                                  className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                  title="Approve televerification and move to Phase 2 (Physical Verification)"
+                                >
+                                  {isAdvancingPhase ? (
+                                    <>
+                                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                      <span>Advancing...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <HomeModernIcon className="w-4 h-4 text-white stroke-[2.5]" />
+                                      <span>Move to Phase 2 (Physical Verification)</span>
+                                      <ArrowRightIcon className="w-3.5 h-3.5 text-white/80" />
+                                    </>
+                                  )}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setIsRejectModalOpen(true)}
+                                  className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                >
+                                  <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                  <span>Reject</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => openVolunteerAssignment("televerification")}
+                                  className="inline-flex items-center gap-1.5 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-300 transition cursor-pointer"
+                                  title="Change assigned volunteer"
+                                >
+                                  <UserPlusIcon className="w-3.5 h-3.5 text-slate-600" />
+                                  <span>Reassign</span>
+                                </button>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -1376,7 +3000,7 @@ export default function AdminApplicationsScreen() {
                     Applicants Details
                   </h1>
                   <p className="font-primary text-xs sm:text-sm text-slate-600 mt-1">
-                    Review and manage student applications for the Maatram Foundation 2025-26 Scholarship.
+                    Review and manage student applications for the Maatram Foundation 2025-26 program.
                   </p>
                 </div>
 
@@ -1626,30 +3250,9 @@ export default function AdminApplicationsScreen() {
                                       <p className="text-[9px] text-amber-800 font-bold mt-1">— {app.volunteer_name}</p>
                                     )}
                                   </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setEditingVolunteerId(app.id);
-                                      setVolunteerNoteInput(app.volunteer_suggestion || "");
-                                    }}
-                                    className="opacity-0 group-hover/note:opacity-100 p-1 text-slate-400 hover:text-amber-600 transition"
-                                    title="Edit suggestion"
-                                  >
-                                    <PencilSquareIcon className="w-3.5 h-3.5" />
-                                  </button>
                                 </div>
                               ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingVolunteerId(app.id);
-                                    setVolunteerNoteInput("");
-                                  }}
-                                  className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-amber-700 font-medium py-1 px-2 rounded hover:bg-amber-50 transition border border-dashed border-slate-200 hover:border-amber-300 w-full justify-center"
-                                >
-                                  <ChatBubbleLeftEllipsisIcon className="w-3 h-3 text-slate-400" />
-                                  <span>+ Add Note</span>
-                                </button>
+                                <span className="text-[11px] text-slate-400">No remarks</span>
                               )}
                             </td>
 
@@ -1809,6 +3412,399 @@ export default function AdminApplicationsScreen() {
                 className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= ASSIGN VOLUNTEER FOR TELEVERIFICATION MODAL ================= */}
+      {isAssignVolunteerModalOpen && selectedApplicant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-linear-to-r from-amber-500/10 via-amber-50/50 to-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#F7BC0F]/20 border border-[#F7BC0F] flex items-center justify-center text-slate-900">
+                  <UserPlusIcon className="w-5 h-5 text-amber-600 stroke-[2.5]" />
+                </div>
+                <div>
+                  <h3 className="font-heading font-black text-base text-slate-900 tracking-wide uppercase">
+                    {assignVolunteerPhase === "physical"
+                      ? "Assign Volunteer for Physical Verification (Phase 2)"
+                      : "Assign Volunteer for Televerification (Phase 1)"}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {assignVolunteerPhase === "physical"
+                      ? "Allocate this application to an active volunteer for in-person / home verification."
+                      : "Allocate this application to an active volunteer for telephonic screening and review."}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAssignVolunteerModalOpen(false);
+                  setSelectedVolunteerId(null);
+                }}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="overflow-y-auto p-6 space-y-6 flex-1">
+              {/* Applicant Context Strip */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-400 block">
+                    Target Applicant
+                  </span>
+                  <span className="font-heading font-black text-sm text-slate-900">
+                    {selectedApplicant.full_name}
+                  </span>
+                  <span className="font-mono text-xs text-slate-500 ml-2">
+                    ({selectedApplicant.application_number || "MF-2025-APP"})
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs flex-wrap">
+                  <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-bold text-slate-700">
+                    Cutoff: <span className="text-amber-600 font-extrabold">{selectedApplicant.twelfth_cutoff || "N/A"}</span>
+                  </span>
+                  <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-medium text-slate-700">
+                    Target: <span className="font-bold">{selectedApplicant.preferred_degree || "Engineering"}</span>
+                  </span>
+                  <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-medium text-slate-700">
+                    District: <span className="font-bold">{selectedApplicant.district || "Tamil Nadu"}</span>
+                  </span>
+                  <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-medium text-slate-700">
+                    Mobile: <span className="font-bold">{selectedApplicant.mobile_number || "N/A"}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Volunteer Directory & Selection */}
+              <div className="space-y-3">
+                <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2.5">
+                  {/* Search Input */}
+                  <div className="relative min-w-0 flex-1">
+                    <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={volunteerSearchQuery}
+                      onChange={(e) => setVolunteerSearchQuery(e.target.value)}
+                      placeholder="Search by name, company, college..."
+                      className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] font-medium"
+                    />
+                  </div>
+
+                  {/* Near the filter: Event Dropdown + Role Filter Tabs */}
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    {/* Event Dropdown */}
+                    <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                      <span className="flex items-center gap-1 px-2 text-xs font-bold text-slate-700 shrink-0">
+                        <CalendarDaysIcon className="w-4 h-4 text-amber-600" />
+                        <span className="hidden sm:inline">Event:</span>
+                      </span>
+                      <select
+                        value={selectedEventId}
+                        onChange={(e) => setSelectedEventId(e.target.value)}
+                        className="text-xs font-semibold bg-white text-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] max-w-[230px] truncate cursor-pointer shadow-2xs"
+                      >
+                        {phaseEvents.length > 0 ? (
+                          phaseEvents.map((ev) => {
+                            const regCount = (
+                              (ev.accepted_students?.length || ev.acceptedStudents?.length || 0) +
+                              (ev.accepted_alumni?.length || ev.acceptedAlumni?.length || 0) +
+                              (ev.accepted_volunteers?.length || ev.acceptedVolunteers?.length || 0)
+                            );
+                            return (
+                              <option key={ev.id} value={String(ev.id)}>
+                                {ev.title || ev.name} ({ev.location || ev.mode || "Offline"} · {regCount} vol)
+                              </option>
+                            );
+                          })
+                        ) : (
+                          <option value="" disabled>
+                            No events available
+                          </option>
+                        )}
+                      </select>
+                    </div>
+
+                    {/* Role Filter Tabs */}
+                    <div className="inline-flex shrink-0 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">
+                      <button
+                        type="button"
+                        onClick={() => setVolunteerRoleFilter("all")}
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                          volunteerRoleFilter === "all" ? "bg-white text-slate-900 shadow-2xs" : "hover:text-slate-900"
+                        }`}
+                      >
+                        All Volunteers
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVolunteerRoleFilter("alumni")}
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                          volunteerRoleFilter === "alumni" ? "bg-white text-slate-900 shadow-2xs" : "hover:text-slate-900"
+                        }`}
+                      >
+                        Alumni Volunteers
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVolunteerRoleFilter("student")}
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                          volunteerRoleFilter === "student" ? "bg-white text-slate-900 shadow-2xs" : "hover:text-slate-900"
+                        }`}
+                      >
+                        Student Volunteers
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Event Context Strip */}
+                {selectedEventId && (
+                  <div className="flex items-center justify-between px-3.5 py-1.5 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs">
+                    <div className="flex items-center gap-1.5 text-amber-900 truncate mr-2">
+                      <span className="font-bold shrink-0">Selected Event:</span>
+                      <span className="font-medium text-amber-800 truncate">
+                        {eventsList.find((ev) => String(ev.id) === String(selectedEventId))?.title ||
+                          eventsList.find((ev) => String(ev.id) === String(selectedEventId))?.name ||
+                          "Selected Event"}
+                      </span>
+                    </div>
+                    <span className="text-amber-700 font-bold bg-white px-2 py-0.5 rounded-md border border-amber-200 shrink-0 text-[11px]">
+                      {filteredVolunteers.length} volunteer{filteredVolunteers.length === 1 ? "" : "s"} enrolled
+                    </span>
+                  </div>
+                )}
+
+                {/* Volunteer Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1">
+                  {isLoadingVolunteers ? (
+                    <div className="col-span-2 py-12 text-center text-xs font-bold text-slate-400">
+                      Loading volunteer roster...
+                    </div>
+                  ) : filteredVolunteers.length === 0 ? (
+                    <div className="col-span-2 py-8 px-4 text-center text-xs font-medium text-slate-500 bg-amber-50/40 rounded-xl border border-dashed border-amber-200 space-y-2">
+                      <p className="font-bold text-slate-700">
+                        No volunteers registered for this event yet.
+                      </p>
+                      <p className="text-slate-500 text-[11px] max-w-md mx-auto">
+                        Only volunteers who registered / accepted this verification event in their portal appear here.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEventId("general_pool")}
+                        className="inline-block mt-1 px-3 py-1.5 bg-white hover:bg-amber-100 border border-amber-300 rounded-lg text-amber-900 font-bold text-xs transition cursor-pointer shadow-2xs"
+                      >
+                        Show All Volunteers (General Pool)
+                      </button>
+                    </div>
+                  ) : (
+                    filteredVolunteers.map((vol) => {
+                      const isSelected = String(selectedVolunteerId) === String(vol.id);
+                      const isAlumni = vol.role?.toLowerCase() === "alumni";
+
+                      return (
+                        <div
+                          key={vol.id}
+                          onClick={() => setSelectedVolunteerId(String(vol.id))}
+                          className={`p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between gap-3 ${
+                            isSelected
+                              ? "bg-amber-50/70 border-amber-500 shadow-xs ring-2 ring-amber-400/30"
+                              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`w-9 h-9 rounded-xl flex items-center justify-center font-heading font-black text-xs ${
+                                  isAlumni
+                                    ? "bg-blue-100 text-blue-800 border border-blue-200"
+                                    : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                }`}
+                              >
+                                {vol.name?.substring(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-heading font-bold text-xs text-slate-900">
+                                    {vol.name}
+                                  </span>
+                                  <span
+                                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                                      isAlumni
+                                        ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                        : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                    }`}
+                                  >
+                                    {isAlumni ? "Alumni" : "Student"}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 truncate max-w-[200px]">
+                                  {isAlumni
+                                    ? `${vol.designation || "Alumni"} • ${vol.company || "Maatram Alumni"}`
+                                    : `${vol.department || "Scholar"} • ${vol.college || "Anna University"}`}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
+                                isSelected
+                                  ? "border-amber-500 bg-amber-500 text-white"
+                                  : "border-slate-300 bg-white"
+                              }`}
+                            >
+                              {isSelected && <span className="block w-2 h-2 rounded-full bg-white" />}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-2">
+                            <span className="flex items-center gap-1">
+                              <PhoneIcon className="w-3 h-3 text-slate-400" />
+                              {vol.phone || "Phone verified"}
+                            </span>
+                            <span className="text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+                              {vol.assigned_count || 0} Assigned
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+              <div className="text-xs">
+                {selectedVolunteerId ? (
+                  <span className="text-slate-700">
+                    Ready to assign to:{" "}
+                    <span className="font-bold text-slate-900">
+                      {
+                        (volunteersList.length > 0 ? volunteersList : DEFAULT_VOLUNTEERS).find(
+                          (v) => String(v.id) === String(selectedVolunteerId)
+                        )?.name
+                      }
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-slate-400 italic">Select a volunteer from the list above</span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAssignVolunteerModalOpen(false);
+                    setSelectedVolunteerId(null);
+                  }}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!selectedVolunteerId || isAssigningVolunteer}
+                  onClick={handleAssignVolunteer}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-amber-400 to-[#F7BC0F] hover:from-amber-500 hover:to-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md cursor-pointer"
+                >
+                  {isAssigningVolunteer ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      <span>Assigning...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircleIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                      <span>Confirm Assignment</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= REJECT APPLICATION CONFIRMATION MODAL ================= */}
+      {isRejectModalOpen && selectedApplicant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-rose-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600">
+                  <XCircleIcon className="w-6 h-6 stroke-[2]" />
+                </div>
+                <div>
+                  <h3 className="font-heading font-black text-base text-slate-900 tracking-wide uppercase">
+                    Reject Application
+                  </h3>
+                  <p className="text-xs text-rose-600 font-semibold">
+                    Action will close this application in the pipeline
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRejectModalOpen(false);
+                  setRejectionReason("");
+                }}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-sm text-slate-700 leading-relaxed">
+                Are you sure you want to reject the application for{" "}
+                <strong className="text-slate-900 font-bold">{selectedApplicant.full_name}</strong>{" "}
+                <span className="font-mono text-slate-500">({selectedApplicant.application_number || "MF-2025-APP"})</span>?
+              </p>
+              <p className="text-xs text-rose-600 mt-2 font-semibold">
+                This will update the selection pipeline status to REJECTED.
+              </p>
+            </div>
+
+            <div className="p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRejectModalOpen(false);
+                  setRejectionReason("");
+                }}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isRejecting}
+                onClick={handleConfirmReject}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md cursor-pointer"
+              >
+                {isRejecting ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Rejecting...</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircleIcon className="w-4 h-4 text-white stroke-[2.5]" />
+                    <span>Reject</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

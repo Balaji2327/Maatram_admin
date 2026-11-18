@@ -37,7 +37,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
     {
       id: "welcome-1",
       sender: "bot",
-      text: "Hello! 👋 I'm Mark, your Maatram AI Assistant. I can help answer queries about scholarship eligibility, cutoff cutoffs, student verification, partner colleges, and alumni network.",
+      text: "Hello! 👋 I'm Mark, your Maatram AI Assistant. I can help answer queries about eligibility, cutoff marks, student verification, partner colleges, and alumni network.",
       timestamp: "Just now",
       options: [
         "Cutoff eligibility criteria",
@@ -84,7 +84,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
       if (lower.includes("cutoff") || lower.includes("mark")) {
         botReply = "For Engineering admissions, Maatram looks for 12th HSC Cutoffs above 165-170/200. Special affirmative weightage is given to first-generation graduates, rural government school students, and single-parent backgrounds.";
       } else if (lower.includes("verification") || lower.includes("stage") || lower.includes("process")) {
-        botReply = "The 3-stage scholarship evaluation process:\n1. Online Application Screening (12th Marks & Family Income)\n2. Telephonic Verification Call with Candidate and Parents\n3. Physical Home Visit & Background Inquiries by Trustees.";
+        botReply = "The 3-stage evaluation process:\n1. Online Application Screening (12th Marks & Family Income)\n2. Telephonic Verification Call with Candidate and Parents\n3. Physical Home Visit & Background Inquiries by Trustees.";
       } else if (lower.includes("college") || lower.includes("partner")) {
         botReply = "Maatram collaborates with top Tamil Nadu engineering institutions (including PSG Tech, CIT, SKCET, TCE, SASTRA, and VIT) to provide 100% free higher education covering tuition, hostel, and food.";
       } else if (lower.includes("first-graduate") || lower.includes("first graduate")) {
@@ -95,12 +95,12 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
         botReply = "Regular orientation workshops, mock interview bootcamps, and alumni meetups are organized throughout the academic year. You can manage them in the Events portal.";
       } else if (lower.includes("stat") || lower.includes("applicant") || lower.includes("total") || lower.includes("count")) {
         botReply = applicationsCount > 0
-          ? `There are currently ${applicationsCount} registered scholarship applications under review in the Maatram system.`
+          ? `There are currently ${applicationsCount} registered applications under review in the Maatram system.`
           : "Applications are actively tracked in real-time across Tamil Nadu districts.";
       } else if (lower.includes("contact") || lower.includes("trust") || lower.includes("office") || lower.includes("help")) {
         botReply = "Maatram Foundation Head Office is in Chennai, Tamil Nadu. Official correspondence: contact@maatramfoundation.com.";
       } else {
-        botReply = `Understood! You asked: "${text}". I'm Mark, the Maatram AI assistant. I can help with scholarship criteria, student screening guidelines, colleges, and foundation processes. What specific information can I find for you?`;
+        botReply = `Understood! You asked: "${text}". I'm Mark, the Maatram AI assistant. I can help with eligibility criteria, student screening guidelines, colleges, and foundation processes. What specific information can I find for you?`;
       }
 
       const replyMessage: Message = {

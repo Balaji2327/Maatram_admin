@@ -244,7 +244,7 @@ export default function AdminStudentsScreen() {
                 Students Directory
               </h1>
               <p className="font-primary text-xs sm:text-sm text-slate-600 mt-1">
-                Directory of currently supported scholarship students registered with authentication credentials.
+                Directory of currently supported students registered with authentication credentials.
               </p>
             </div>
           </div>

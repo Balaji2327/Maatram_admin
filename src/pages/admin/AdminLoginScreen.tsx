@@ -12,7 +12,7 @@ import {
   EyeIcon,
   EyeSlashIcon,
 } from "@heroicons/react/24/outline";
-import { adminApi } from "../../lib/api";
+import { adminApi, getAuthToken } from "../../lib/api";
 
 export default function AdminLoginScreen() {
   const router = useRouter();
@@ -29,6 +29,11 @@ export default function AdminLoginScreen() {
 
   // Guarantee fields are completely empty whenever the admin arrives on the login page
   useEffect(() => {
+    if (getAuthToken()) {
+      router.replace("/dashboard");
+      return;
+    }
+
     setEmail("");
     setPassword("");
     setOtp(["", "", "", "", "", ""]);
@@ -38,7 +43,7 @@ export default function AdminLoginScreen() {
     if (typeof window !== "undefined") {
       adminApi.logout();
     }
-  }, []);
+  }, [router]);
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,7 +160,7 @@ export default function AdminLoginScreen() {
         <p className="font-primary text-xs sm:text-sm text-slate-600 leading-relaxed mt-1.5 text-center">
           {requires2FA
             ? "Enter the 6-digit two-factor verification code to access the management portal:"
-            : "Authorized personnel access to view and manage student scholarship applications."}
+            : "Authorized personnel access to view and manage student applications."}
         </p>
 
         {/* Info & Error Messages */}
@@ -294,7 +299,7 @@ export default function AdminLoginScreen() {
           {/* Student Portal Switch Link */}
           <div className="text-center pt-3 border-t border-slate-100">
             <span className="font-primary text-xs text-slate-600">
-              Are you a student applying for scholarship?{" "}
+              Are you a student applying for education support?{" "}
             </span>
             <Link
               href="/login"

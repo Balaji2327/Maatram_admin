@@ -2,7 +2,7 @@ import LoginScreen from "../../pages/LoginScreen";
 
 export const metadata = {
   title: "Student Sign In | Maatram Foundation",
-  description: "Sign in to access your Maatram Foundation scholarship portal.",
+  description: "Sign in to access your Maatram Foundation student portal.",
 };
 
 export default function StudentLoginPage() {
