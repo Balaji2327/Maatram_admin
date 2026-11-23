@@ -201,7 +201,7 @@ export default function AdminVolunteersScreen() {
       const isAdmittedStudent =
         a.current_stage === "admitted" ||
         a.status === "selected" ||
-        a.status === "scholarship_awarded" ||
+
         (a.application_number && a.application_number.includes("SCH-"));
       const isRejectedStudent =
         a.status === "rejected" ||
@@ -278,12 +278,12 @@ export default function AdminVolunteersScreen() {
 
   // Filter applications
   const filteredApplications = useMemo(() => {
-    // Filter out enrolled/approved scholarship students — they are admitted students, not volunteer verification candidates
+    // Filter out admitted students — they are admitted students, not volunteer verification candidates
     let result = applications.filter((a) => {
       const isAdmittedStudent =
         a.current_stage === "admitted" ||
         a.status === "selected" ||
-        a.status === "scholarship_awarded" ||
+
         (a.application_number && a.application_number.includes("SCH-"));
       return !isAdmittedStudent;
     });

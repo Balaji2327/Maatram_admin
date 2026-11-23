@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
+  XMarkIcon,
   Cog6ToothIcon,
   UserPlusIcon,
   ShieldCheckIcon,
@@ -726,7 +727,7 @@ export default function AdminSettingsScreen() {
                 onClick={() => setShowQrModal(false)}
                 className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-sm"
               >
-                ✕
+                <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
               </button>
             </div>
 
@@ -807,7 +808,7 @@ export default function AdminSettingsScreen() {
                 }}
                 className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-sm"
               >
-                ✕
+                <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
               </button>
             </div>
 
@@ -917,7 +918,7 @@ export default function AdminSettingsScreen() {
                 }}
                 className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-sm w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center"
               >
-                ✕
+                <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
               </button>
             </div>
 

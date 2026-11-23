@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  CheckIcon,
   UserGroupIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -877,11 +878,11 @@ export default function AdminApplicationsScreen() {
       case "direct_interview_done":
         return {
           nextStatus: "selected",
-          buttonText: "Approve & Award Scholarship (Final Selection)",
+          buttonText: "Confirm Final Admission",
           icon: CheckBadgeIcon,
           badgeText: "Phase 4: Direct Interview Cleared",
           nextStage: "Final Selection",
-          nextStageStatus: "Scholarship Awarded",
+          nextStageStatus: "Admission Confirmed",
         };
       default:
         return null;
@@ -1567,7 +1568,7 @@ export default function AdminApplicationsScreen() {
           </span>
         );
       case "selected":
-      case "scholarship_awarded":
+
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300">
             <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-600" />
@@ -1708,8 +1709,7 @@ export default function AdminApplicationsScreen() {
                   }
 
                   const isFinalSelected =
-                    selectedApplicant.status === "selected" ||
-                    selectedApplicant.status === "scholarship_awarded";
+                    selectedApplicant.status === "selected";
 
                   if (isFinalSelected) {
                     return (
@@ -1721,7 +1721,7 @@ export default function AdminApplicationsScreen() {
                             </div>
                             <div>
                               <h4 className="font-heading font-black text-sm text-emerald-950 uppercase tracking-wider">
-                                Final Selection & 100% Free Higher Education Scholarship Awarded
+                                Admission Confirmed for Free Higher Education
                               </h4>
                               <p className="text-xs text-emerald-800/90 mt-0.5">
                                 Candidate has successfully cleared all 4 verification phases: Televerification, Physical Verification, Video Call Interview, and Direct Interview.
@@ -1886,7 +1886,7 @@ export default function AdminApplicationsScreen() {
                                   ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                                   : "bg-amber-50 text-amber-800 border-amber-200"
                               }`}>
-                                {hasPhysicalSuggestion ? "✓ Physical Findings Submitted" : "Waiting for Volunteer Suggestion"}
+                                {hasPhysicalSuggestion ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Physical Findings Submitted</> : "Waiting for Volunteer Suggestion"}
                               </span>
                             </div>
 
@@ -1921,7 +1921,7 @@ export default function AdminApplicationsScreen() {
                                             </span>
                                             {photoUrl ? (
                                               <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded">
-                                                ✓ Added
+                                                <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Added
                                               </span>
                                             ) : (
                                               <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-bold rounded">
@@ -2008,7 +2008,7 @@ export default function AdminApplicationsScreen() {
                                   <textarea
                                     value={volunteerNoteInput}
                                     onChange={(e) => setVolunteerNoteInput(e.target.value)}
-                                    placeholder="Enter final recommendation (e.g. Recommended for scholarship due to genuine financial distress and verified academic drive)..."
+                                    placeholder="Enter final recommendation (e.g. Recommended for admission due to genuine financial distress and verified academic drive)..."
                                     rows={2}
                                     className="w-full text-xs p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 font-medium"
                                   />
@@ -2116,7 +2116,7 @@ export default function AdminApplicationsScreen() {
                                             </span>
                                             {photoUrl ? (
                                               <span className="px-1 py-0.5 bg-emerald-100 text-emerald-800 text-[8px] font-bold rounded">
-                                                ✓ Added
+                                                <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Added
                                               </span>
                                             ) : (
                                               <span className="px-1 py-0.5 bg-slate-200 text-slate-600 text-[8px] font-bold rounded">
@@ -2609,7 +2609,7 @@ export default function AdminApplicationsScreen() {
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-300">
-                            ✓ Phase 1 Feedback Recorded
+                            <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Phase 1 Feedback Recorded
                           </span>
                           <button
                             type="button"
@@ -3113,16 +3113,16 @@ export default function AdminApplicationsScreen() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${selectedApplicant.orphan ? "bg-rose-100 border-rose-300 text-rose-950" : "bg-white border-slate-200 text-slate-500"}`}>
-                        {selectedApplicant.orphan ? "✓ Orphan Student" : "Not Orphan"}
+                        {selectedApplicant.orphan ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Orphan Student</> : "Not Orphan"}
                       </span>
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${selectedApplicant.single_parent ? "bg-purple-100 border-purple-300 text-purple-950" : "bg-white border-slate-200 text-slate-500"}`}>
-                        {selectedApplicant.single_parent ? "✓ Single Parent Child" : "Both Parents"}
+                        {selectedApplicant.single_parent ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Single Parent Child</> : "Both Parents"}
                       </span>
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${selectedApplicant.first_graduate ? "bg-amber-100 border-amber-300 text-amber-950" : "bg-white border-slate-200 text-slate-500"}`}>
-                        {selectedApplicant.first_graduate ? "✓ First-Generation Learner" : "Non-First Graduate"}
+                        {selectedApplicant.first_graduate ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> First-Generation Learner</> : "Non-First Graduate"}
                       </span>
                       <span className="px-2.5 py-1 rounded-lg text-xs font-bold border bg-emerald-50 border-emerald-300 text-emerald-950">
-                        {selectedApplicant.willingToRelocateTN !== false ? "✓ Willing to Relocate in Tamil Nadu" : "Local Only"}
+                        {selectedApplicant.willingToRelocateTN !== false ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Willing to Relocate in Tamil Nadu</> : "Local Only"}
                       </span>
                     </div>
 
@@ -3257,14 +3257,13 @@ export default function AdminApplicationsScreen() {
                           {/* 4-PHASE ACTIONS IN BOTTOM BAR */}
                           {(() => {
                             const isFinalSelected =
-                              selectedApplicant.status === "selected" ||
-                              selectedApplicant.status === "scholarship_awarded";
+                              selectedApplicant.status === "selected";
 
                             if (isFinalSelected) {
                               return (
                                 <span className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-900 border border-emerald-300 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-2xs">
                                   <CheckBadgeIcon className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
-                                  <span>100% Free Scholarship Awarded</span>
+                                  <span>Admission Confirmed</span>
                                 </span>
                               );
                             }

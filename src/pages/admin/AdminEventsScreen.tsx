@@ -581,7 +581,7 @@ export default function AdminEventsScreen() {
                     onClick={() => setIsEventModalOpen(false)}
                     className="text-slate-400 hover:text-slate-600 font-bold text-sm w-8 h-8 rounded-xl hover:bg-slate-100 flex items-center justify-center transition cursor-pointer"
                   >
-                    ✕
+                    <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
                   </button>
                 </div>
 
@@ -656,7 +656,7 @@ export default function AdminEventsScreen() {
                     onClick={() => setIsEventModalOpen(false)}
                     className="text-slate-400 hover:text-slate-600 font-bold text-sm w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition cursor-pointer"
                   >
-                    ✕
+                    <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
                   </button>
                 </div>
 
@@ -1043,7 +1043,7 @@ export default function AdminEventsScreen() {
                   onClick={() => setSelectedEvent(null)}
                   className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-900/60 text-white hover:bg-slate-900 flex items-center justify-center backdrop-blur-xs transition cursor-pointer"
                 >
-                  ✕
+                  <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
                 </button>
               </div>
             )}

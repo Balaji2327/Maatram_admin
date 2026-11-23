@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import {
+  HandRaisedIcon,
   XMarkIcon,
   PaperAirplaneIcon,
   MinusIcon,
@@ -37,7 +38,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
     {
       id: "welcome-1",
       sender: "bot",
-      text: "Hello! 👋 I'm Mark, your Maatram AI Assistant. I can help answer queries about eligibility, cutoff marks, student verification, partner colleges, and alumni network.",
+      text: "Hello! I'm Mark, your Maatram AI Assistant. I can help answer queries about eligibility, cutoff marks, student verification, partner colleges, and alumni network.",
       timestamp: "Just now",
       options: [
         "Cutoff eligibility criteria",
@@ -209,7 +210,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
                           : "bg-white text-slate-900 border border-slate-200 rounded-bl-xs"
                       }`}
                     >
-                      <p className="whitespace-pre-line">{m.text}</p>
+                      <p className="whitespace-pre-line">{m.id === "welcome-1" && <> <HandRaisedIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> </>}{m.text}</p>
                     </div>
                     <span className="text-[9px] text-slate-400 mt-1 px-1">
                       {m.timestamp}

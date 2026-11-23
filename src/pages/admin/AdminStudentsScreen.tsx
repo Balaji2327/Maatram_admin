@@ -4,6 +4,7 @@ import ScholarProfile from "../../components/ScholarProfile";
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
+  CheckIcon,
   UserGroupIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -452,7 +453,7 @@ export default function AdminStudentsScreen() {
                         }`}
                       >
                         <span>Semester {semNum}</span>
-                        {hasData && <span className="text-[9px] font-black">✓</span>}
+                        {hasData && <span className="text-[9px] font-black"><CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /></span>}
                       </button>
                     );
                   })}
@@ -507,7 +508,7 @@ export default function AdminStudentsScreen() {
                         onClick={() => setIsEditingSubject(false)}
                         className="text-slate-400 hover:text-slate-600 text-xs font-bold"
                       >
-                        ✕
+                        <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
                       </button>
                     </div>
 
