@@ -708,6 +708,8 @@ export default function DashboardScreen() {
     submittedAt?: string;
     rejectionReason?: string;
     rejectionStage?: number;
+    videoInterviewLink?: string;
+    videoInterviewTime?: string;
   }>({
     status: "draft",
     currentStage: "Draft",
@@ -966,6 +968,8 @@ export default function DashboardScreen() {
             submittedAt: d.submittedAt,
             rejectionReason: reason || undefined,
             rejectionStage: stage,
+            videoInterviewLink: d.video_interview_link || d.videoInterviewLink || undefined,
+            videoInterviewTime: d.video_interview_time || d.videoInterviewTime || undefined,
           });
         }
 
@@ -998,6 +1002,8 @@ export default function DashboardScreen() {
               submittedAt: s.submittedAt,
               rejectionReason: liveReason || undefined,
               rejectionStage: liveStage,
+              videoInterviewLink: s.videoInterviewLink || s.video_interview_link || undefined,
+              videoInterviewTime: s.videoInterviewTime || s.video_interview_time || undefined,
             });
             if (s.status && s.status !== "draft") {
               setIsSubmitted(true);
@@ -1243,6 +1249,64 @@ export default function DashboardScreen() {
                 <p className="text-[11px] text-slate-500 truncate">Chennai Central Office</p>
               </div>
             </div>
+
+            {/* Phase 3 Video Call Interview Live Meeting Card for New Student */}
+            {(applicationStatusData.status === "physical_verification_done" ||
+              applicationStatusData.status === "home_visit_done" ||
+              applicationStatusData.status === "video_interview_in_progress") && (
+              <div className="bg-gradient-to-r from-blue-500/10 via-indigo-50/70 to-emerald-500/10 border-2 border-indigo-400/80 rounded-3xl p-6 sm:p-7 shadow-sm space-y-4 animate-in fade-in duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start sm:items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                      <VideoCameraIcon className="w-7 h-7 stroke-[2.2]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase tracking-wider border border-emerald-300">
+                          Phase 3 Active
+                        </span>
+                        <span className="text-xs text-slate-500 font-medium">Virtual Advisory Panel</span>
+                      </div>
+                      <h3 className="text-base sm:text-lg font-heading font-black text-slate-950 mt-0.5">
+                        Your Google Meet Video Interview is Scheduled!
+                      </h3>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        Congratulations on clearing Physical Verification! Please join the Google Meet call below at your scheduled time.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+                    <a
+                      href={applicationStatusData.videoInterviewLink || (formData as any).video_interview_link || "https://meet.google.com"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-heading font-black uppercase tracking-wider rounded-2xl shadow-md hover:shadow-lg transition active:scale-98 cursor-pointer"
+                    >
+                      <VideoCameraIcon className="w-5 h-5 stroke-[2.5]" />
+                      <span>Join Google Meet</span>
+                    </a>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-white/90 rounded-2xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-bold text-slate-700 shrink-0">Meeting Link:</span>
+                    <a
+                      href={applicationStatusData.videoInterviewLink || (formData as any).video_interview_link || "https://meet.google.com"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-indigo-700 hover:text-indigo-900 underline truncate block"
+                    >
+                      {applicationStatusData.videoInterviewLink || (formData as any).video_interview_link || "https://meet.google.com/mtr-vid-room"}
+                    </a>
+                  </div>
+                  <span className="text-[11px] text-slate-500 font-medium shrink-0">
+                    Camera & microphone required
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* 3. Main Two-Column Layout: Live Selection Flow Tracker & Application Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

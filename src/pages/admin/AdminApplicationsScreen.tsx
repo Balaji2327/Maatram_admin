@@ -895,11 +895,22 @@ export default function AdminApplicationsScreen() {
     try {
       const res = await adminApi.updateStatus(selectedApplicant.id, action.nextStatus);
       if (res.success) {
+        // Capture any auto-generated meeting details from response
+        const respData = res.data || {};
+        let ext = {};
+        if (respData.additional_remarks) {
+          try {
+            ext = typeof respData.additional_remarks === "string" ? JSON.parse(respData.additional_remarks) : respData.additional_remarks;
+          } catch {}
+        }
+
         const updatedApp = {
           ...selectedApplicant,
           status: action.nextStatus,
           current_stage: action.nextStage,
           stage_status: action.nextStageStatus,
+          video_interview_link: (ext as any).video_interview_link || (ext as any).google_meet_link || respData.video_interview_link || selectedApplicant.video_interview_link,
+          video_interview_time: (ext as any).video_interview_time || respData.video_interview_time || selectedApplicant.video_interview_time,
         };
 
         setSelectedApplicant(updatedApp);
@@ -1266,6 +1277,14 @@ export default function AdminApplicationsScreen() {
         }
       );
       if (res.success) {
+        const returnedPhotos = res?.data?.physical_verification_photos || {
+          front_view_home: res?.data?.front_view_home || adminPhysicalPhotos.front_view_home || "",
+          inside_home: res?.data?.inside_home || adminPhysicalPhotos.inside_home || "",
+          furniture: res?.data?.furniture || adminPhysicalPhotos.furniture || "",
+          with_student: res?.data?.with_student || adminPhysicalPhotos.with_student || "",
+          backward: res?.data?.backward || adminPhysicalPhotos.backward || "",
+        };
+
         setApplications((prev) =>
           prev.map((app) =>
             app.id === applicantId
@@ -1273,12 +1292,12 @@ export default function AdminApplicationsScreen() {
                   ...app,
                   physical_volunteer_suggestion: volunteerNoteInput.trim(),
                   physical_student_description: volunteerStudentDescriptionInput.trim(),
-                  physical_verification_photos: adminPhysicalPhotos,
-                  front_view_home: adminPhysicalPhotos.front_view_home || "",
-                  inside_home: adminPhysicalPhotos.inside_home || "",
-                  furniture: adminPhysicalPhotos.furniture || "",
-                  with_student: adminPhysicalPhotos.with_student || "",
-                  backward: adminPhysicalPhotos.backward || "",
+                  physical_verification_photos: returnedPhotos,
+                  front_view_home: returnedPhotos.front_view_home || "",
+                  inside_home: returnedPhotos.inside_home || "",
+                  furniture: returnedPhotos.furniture || "",
+                  with_student: returnedPhotos.with_student || "",
+                  backward: returnedPhotos.backward || "",
                 }
               : app
           )
@@ -1288,14 +1307,15 @@ export default function AdminApplicationsScreen() {
             ...prev,
             physical_volunteer_suggestion: volunteerNoteInput.trim(),
             physical_student_description: volunteerStudentDescriptionInput.trim(),
-            physical_verification_photos: adminPhysicalPhotos,
-            front_view_home: adminPhysicalPhotos.front_view_home || "",
-            inside_home: adminPhysicalPhotos.inside_home || "",
-            furniture: adminPhysicalPhotos.furniture || "",
-            with_student: adminPhysicalPhotos.with_student || "",
-            backward: adminPhysicalPhotos.backward || "",
+            physical_verification_photos: returnedPhotos,
+            front_view_home: returnedPhotos.front_view_home || "",
+            inside_home: returnedPhotos.inside_home || "",
+            furniture: returnedPhotos.furniture || "",
+            with_student: returnedPhotos.with_student || "",
+            backward: returnedPhotos.backward || "",
           }));
         }
+        setAdminPhysicalPhotos(returnedPhotos);
         setEditingVolunteerId(null);
         setVolunteerNoteInput("");
         setVolunteerStudentDescriptionInput("");
@@ -1725,14 +1745,30 @@ export default function AdminApplicationsScreen() {
                         selectedApplicant.physical_student_description.trim() !== "")
                     );
 
-                    const physicalPhotos: Record<string, string> =
-                      selectedApplicant.physical_verification_photos || {
-                        front_view_home: selectedApplicant.front_view_home || "",
-                        inside_home: selectedApplicant.inside_home || "",
-                        furniture: selectedApplicant.furniture || "",
-                        with_student: selectedApplicant.with_student || "",
-                        backward: selectedApplicant.backward || "",
-                      };
+                    const getPhysicalPhoto = (slotKey: string): string => {
+                      const photosObj =
+                        selectedApplicant.physical_verification_photos ||
+                        selectedApplicant.photos ||
+                        {};
+                      const camelKey = slotKey.replace(/_([a-z])/g, (_, g) => g.toUpperCase());
+
+                      return (
+                        photosObj[slotKey] ||
+                        selectedApplicant[slotKey] ||
+                        photosObj[camelKey] ||
+                        selectedApplicant[camelKey] ||
+                        adminPhysicalPhotos[slotKey] ||
+                        ""
+                      );
+                    };
+
+                    const physicalPhotos: Record<string, string> = {
+                      front_view_home: getPhysicalPhoto("front_view_home"),
+                      inside_home: getPhysicalPhoto("inside_home"),
+                      furniture: getPhysicalPhoto("furniture"),
+                      with_student: getPhysicalPhoto("with_student"),
+                      backward: getPhysicalPhoto("backward"),
+                    };
 
                     return (
                       <div className="p-6 rounded-3xl border bg-linear-to-r from-blue-50/70 via-indigo-50/40 to-white border-blue-200 shadow-sm space-y-5">
@@ -2300,6 +2336,72 @@ export default function AdminApplicationsScreen() {
                             </div>
                           )}
                         </div>
+
+                        {/* Phase 3 Auto-Generated Google Meet Link Card */}
+                        {(selectedApplicant.status === "physical_verification_done" ||
+                          selectedApplicant.status === "home_visit_done" ||
+                          selectedApplicant.status === "video_interview_in_progress") && (
+                          <div className="bg-white p-4.5 rounded-2xl border-2 border-indigo-300 shadow-sm space-y-3">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                                  <VideoCameraIcon className="w-5 h-5 stroke-[2.2]" />
+                                </div>
+                                <div>
+                                  <span className="text-xs font-heading font-black text-slate-900 uppercase tracking-wider block">
+                                    Google Meet Video Interview Room
+                                  </span>
+                                  <span className="text-[11px] text-slate-500">
+                                    Auto-generated link available to both Admin & Applicant Student
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-200">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                Meeting Ready
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                              <div className="min-w-0 flex-1">
+                                <span className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5">
+                                  Meeting URL
+                                </span>
+                                <a
+                                  href={selectedApplicant.video_interview_link || selectedApplicant.google_meet_link || "https://meet.google.com"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs font-mono font-bold text-indigo-700 hover:text-indigo-900 hover:underline truncate block"
+                                >
+                                  {selectedApplicant.video_interview_link || selectedApplicant.google_meet_link || "https://meet.google.com/mtr-vid-room"}
+                                </a>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const link = selectedApplicant.video_interview_link || selectedApplicant.google_meet_link || "https://meet.google.com";
+                                    navigator.clipboard.writeText(link);
+                                    alert("Google Meet link copied to clipboard!");
+                                  }}
+                                  className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer"
+                                >
+                                  Copy Link
+                                </button>
+                                <a
+                                  href={selectedApplicant.video_interview_link || selectedApplicant.google_meet_link || "https://meet.google.com"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-heading font-black uppercase tracking-wider shadow-xs transition hover:shadow-md cursor-pointer"
+                                >
+                                  <VideoCameraIcon className="w-3.5 h-3.5 stroke-[2.5]" />
+                                  <span>Join Interview</span>
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Decision Bar */}
                         <div className="pt-2 border-t border-blue-200/60 flex flex-col sm:flex-row items-center justify-between gap-3">
