@@ -3,6 +3,11 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "ax
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const API_BASE_URL = rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "");
 
+export function postMediaUrl(value = ""): string {
+  const key = value.match(/(?:^|\/admin\/media\/)(posts\/.+)$/)?.[1];
+  return key ? `${API_BASE_URL}/admin/media/${key}` : value;
+}
+
 // Token & User storage helpers
 export function getPhysicalPhotoUrl(value: string = ""): string {
   const key = value.match(/(?:^|\/admin\/media\/|\.amazonaws\.com\/)(physical_verification\/[\w.-]+)$/)?.[1];
@@ -458,12 +463,15 @@ export const adminApi = {
     return callApi(() => apiClient.get("/admin/posts"));
   },
 
+  uploadPostMedia: (file: File) => callApi<{ key: string }>(() =>
+    apiClient.post("/admin/posts/media", file, { headers: { "Content-Type": file.type }, timeout: 0 })),
+
   createPost: async (postData: any): Promise<ApiResponse> => {
-    return callApi(() => apiClient.post("/admin/posts", postData));
+    return callApi(() => apiClient.post("/admin/posts", postData, { timeout: 0 }));
   },
 
   updatePost: async (id: string, postData: any): Promise<ApiResponse> => {
-    return callApi(() => apiClient.put(`/admin/posts/${id}`, postData));
+    return callApi(() => apiClient.put(`/admin/posts/${id}`, postData, { timeout: 0 }));
   },
 
   deletePost: async (id: string): Promise<ApiResponse> => {
@@ -476,11 +484,11 @@ export const adminApi = {
   },
 
   createEvent: async (eventData: any): Promise<ApiResponse> => {
-    return callApi(() => apiClient.post("/admin/events", eventData));
+    return callApi(() => apiClient.post("/admin/events", eventData, { timeout: 0 }));
   },
 
   updateEvent: async (id: string, eventData: any): Promise<ApiResponse> => {
-    return callApi(() => apiClient.put(`/admin/events/${id}`, eventData));
+    return callApi(() => apiClient.put(`/admin/events/${id}`, eventData, { timeout: 0 }));
   },
 
   deleteEvent: async (id: string): Promise<ApiResponse> => {

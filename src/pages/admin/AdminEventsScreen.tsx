@@ -151,7 +151,7 @@ export default function AdminEventsScreen() {
   const [eventImageUrl, setEventImageUrl] = useState("");
   const [imageFileName, setImageFileName] = useState("");
   const [eventStatus, setEventStatus] = useState<"upcoming" | "completed" | "cancelled">("upcoming");
-  const [sendEmailNotification, setSendEmailNotification] = useState(true);
+  const [sendEmailNotification, setSendEmailNotification] = useState(false);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -226,6 +226,8 @@ export default function AdminEventsScreen() {
   };
 
   // Handle local image file upload + preview
+  const bannerReader = React.useRef<FileReader | null>(null);
+  const [readingBanner, setReadingBanner] = useState(false);
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -235,7 +237,16 @@ export default function AdminEventsScreen() {
       }
       setImageFileName(file.name);
       const reader = new FileReader();
-      reader.onloadend = () => {
+      bannerReader.current?.abort();
+      bannerReader.current = reader;
+      setReadingBanner(true);
+      reader.onerror = () => {
+        setFormError("Could not read the banner. Select it again.");
+        setReadingBanner(false);
+        setImageFileName("");
+      };
+      reader.onload = () => {
+        setReadingBanner(false);
         setEventImageUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
@@ -243,6 +254,8 @@ export default function AdminEventsScreen() {
   };
 
   const resetForm = () => {
+    bannerReader.current?.abort();
+    setReadingBanner(false);
     setEditingEventId(null);
     setEventMode("offline");
     setEventTitle("");
@@ -260,7 +273,7 @@ export default function AdminEventsScreen() {
     setEventImageUrl("");
     setImageFileName("");
     setEventStatus("upcoming");
-    setSendEmailNotification(true);
+    setSendEmailNotification(false);
     setFormError("");
     setModalStep("choose_mode");
     setIsSubmitting(false);
@@ -317,6 +330,7 @@ export default function AdminEventsScreen() {
 
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (readingBanner || isSubmitting) return;
     if (!eventTitle.trim()) {
       setFormError("Event name is required");
       return;
@@ -347,7 +361,7 @@ export default function AdminEventsScreen() {
       location: eventMode === "remote" ? "Online / Remote" : eventLocation.trim(),
       category: eventCategory,
       targetAudience: `Scholars (Years: ${eligibleYears.join(", ")}) & Alumni`,
-      imageUrl: eventImageUrl,
+      imageUrl: editingEventId && eventImageUrl && !eventImageUrl.startsWith("data:") ? undefined : eventImageUrl,
       status: eventStatus,
       // Specific Volunteer Event Attributes
       mode: eventMode,
@@ -366,7 +380,7 @@ export default function AdminEventsScreen() {
         const res = await adminApi.updateEvent(editingEventId, payload);
         if (res.success) {
           await fetchEvents();
-          setToastMessage(`Event "${eventTitle}" updated successfully.`);
+          setToastMessage(res.message || "Event updated.");
         } else {
           setFormError(res.message || "Failed to update event");
           setIsSubmitting(false);
@@ -376,11 +390,7 @@ export default function AdminEventsScreen() {
         const res = await adminApi.createEvent(payload);
         if (res.success) {
           await fetchEvents();
-          setToastMessage(
-            sendEmailNotification
-              ? `Event "${eventTitle}" published! Email alerts dispatched to all registered volunteers.`
-              : `Event "${eventTitle}" published! (Email notifications disabled)`
-          );
+          setToastMessage(res.message || "Event published.");
         } else {
           setFormError(res.message || "Failed to create event");
           setIsSubmitting(false);
@@ -996,7 +1006,7 @@ export default function AdminEventsScreen() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || readingBanner}
                     className="px-5 py-2.5 text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-xs border border-[#e5ad0c] flex items-center gap-1.5 disabled:opacity-50"
                   >
                     {isSubmitting ? (

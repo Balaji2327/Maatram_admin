@@ -16,7 +16,7 @@ import {
   VideoCameraIcon,
   LanguageIcon,
 } from "@heroicons/react/24/outline";
-import { getAdminToken, adminApi, getAdminCachedData, setAdminCachedData } from "../../lib/api";
+import { postMediaUrl, getAdminToken, adminApi, getAdminCachedData, setAdminCachedData } from "../../lib/api";
 import AdminSidebar from "../../components/AdminSidebar";
 import SignOutModal from "../../components/SignOutModal";
 import DeleteConfirmModal from "../../components/DeleteConfirmModal";
@@ -42,6 +42,28 @@ export default function AdminPostsScreen() {
   const [postLanguage, setPostLanguage] = useState("English");
   const [postAuthor, setPostAuthor] = useState("Admin Office");
 
+  const [sendEmailNotification, setSendEmailNotification] = useState(true);
+  const files = React.useRef(new Map<string, { file: File; key?: string }>());
+  useEffect(() => {
+    const previews = files.current;
+    return () => { for (const url of previews.keys()) URL.revokeObjectURL(url); };
+  }, []);
+  function preview(file: File) {
+    const url = URL.createObjectURL(file);
+    files.current.set(url, { file });
+    return url;
+  }
+  async function mediaKey(url: string) {
+    const entry = files.current.get(url);
+    if (!entry) return url.match(/\/admin\/media\/(posts\/.+)$/)?.[1] || url;
+    if (!entry.key) {
+      const res = await adminApi.uploadPostMedia(entry.file);
+      if (!res.success || !res.data?.key) throw new Error(res.message || "Media upload failed.");
+      entry.key = res.data.key;
+    }
+    return entry.key;
+  }
+
   // Video State
   const [postVideoUrl, setPostVideoUrl] = useState("");
   const [videoFileName, setVideoFileName] = useState("");
@@ -61,11 +83,7 @@ export default function AdminPostsScreen() {
         return;
       }
       setVideoFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPostVideoUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setPostVideoUrl(preview(file));
     }
   };
 
@@ -85,12 +103,9 @@ export default function AdminPostsScreen() {
         alert(`File ${file.name} is larger than 10MB`);
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPostImages((prev) => [...prev, reader.result as string]);
-        setImageFileNames((prev) => [...prev, file.name]);
-      };
-      reader.readAsDataURL(file);
+      const url = preview(file);
+      setPostImages(prev => [...prev, url]);
+      setImageFileNames(prev => [...prev, file.name]);
     });
   };
 
@@ -118,8 +133,8 @@ export default function AdminPostsScreen() {
       const res = await adminApi.getPosts();
       if (res.success && Array.isArray(res.data)) {
         const formatted: PostCardData[] = res.data.map((item: any) => {
-          const imagesList = Array.isArray(item.images) ? item.images : [];
-          const primaryImage = item.image_url || (imagesList.length > 0 ? imagesList[0] : undefined);
+          const imagesList = Array.isArray(item.images) ? item.images.map((url: string) => postMediaUrl(url)) : [];
+          const primaryImage = postMediaUrl(item.image_url || "") || (imagesList.length > 0 ? imagesList[0] : undefined);
 
           return {
             id: item.id,
@@ -133,7 +148,7 @@ export default function AdminPostsScreen() {
             authorName: item.author_name,
             imageUrl: primaryImage,
             images: imagesList,
-            videoUrl: item.video_url,
+            videoUrl: postMediaUrl(item.video_url || ""),
             videoFileName: item.video_file_name,
             createdAt: item.created_at
               ? new Date(item.created_at).toLocaleDateString("en-IN", {
@@ -172,6 +187,7 @@ export default function AdminPostsScreen() {
   // Open Edit Modal
   const handleEditClick = (post: PostCardData) => {
     setEditingPostId(post.id);
+    setSendEmailNotification(false);
     setPostTitle(post.title || "");
     setPostContent(post.content || "");
     setPostCategory(post.category || "Announcement");
@@ -244,6 +260,9 @@ export default function AdminPostsScreen() {
   }, [postsList, searchTerm]);
 
   const resetForm = () => {
+    for (const url of files.current.keys()) URL.revokeObjectURL(url);
+    files.current.clear();
+    setSendEmailNotification(true);
     setPostTitle("");
     setPostContent("");
     setPostCategory("Announcement");
@@ -269,7 +288,8 @@ export default function AdminPostsScreen() {
     setIsSubmitting(true);
 
     try {
-      const primaryImageUrl = postImages.length > 0 ? postImages[0] : undefined;
+      const images = [];
+      for (const url of postImages) images.push(await mediaKey(url));
 
       const payload = {
         title: postTitle.trim(),
@@ -280,10 +300,10 @@ export default function AdminPostsScreen() {
         location: postLocation.trim() || undefined,
         language: postLanguage.trim() || "English",
         authorName: postAuthor.trim() || "Foundation Admin",
-        videoUrl: postVideoUrl || undefined,
+        videoUrl: postVideoUrl ? await mediaKey(postVideoUrl) : undefined,
+        sendEmailNotification,
         videoFileName: videoFileName || undefined,
-        images: postImages.length > 0 ? postImages : undefined,
-        imageUrl: primaryImageUrl,
+        images,
       };
 
       if (editingPostId) {
@@ -291,6 +311,7 @@ export default function AdminPostsScreen() {
         const res = await adminApi.updatePost(editingPostId, payload);
         if (res.success) {
           await fetchPosts();
+          alert(res.message || "Post saved.");
         } else {
           alert(res.message || "Failed to update post in database");
           setIsSubmitting(false);
@@ -301,6 +322,7 @@ export default function AdminPostsScreen() {
         const res = await adminApi.createPost(payload);
         if (res.success) {
           await fetchPosts();
+          alert(res.message || "Post saved.");
         } else {
           alert(res.message || "Failed to save post to database");
           setIsSubmitting(false);
@@ -420,6 +442,7 @@ export default function AdminPostsScreen() {
               <button
                 type="button"
                 onClick={() => {
+                  if (isSubmitting) return;
                   setIsCreateModalOpen(false);
                   resetForm();
                 }}
@@ -430,7 +453,7 @@ export default function AdminPostsScreen() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSavePost} className="space-y-4">
+            <form onSubmit={handleSavePost}><fieldset disabled={isSubmitting} className="space-y-4">
               {/* 1. Post Title */}
               <div>
                 <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
@@ -566,7 +589,7 @@ export default function AdminPostsScreen() {
                     </p>
                     <input
                       type="file"
-                      accept="video/*"
+                      accept="video/mp4,video/webm"
                       onChange={handleVideoFileChange}
                       className="hidden"
                     />
@@ -624,7 +647,7 @@ export default function AdminPostsScreen() {
                   <input
                     type="file"
                     multiple
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
                     onChange={handleMultipleImagesChange}
                     className="hidden"
                   />
@@ -664,6 +687,10 @@ export default function AdminPostsScreen() {
                 )}
               </div>
 
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={sendEmailNotification} onChange={e => setSendEmailNotification(e.target.checked)} />
+                Email post text to all students, alumni and admins
+              </label>
               {/* Modal Buttons */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
@@ -690,7 +717,7 @@ export default function AdminPostsScreen() {
                     : "Publish Post"}
                 </button>
               </div>
-            </form>
+            </fieldset></form>
           </div>
         </div>
       )}
