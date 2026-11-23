@@ -86,7 +86,9 @@ export default function AdminLoginScreen() {
       }
 
       // Navigate to Admin Dashboard upon successful authentication
-      router.push("/admin/dashboard");
+      const target = sessionStorage.getItem("admin_review_applicant");
+      sessionStorage.removeItem("admin_review_applicant");
+      router.push(target ? "/admin/applications?applicantId=" + encodeURIComponent(target) : "/admin/dashboard");
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to authenticate with management server.");
     } finally {
@@ -296,7 +298,7 @@ export default function AdminLoginScreen() {
               Are you a student applying for education support?{" "}
             </span>
             <Link
-              href="/login"
+              href={"/login"}
               className="font-primary text-xs font-bold text-slate-900 hover:text-[#F7BC0F] hover:underline transition"
             >
               Student Sign In

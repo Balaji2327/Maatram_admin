@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    const origin = process.env.NEXT_PUBLIC_APPLICATION_URL ||
+      (process.env.NODE_ENV === "development" ? "http://localhost:3002" : "https://application.matramites.tech");
+    return ["/login", "/signup", "/verify-otp", "/dashboard", "/process"].map(path => ({
+      source: path,
+      destination: new URL(path, origin).href,
+      permanent: false,
+    }));
+  },
   experimental: {
     agentFeedback: true,
   },

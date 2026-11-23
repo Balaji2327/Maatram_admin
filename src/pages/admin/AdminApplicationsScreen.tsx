@@ -120,6 +120,8 @@ export default function AdminApplicationsScreen() {
   useEffect(() => {
     const token = getAdminToken();
     if (!token) {
+      const target = new URLSearchParams(window.location.search).get("applicantId");
+      if (target) sessionStorage.setItem("admin_review_applicant", target);
       router.replace("/admin/login");
     }
   }, [router]);

@@ -1,5 +1,6 @@
 "use client";
 
+import ScholarProfile from "../../components/ScholarProfile";
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -700,65 +701,7 @@ export default function AdminStudentsScreen() {
                 </div>
               </div>
             ) : (
-              /* ================= TAB 2: SCHOLAR PROFILE & SCHOOLING ================= */
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3.5 rounded-xl bg-slate-50 space-y-1">
-                    <p className="text-[10px] uppercase font-semibold text-slate-400">College & Degree</p>
-                    <p className="font-bold text-slate-800">{selectedStudent.college}</p>
-                    <p className="text-slate-600">{selectedStudent.degree}</p>
-                    <p className="text-amber-700 font-semibold">{selectedStudent.year} • CGPA: {selectedStudent.cgpa}</p>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-50 space-y-1">
-                    <p className="text-[10px] uppercase font-semibold text-slate-400">Contact & Location</p>
-                    <p className="text-slate-800 flex items-center gap-1.5 font-mono">
-                      <EnvelopeIcon className="w-3.5 h-3.5 text-slate-400" />
-                      {selectedStudent.email}
-                    </p>
-                    <p className="text-slate-800 flex items-center gap-1.5">
-                      <PhoneIcon className="w-3.5 h-3.5 text-slate-400" />
-                      {selectedStudent.phone || selectedStudent.metadata?.phone}
-                    </p>
-                    <p className="text-slate-600 flex items-center gap-1.5">
-                      <MapPinIcon className="w-3.5 h-3.5 text-slate-400" />
-                      {selectedStudent.district}, {selectedStudent.metadata?.state || "Tamil Nadu"}
-                    </p>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-50 space-y-1">
-                    <p className="text-[10px] uppercase font-semibold text-slate-400">Family & Financials</p>
-                    <p className="text-slate-700">
-                      <span className="font-semibold">Father:</span> {selectedStudent.metadata?.father_name} ({selectedStudent.metadata?.father_occupation})
-                    </p>
-                    <p className="text-slate-700">
-                      <span className="font-semibold">Mother:</span> {selectedStudent.metadata?.mother_name} ({selectedStudent.metadata?.mother_occupation})
-                    </p>
-                    <p className="text-slate-700">
-                      <span className="font-semibold">Annual Income:</span> {selectedStudent.metadata?.family_annual_income}
-                    </p>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-50 space-y-1">
-                    <p className="text-[10px] uppercase font-semibold text-slate-400">Academics (Schooling)</p>
-                    <p className="text-slate-700">
-                      <span className="font-semibold">12th Cutoff:</span> {selectedStudent.metadata?.twelfth_cutoff}
-                    </p>
-                    <p className="text-slate-700">
-                      <span className="font-semibold">12th Marks:</span> {selectedStudent.metadata?.twelfth_marks} ({selectedStudent.metadata?.twelfth_percentage})
-                    </p>
-                    <p className="text-slate-700">
-                      <span className="font-semibold">10th Marks:</span> {selectedStudent.metadata?.tenth_marks} ({selectedStudent.metadata?.tenth_percentage})
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-100 text-xs space-y-1.5">
-                  <p className="font-bold text-amber-900">Career Ambition & Goals</p>
-                  <p className="text-slate-700 italic">"{selectedStudent.metadata?.career_ambition}"</p>
-                  <p className="text-[11px] text-slate-600 mt-1">{selectedStudent.metadata?.future_goals}</p>
-                </div>
-              </div>
+              <ScholarProfile onSaved={fetchStudents} key={selectedStudent.id} endpoint={`/admin/students/${selectedStudent.id}/profile`} />
             )}
 
             <div className="flex justify-end pt-2 border-t border-slate-100">
