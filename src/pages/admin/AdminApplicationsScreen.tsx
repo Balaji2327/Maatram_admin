@@ -40,7 +40,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import * as XLSX from "xlsx";
-import { adminApi, getAdminToken, getAdminCachedData, setAdminCachedData } from "../../lib/api";
+import { adminApi, getPhysicalPhotoUrl, getAdminToken, getAdminCachedData, setAdminCachedData } from "../../lib/api";
 import SignOutModal from "../../components/SignOutModal";
 import AdminSidebar, { AdminTab } from "../../components/AdminSidebar";
 
@@ -232,6 +232,7 @@ export default function AdminApplicationsScreen() {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
+  const [interviewLocation, setInterviewLocation] = useState<string | null>(null);
   const [isAdvancingPhase, setIsAdvancingPhase] = useState(false);
 
   const openVolunteerAssignment = async (phase: "televerification" | "physical" = "televerification") => {
@@ -886,14 +887,23 @@ export default function AdminApplicationsScreen() {
   };
 
   // Handle Move to Next Phase (Sequential progression across 4 phases)
-  const handleMoveNextPhase = async () => {
+  const handleMoveNextPhase = () => {
+    if (!selectedApplicant) return;
+    if (getNextPhaseAction(selectedApplicant.status)?.nextStatus === "video_interview_done") {
+      setInterviewLocation(selectedApplicant.direct_interview_location || "");
+      return;
+    }
+    void advancePhase();
+  };
+
+  const advancePhase = async (location?: string) => {
     if (!selectedApplicant) return;
     const action = getNextPhaseAction(selectedApplicant.status);
     if (!action) return;
 
     setIsAdvancingPhase(true);
     try {
-      const res = await adminApi.updateStatus(selectedApplicant.id, action.nextStatus);
+      const res = await adminApi.updateStatus(selectedApplicant.id, action.nextStatus, { directInterviewLocation: location });
       if (res.success) {
         // Capture any auto-generated meeting details from response
         const respData = res.data || {};
@@ -906,6 +916,7 @@ export default function AdminApplicationsScreen() {
 
         const updatedApp = {
           ...selectedApplicant,
+          direct_interview_location: (ext as any).direct_interview_location || selectedApplicant.direct_interview_location,
           status: action.nextStatus,
           current_stage: action.nextStage,
           stage_status: action.nextStageStatus,
@@ -913,6 +924,7 @@ export default function AdminApplicationsScreen() {
           video_interview_time: (ext as any).video_interview_time || respData.video_interview_time || selectedApplicant.video_interview_time,
         };
 
+        setInterviewLocation(null);
         setSelectedApplicant(updatedApp);
         setApplications((prev) =>
           prev.map((a) => (a.id === selectedApplicant.id ? updatedApp : a))
@@ -999,10 +1011,7 @@ export default function AdminApplicationsScreen() {
       const res = await adminApi.updateStatus(
         selectedApplicant.id,
         "rejected",
-        defaultReason,
-        selectedApplicant.email,
-        selectedApplicant.full_name,
-        rejectionStage
+        { reason: defaultReason, email: selectedApplicant.email, name: selectedApplicant.full_name, rejectionStage }
       );
       if (res.success) {
         const updatedApp = {
@@ -1738,13 +1747,6 @@ export default function AdminApplicationsScreen() {
                       selectedApplicant.physical_volunteer_name &&
                       selectedApplicant.physical_volunteer_name.trim() !== ""
                     );
-                    const hasPhysicalSuggestion = Boolean(
-                      (selectedApplicant.physical_volunteer_suggestion &&
-                        selectedApplicant.physical_volunteer_suggestion.trim() !== "") ||
-                      (selectedApplicant.physical_student_description &&
-                        selectedApplicant.physical_student_description.trim() !== "")
-                    );
-
                     const getPhysicalPhoto = (slotKey: string): string => {
                       const photosObj =
                         selectedApplicant.physical_verification_photos ||
@@ -1757,7 +1759,6 @@ export default function AdminApplicationsScreen() {
                         selectedApplicant[slotKey] ||
                         photosObj[camelKey] ||
                         selectedApplicant[camelKey] ||
-                        adminPhysicalPhotos[slotKey] ||
                         ""
                       );
                     };
@@ -1769,6 +1770,12 @@ export default function AdminApplicationsScreen() {
                       with_student: getPhysicalPhoto("with_student"),
                       backward: getPhysicalPhoto("backward"),
                     };
+
+                    const hasPhysicalSuggestion = Boolean(
+                      selectedApplicant.physical_volunteer_suggestion?.trim() &&
+                      selectedApplicant.physical_student_description?.trim() &&
+                      PHYSICAL_PHOTO_SLOTS.every(({ key }) => physicalPhotos[key])
+                    );
 
                     return (
                       <div className="p-6 rounded-3xl border bg-linear-to-r from-blue-50/70 via-indigo-50/40 to-white border-blue-200 shadow-sm space-y-5">
@@ -1900,7 +1907,7 @@ export default function AdminApplicationsScreen() {
                                   </label>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                                     {PHYSICAL_PHOTO_SLOTS.map((slot, idx) => {
-                                      const photoUrl = adminPhysicalPhotos[slot.key];
+                                      const photoUrl = getPhysicalPhotoUrl(adminPhysicalPhotos[slot.key]);
                                       return (
                                         <div
                                           key={slot.key}
@@ -2019,7 +2026,7 @@ export default function AdminApplicationsScreen() {
                                   </button>
                                   <button
                                     type="button"
-                                    disabled={isSavingVolunteerNote}
+                                    disabled={isSavingVolunteerNote || PHYSICAL_PHOTO_SLOTS.some(({ key }) => !adminPhysicalPhotos[key]) || !volunteerStudentDescriptionInput.trim() || !volunteerNoteInput.trim()}
                                     onClick={() => handleSavePhysicalVolunteerNote(selectedApplicant.id)}
                                     className="px-5 py-2 text-xs font-heading font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition cursor-pointer shadow-xs"
                                   >
@@ -2095,7 +2102,7 @@ export default function AdminApplicationsScreen() {
 
                                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                     {PHYSICAL_PHOTO_SLOTS.map((slot, idx) => {
-                                      const photoUrl = physicalPhotos[slot.key];
+                                      const photoUrl = getPhysicalPhotoUrl(physicalPhotos[slot.key]);
                                       return (
                                         <div
                                           key={slot.key}
@@ -2292,7 +2299,7 @@ export default function AdminApplicationsScreen() {
                       selectedApplicant.status === "direct_interview_done"
                     ) {
                       phaseTitle = "Fourth Phase: Direct Interview (Final Stage)";
-                      phaseDesc = "Phase 3 Video Call cleared. Direct in-person panel interview with senior trustees at Maatram Central Office.";
+                      phaseDesc = "Phase 3 Video Call cleared. Direct in-person panel interview with senior trustees.";
                       phaseBadge = "Phase 4 (Final Stage) Active";
                     }
 
@@ -2310,6 +2317,7 @@ export default function AdminApplicationsScreen() {
                               </span>
                             </div>
                             <p className="text-xs text-slate-600 mt-0.5">{phaseDesc}</p>
+                            {selectedApplicant.direct_interview_location && <p className="mt-2 text-sm font-semibold text-slate-900">Interview location: {selectedApplicant.direct_interview_location}</p>}
                           </div>
                         </div>
 
@@ -2333,6 +2341,18 @@ export default function AdminApplicationsScreen() {
                               <p className="text-xs font-bold text-slate-800 italic">
                                 &quot;{selectedApplicant.physical_volunteer_suggestion}&quot;
                               </p>
+                              <p className="mt-2 text-xs text-slate-700">{selectedApplicant.physical_student_description}</p>
+                              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                                {PHYSICAL_PHOTO_SLOTS.map(({ key, title }) => {
+                                  const url = getPhysicalPhotoUrl(selectedApplicant.physical_verification_photos?.[key] || selectedApplicant[key]);
+                                  return url && (
+                                    <a key={key} href={url} target="_blank" rel="noreferrer">
+                                      <img src={url} alt={title} className="w-full aspect-square rounded-lg object-cover" />
+                                      <span className="text-xs">{title}</span>
+                                    </a>
+                                  );
+                                })}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -4261,6 +4281,28 @@ export default function AdminApplicationsScreen() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {interviewLocation !== null && selectedApplicant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+          <form role="dialog" aria-modal="true" aria-labelledby="direct-interview-heading"
+            className="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-xl"
+            onSubmit={e => { e.preventDefault(); if (interviewLocation.trim() && !isAdvancingPhase) void advancePhase(interviewLocation.trim()); }}>
+            <h2 id="direct-interview-heading" className="text-lg font-bold text-slate-900">Move to direct interview</h2>
+            <label className="block text-sm font-semibold text-slate-800">
+              Interview location
+              <textarea autoFocus required rows={3} value={interviewLocation} disabled={isAdvancingPhase}
+                onChange={e => setInterviewLocation(e.target.value)} placeholder="Venue name and address"
+                className="mt-2 block w-full rounded-lg border border-slate-300 p-3 text-sm" />
+            </label>
+            <div className="flex justify-end gap-3">
+              <button type="button" disabled={isAdvancingPhase} onClick={() => setInterviewLocation(null)}>Cancel</button>
+              <button type="submit" disabled={isAdvancingPhase || !interviewLocation.trim()} className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
+                {isAdvancingPhase ? "Saving..." : "Confirm direct interview"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

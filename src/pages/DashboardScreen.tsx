@@ -709,6 +709,7 @@ export default function DashboardScreen() {
     rejectionReason?: string;
     rejectionStage?: number;
     videoInterviewLink?: string;
+    directInterviewLocation?: string;
     videoInterviewTime?: string;
   }>({
     status: "draft",
@@ -969,6 +970,7 @@ export default function DashboardScreen() {
             rejectionReason: reason || undefined,
             rejectionStage: stage,
             videoInterviewLink: d.video_interview_link || d.videoInterviewLink || undefined,
+            directInterviewLocation: d.directInterviewLocation,
             videoInterviewTime: d.video_interview_time || d.videoInterviewTime || undefined,
           });
         }
@@ -1003,6 +1005,7 @@ export default function DashboardScreen() {
               rejectionReason: liveReason || undefined,
               rejectionStage: liveStage,
               videoInterviewLink: s.videoInterviewLink || s.video_interview_link || undefined,
+              directInterviewLocation: s.directInterviewLocation,
               videoInterviewTime: s.videoInterviewTime || s.video_interview_time || undefined,
             });
             if (s.status && s.status !== "draft") {
@@ -1388,10 +1391,10 @@ export default function DashboardScreen() {
                     {
                       id: 5,
                       title: "Fourth Phase: Direct Interview (Final Stage)",
-                      desc: "In-person direct panel interview with senior trustees, academic leaders, and corporate sponsors at Maatram Central Office.",
+                      desc: "In-person direct panel interview with senior trustees, academic leaders, and corporate sponsors.",
                       completed: currentLevel >= 5,
                       isCurrentWaiting: currentLevel === 4,
-                      waitingText: "Waiting for direct interview call letter & in-person panel scheduling at Maatram Trust.",
+                      waitingText: applicationStatusData.directInterviewLocation ? `Direct interview location: ${applicationStatusData.directInterviewLocation}` : "Waiting for direct interview details.",
                     },
                     {
                       id: 6,

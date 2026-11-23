@@ -18,6 +18,7 @@ export default function SelectionProcessScreen() {
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [appNumber, setAppNumber] = useState("MF-2025-001");
   const [status, setStatus] = useState("submitted");
+  const [directInterviewLocation, setDirectInterviewLocation] = useState("");
   const [stageStatus, setStageStatus] = useState("In Progress");
   const [rejectionStage, setRejectionStage] = useState(1);
 
@@ -27,6 +28,7 @@ export default function SelectionProcessScreen() {
         const res = await applicationApi.getStatus();
         const appNum = res.data?.applicationNumber || res.applicationNumber || "MF-2025-001";
         setAppNumber(appNum);
+        setDirectInterviewLocation(res.data?.directInterviewLocation || res.directInterviewLocation || "");
         if (res.data?.status || res.status) setStatus(res.data?.status || res.status);
         if (res.data?.stageStatus || res.stageStatus) setStageStatus(res.data?.stageStatus || res.stageStatus);
 
@@ -106,10 +108,10 @@ export default function SelectionProcessScreen() {
     {
       id: 5,
       title: "Fourth Phase: Direct Interview (Final Stage)",
-      desc: "In-person direct panel interview with senior trustees, academic leaders, and corporate sponsors at Maatram Central Office.",
+      desc: "In-person direct panel interview with senior trustees, academic leaders, and corporate sponsors.",
       completed: currentLevel >= 5,
       isCurrentWaiting: currentLevel === 4,
-      waitingText: "Waiting for direct interview call letter & in-person panel scheduling at Maatram Trust.",
+      waitingText: directInterviewLocation ? `Direct interview location: ${directInterviewLocation}` : "Waiting for direct interview details.",
     },
     {
       id: 6,
