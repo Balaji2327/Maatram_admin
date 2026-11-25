@@ -340,7 +340,7 @@ export default function AdminPostsScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-primary flex">
+    <div className="min-h-screen bg-white text-black font-primary flex">
       {/* 1. Yellow & White Sidebar */}
       <AdminSidebar
         activeTab="posts"
@@ -348,15 +348,15 @@ export default function AdminPostsScreen() {
       />
 
       {/* 2. Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC]">
-        <main className="w-full px-6 lg:px-10 py-8 space-y-8 flex-1">
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
+        <main className="w-full px-4 sm:px-6 lg:px-10 py-8 space-y-8 flex-1">
           {/* Header Banner */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+              <h1 className="font-heading font-bold text-2xl sm:text-3xl text-black tracking-tight">
                 Community Posts
               </h1>
-              <p className="font-primary text-xs sm:text-sm text-slate-600 mt-1">
+              <p className="font-primary text-xs sm:text-sm text-black mt-1">
                 Publish foundation announcements, stories, news, and community discussions.
               </p>
             </div>
@@ -365,7 +365,7 @@ export default function AdminPostsScreen() {
               <button
                 type="button"
                 onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] transition cursor-pointer shadow-xs border border-[#e5ad0c]"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md text-xs font-heading font-bold text-black bg-brand hover:brightness-95 transition cursor-pointer border border-brand"
               >
                 <PlusIcon className="w-4 h-4 stroke-[2.5]" />
                 <span>Create Post</span>
@@ -374,31 +374,31 @@ export default function AdminPostsScreen() {
           </div>
 
           {/* Search & Counter Bar */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-white border border-black/15 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative w-full sm:w-96">
-              <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <MagnifyingGlassIcon className="w-4 h-4 text-black/65 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search posts by title, author, or content..."
-                className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:bg-white transition"
+                className="w-full pl-9 pr-3.5 py-2 text-xs rounded-md border border-black/15 bg-black/5 text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:bg-white transition"
               />
             </div>
           </div>
 
           {/* Posts Grid Layout - Instant rendering */}
           {filteredPosts.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-3xl p-16 text-center text-slate-400 shadow-xs">
-              <ChatBubbleLeftRightIcon className="w-12 h-12 mx-auto mb-3 text-slate-300 stroke-1" />
-              <p className="text-base font-bold text-slate-700">No Posts Published Yet</p>
-              <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+            <div className="bg-white border border-black/15 rounded-xl p-16 text-center text-black/65">
+              <ChatBubbleLeftRightIcon className="w-12 h-12 mx-auto mb-3 text-black/65 stroke-1" />
+              <p className="text-base font-bold text-black">No Posts Published Yet</p>
+              <p className="text-xs text-black/65 mt-1 max-w-sm mx-auto">
                 Keep alumni, scholars, and volunteers informed. Click "Create Post" to publish your first announcement.
               </p>
               <button
                 type="button"
                 onClick={() => setIsCreateModalOpen(true)}
-                className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] transition cursor-pointer shadow-xs border border-[#e5ad0c]"
+                className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-md text-xs font-heading font-bold text-black bg-brand hover:brightness-95 transition cursor-pointer border border-brand"
               >
                 <PlusIcon className="w-4 h-4 stroke-[2.5]" />
                 <span>Create Post</span>
@@ -422,19 +422,19 @@ export default function AdminPostsScreen() {
 
       {/* CREATE / EDIT POST MODAL POPUP */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl border border-black/15 shadow-sm max-w-2xl w-full p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-black/15">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-800">
+                <div className="w-8 h-8 rounded-md bg-brand/15 border border-brand/60 flex items-center justify-center text-black">
                   <ChatBubbleLeftRightIcon className="w-4 h-4 stroke-[2]" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-bold text-base text-slate-900">
+                  <h3 className="font-heading font-bold text-base text-black">
                     {editingPostId ? "Edit Post" : "Create New Post"}
                   </h3>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-black/65">
                     Publish updates, schedules, and media to students and alumni
                   </p>
                 </div>
@@ -446,7 +446,7 @@ export default function AdminPostsScreen() {
                   setIsCreateModalOpen(false);
                   resetForm();
                 }}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-sm p-1 rounded-lg hover:bg-slate-100 transition"
+                className="text-black/65 hover:text-black cursor-pointer font-bold text-sm p-1 rounded-lg hover:bg-black/5 transition"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -456,8 +456,8 @@ export default function AdminPostsScreen() {
             <form onSubmit={handleSavePost}><fieldset disabled={isSubmitting} className="space-y-4">
               {/* 1. Post Title */}
               <div>
-                <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                  Post Title <span className="text-red-500">*</span>
+                <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                  Post Title <span className="text-black/65">*</span>
                 </label>
                 <input
                   type="text"
@@ -465,14 +465,14 @@ export default function AdminPostsScreen() {
                   value={postTitle}
                   onChange={(e) => setPostTitle(e.target.value)}
                   placeholder="e.g. Annual Education Orientation Day 2026"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                  className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                 />
               </div>
 
               {/* 2. Post Description / Content */}
               <div>
-                <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                  Post Description / Content <span className="text-red-500">*</span>
+                <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                  Post Description / Content <span className="text-black/65">*</span>
                 </label>
                 <textarea
                   required
@@ -480,20 +480,20 @@ export default function AdminPostsScreen() {
                   value={postContent}
                   onChange={(e) => setPostContent(e.target.value)}
                   placeholder="Write full details of the announcement, event instructions, rules, or message..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                  className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                 />
               </div>
 
               {/* 3 & 4. Category (Dropdown) & Post Language */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                    Category (Dropdown) <span className="text-red-500">*</span>
+                  <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                    Category (Dropdown) <span className="text-black/65">*</span>
                   </label>
                   <select
                     value={postCategory}
                     onChange={(e) => setPostCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                    className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                   >
                     <option value="Announcement">Announcement</option>
                     <option value="Orientation">Orientation</option>
@@ -507,13 +507,13 @@ export default function AdminPostsScreen() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-heading font-bold text-black mb-1.5">
                     Post Language
                   </label>
                   <select
                     value={postLanguage}
                     onChange={(e) => setPostLanguage(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                    className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                   >
                     <option value="English">English</option>
                     <option value="Tamil">Tamil (தமிழ்)</option>
@@ -527,7 +527,7 @@ export default function AdminPostsScreen() {
               {/* 5, 6, 7. Schedule Date, Schedule Time, Location */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <div>
-                  <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-heading font-bold text-black mb-1.5">
                     Schedule Date
                   </label>
                   <div className="relative">
@@ -535,13 +535,13 @@ export default function AdminPostsScreen() {
                       type="date"
                       value={postScheduleDate}
                       onChange={(e) => setPostScheduleDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                      className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-heading font-bold text-black mb-1.5">
                     Schedule Time
                   </label>
                   <div className="relative">
@@ -549,13 +549,13 @@ export default function AdminPostsScreen() {
                       type="time"
                       value={postScheduleTime}
                       onChange={(e) => setPostScheduleTime(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                      className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-heading font-bold text-black mb-1.5">
                     Location
                   </label>
                   <div className="relative">
@@ -564,7 +564,7 @@ export default function AdminPostsScreen() {
                       value={postLocation}
                       onChange={(e) => setPostLocation(e.target.value)}
                       placeholder="e.g. Chennai / Virtual Meet"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                      className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                     />
                   </div>
                 </div>
@@ -572,19 +572,19 @@ export default function AdminPostsScreen() {
 
               {/* 8. Upload Video */}
               <div>
-                <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                  Upload Video <span className="text-slate-400 font-normal">(MP4, WebM up to 50MB)</span>
+                <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                  Upload Video <span className="text-black/65 font-normal">(MP4, WebM up to 50MB)</span>
                 </label>
 
                 {!postVideoUrl ? (
-                  <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 hover:border-[#F7BC0F] rounded-2xl bg-slate-50 hover:bg-amber-50/20 transition cursor-pointer group">
-                    <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 group-hover:text-amber-800 group-hover:scale-105 transition shadow-2xs mb-1.5">
+                  <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-black/15 hover:border-brand rounded-lg bg-black/5 hover:bg-brand/15 transition cursor-pointer group">
+                    <div className="w-9 h-9 rounded-md bg-white border border-black/15 flex items-center justify-center text-black/65 group-hover:text-black transition mb-1.5">
                       <VideoCameraIcon className="w-5 h-5 stroke-[2]" />
                     </div>
-                    <p className="text-xs font-heading font-bold text-slate-700">
+                    <p className="text-xs font-heading font-bold text-black">
                       Click to upload video
                     </p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <p className="text-[11px] text-black/65 mt-0.5">
                       Supports MP4, MOV, WebM formats
                     </p>
                     <input
@@ -595,16 +595,16 @@ export default function AdminPostsScreen() {
                     />
                   </label>
                 ) : (
-                  <div className="relative rounded-2xl border border-purple-200 bg-purple-50/40 p-3 flex items-center justify-between gap-3">
+                  <div className="relative rounded-lg border border-brand/60 bg-brand/15 p-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700 shrink-0">
+                      <div className="w-10 h-10 rounded-md bg-brand/15 border border-brand/60 flex items-center justify-center text-black shrink-0">
                         <VideoCameraIcon className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-heading font-bold text-slate-800 truncate">
+                        <p className="text-xs font-heading font-bold text-black truncate">
                           {videoFileName || "Selected Video"}
                         </p>
-                        <p className="text-[10px] text-purple-700 font-semibold mt-0.5">
+                        <p className="text-[10px] text-black font-semibold mt-0.5">
                           Video ready to attach
                         </p>
                       </div>
@@ -612,7 +612,7 @@ export default function AdminPostsScreen() {
                     <button
                       type="button"
                       onClick={handleRemoveVideo}
-                      className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                      className="p-1.5 text-black/65 hover:text-black hover:bg-brand/15 rounded-md transition cursor-pointer"
                       title="Remove Video"
                     >
                       <TrashIcon className="w-4 h-4" />
@@ -624,24 +624,24 @@ export default function AdminPostsScreen() {
               {/* 9. Upload Images (Multiple) */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-heading font-bold text-slate-700">
-                    Upload Images (Multiple) <span className="text-slate-400 font-normal">(PNG, JPG, WEBP up to 10MB each)</span>
+                  <label className="text-xs font-heading font-bold text-black">
+                    Upload Images (Multiple) <span className="text-black/65 font-normal">(PNG, JPG, WEBP up to 10MB each)</span>
                   </label>
                   {postImages.length > 0 && (
-                    <span className="text-[11px] font-bold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
+                    <span className="text-[11px] font-bold text-black bg-brand/15 border border-brand/60 px-2 py-0.5 rounded-md">
                       {postImages.length} {postImages.length === 1 ? "Image" : "Images"} selected
                     </span>
                   )}
                 </div>
 
-                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 hover:border-[#F7BC0F] rounded-2xl bg-slate-50 hover:bg-amber-50/20 transition cursor-pointer group">
-                  <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 group-hover:text-amber-800 group-hover:scale-105 transition shadow-2xs mb-1.5">
+                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-black/15 hover:border-brand rounded-lg bg-black/5 hover:bg-brand/15 transition cursor-pointer group">
+                  <div className="w-9 h-9 rounded-md bg-white border border-black/15 flex items-center justify-center text-black/65 group-hover:text-black transition mb-1.5">
                     <PhotoIcon className="w-5 h-5 stroke-[2]" />
                   </div>
-                  <p className="text-xs font-heading font-bold text-slate-700">
+                  <p className="text-xs font-heading font-bold text-black">
                     Click to add one or more images
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-black/65 mt-0.5">
                     Hold Ctrl / Cmd or select multiple pictures
                   </p>
                   <input
@@ -659,25 +659,25 @@ export default function AdminPostsScreen() {
                     {postImages.map((imgSrc, index) => (
                       <div
                         key={index}
-                        className="group relative h-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-2xs"
+                        className="group relative h-20 rounded-md overflow-hidden border border-black/15 bg-black/5"
                       >
                         <img
                           src={imgSrc}
                           alt={`Uploaded preview ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                           <button
                             type="button"
                             onClick={() => handleRemoveSingleImage(index)}
-                            className="p-1 rounded-md bg-red-600 text-white hover:bg-red-700 transition cursor-pointer shadow-xs"
+                            className="p-1 rounded-md bg-black text-white hover:bg-black transition cursor-pointer"
                             title="Delete this image"
                           >
                             <TrashIcon className="w-3.5 h-3.5" />
                           </button>
                         </div>
                         {index === 0 && (
-                          <span className="absolute bottom-1 left-1 text-[9px] font-bold bg-amber-400 text-slate-950 px-1.5 py-0.2 rounded shadow-xs">
+                          <span className="absolute bottom-1 left-1 text-[10px] font-bold bg-brand text-black px-1.5 py-0.2 rounded">
                             Cover
                           </span>
                         )}
@@ -687,26 +687,26 @@ export default function AdminPostsScreen() {
                 )}
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className="flex items-center gap-2 text-sm text-black">
                 <input type="checkbox" checked={sendEmailNotification} onChange={e => setSendEmailNotification(e.target.checked)} />
                 Email post text to all students, alumni and admins
               </label>
               {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-black/15">
                 <button
                   type="button"
                   onClick={() => {
                     setIsCreateModalOpen(false);
                     resetForm();
                   }}
-                  className="px-4 py-2.5 text-xs font-heading font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2.5 text-xs font-heading font-bold text-black hover:bg-black/5 rounded-md transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2.5 text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-xs border border-[#e5ad0c]"
+                  className="px-5 py-2.5 text-xs font-heading font-bold text-black bg-brand hover:brightness-95 rounded-md transition cursor-pointer border border-brand"
                 >
                   {isSubmitting
                     ? editingPostId
@@ -724,16 +724,16 @@ export default function AdminPostsScreen() {
 
       {/* VIEW POST DETAILS MODAL */}
       {selectedPost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 sm:p-7 space-y-4 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <span className="text-xs font-heading font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl border border-black/15 shadow-sm max-w-lg w-full p-6 sm:p-7 space-y-4 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-black/15">
+              <span className="text-xs font-heading font-bold text-black bg-brand/15 px-2.5 py-1 rounded-md border border-brand/60">
                 {selectedPost.category || "Post"}
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedPost(null)}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-sm p-1 rounded-lg hover:bg-slate-100 transition"
+                className="text-black/65 hover:text-black cursor-pointer font-bold text-sm p-1 rounded-lg hover:bg-black/5 transition"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -741,12 +741,12 @@ export default function AdminPostsScreen() {
 
             {/* Category & Language Badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-heading font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+              <span className="text-xs font-heading font-bold text-black bg-brand/15 px-2.5 py-1 rounded-md border border-brand/60">
                 {selectedPost.category || "Post"}
               </span>
               {selectedPost.language && (
-                <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 flex items-center gap-1">
-                  <LanguageIcon className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <span className="text-xs font-semibold text-black bg-black/5 px-2.5 py-1 rounded-md border border-black/15 flex items-center gap-1">
+                  <LanguageIcon className="w-3.5 h-3.5 text-black/65 shrink-0" />
                   <span>{selectedPost.language}</span>
                 </span>
               )}
@@ -754,7 +754,7 @@ export default function AdminPostsScreen() {
 
             {/* Video Player if uploaded */}
             {selectedPost.videoUrl && (
-              <div className="w-full rounded-2xl overflow-hidden bg-black/90 border border-slate-200 shadow-xs">
+              <div className="w-full rounded-lg overflow-hidden bg-black/90 border border-black/15">
                 <video
                   src={selectedPost.videoUrl}
                   controls
@@ -768,7 +768,7 @@ export default function AdminPostsScreen() {
             {/* Multiple Images Gallery / Primary Image */}
             {selectedPost.images && selectedPost.images.length > 0 ? (
               <div className="space-y-2">
-                <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
+                <div className="relative w-full h-56 rounded-lg overflow-hidden bg-black/5 border border-black/15">
                   <img
                     src={selectedPost.images[0]}
                     alt={selectedPost.title}
@@ -778,7 +778,7 @@ export default function AdminPostsScreen() {
                 {selectedPost.images.length > 1 && (
                   <div className="grid grid-cols-4 gap-2">
                     {selectedPost.images.slice(1).map((img, i) => (
-                      <div key={i} className="relative h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                      <div key={i} className="relative h-16 rounded-md overflow-hidden bg-black/5 border border-black/15">
                         <img src={img} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
                       </div>
                     ))}
@@ -786,7 +786,7 @@ export default function AdminPostsScreen() {
                 )}
               </div>
             ) : selectedPost.imageUrl ? (
-              <div className="relative w-full h-52 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
+              <div className="relative w-full h-52 rounded-lg overflow-hidden bg-black/5 border border-black/15">
                 <img
                   src={selectedPost.imageUrl}
                   alt={selectedPost.title}
@@ -795,43 +795,43 @@ export default function AdminPostsScreen() {
               </div>
             ) : null}
 
-            <h2 className="font-heading font-bold text-xl text-slate-900 leading-snug">
+            <h2 className="font-heading font-bold text-xl text-black leading-snug">
               {selectedPost.title}
             </h2>
 
             {/* Schedule, Location & Author Meta */}
-            <div className="space-y-2 pb-3 border-b border-slate-100 text-xs text-slate-600">
+            <div className="space-y-2 pb-3 border-b border-black/15 text-xs text-black">
               <div className="flex flex-wrap items-center gap-3">
                 {selectedPost.scheduleDate && (
-                  <span className="inline-flex items-center gap-1.5 font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
-                    <CalendarIcon className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-black bg-brand/15 px-2 py-0.5 rounded-md">
+                    <CalendarIcon className="w-3.5 h-3.5 text-black/65 shrink-0" />
                     <span>{selectedPost.scheduleDate} {selectedPost.scheduleTime ? `@ ${selectedPost.scheduleTime}` : ""}</span>
                   </span>
                 )}
                 {selectedPost.location && (
-                  <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                    <MapPinIcon className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-black bg-brand/15 px-2 py-0.5 rounded-md">
+                    <MapPinIcon className="w-3.5 h-3.5 text-black/65 shrink-0" />
                     <span>{selectedPost.location}</span>
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+              <div className="flex items-center gap-3 text-black/65 text-[11px]">
                 <span>By {selectedPost.authorName || "Foundation Admin"}</span>
                 <span>•</span>
                 <span>Created {selectedPost.createdAt}</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">
+            <p className="text-xs text-black leading-relaxed whitespace-pre-line">
               {selectedPost.content}
             </p>
 
-            <div className="pt-3 border-t border-slate-100 flex justify-end">
+            <div className="pt-3 border-t border-black/15 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedPost(null)}
-                className="px-5 py-2 text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-xs border border-[#e5ad0c]"
+                className="px-5 py-2 text-xs font-heading font-bold text-black bg-brand hover:brightness-95 rounded-md transition cursor-pointer border border-brand"
               >
                 Close
               </button>
@@ -856,7 +856,6 @@ export default function AdminPostsScreen() {
       <SignOutModal
         isOpen={isSignOutModalOpen}
         onClose={() => setIsSignOutModalOpen(false)}
-        onConfirm={() => router.push("/")}
       />
     </div>
   );

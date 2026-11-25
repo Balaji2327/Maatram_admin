@@ -132,7 +132,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
             setIsOpen(true);
             setIsMinimized(false);
           }}
-          className="group relative flex items-center gap-2 px-4 py-2.5 bg-[#F7BC0F] hover:bg-[#eab007] text-slate-950 font-heading font-black text-xs rounded-full shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer active:scale-95 border border-[#e5ad0c]"
+          className="group relative flex items-center gap-2 px-4 py-2.5 bg-brand hover:brightness-95 text-black font-heading font-bold text-xs rounded-md shadow-sm hover:shadow-sm transition-all duration-200 cursor-pointer border border-brand"
           aria-label="Ask Mark"
         >
           <SparklesIcon className="w-4 h-4 stroke-[2.5]" />
@@ -143,23 +143,23 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
       {/* Chat Window */}
       {isOpen && (
         <div
-          className={`flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden transition-all duration-300 ${
+          className={`flex flex-col bg-white rounded-xl shadow-sm border border-black/15 overflow-hidden transition-all duration-300 ${
             isMinimized
               ? "w-80 h-16"
               : "w-[360px] sm:w-[410px] h-[520px] max-h-[85vh]"
           }`}
         >
           {/* Header */}
-          <div className="bg-[#F7BC0F] text-slate-950 px-4 py-3 flex items-center justify-between border-b border-amber-300/80">
+          <div className="bg-brand text-black px-4 py-3 flex items-center justify-between border-b border-brand/60">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-slate-950 text-[#F7BC0F] flex items-center justify-center font-heading font-black text-xs">
+              <div className="w-8 h-8 rounded-full bg-black text-brand flex items-center justify-center font-heading font-bold text-xs">
                 M
               </div>
               <div>
-                <h4 className="font-heading font-black text-sm tracking-wide text-slate-950 leading-tight">
+                <h4 className="font-heading font-bold text-sm tracking-wide text-black leading-tight">
                   Mark
                 </h4>
-                <p className="text-[10px] text-slate-900/80 font-medium">Maatram AI Assistant</p>
+                <p className="text-[10px] text-black/80 font-medium">Maatram AI Assistant</p>
               </div>
             </div>
 
@@ -168,7 +168,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
                 type="button"
                 onClick={handleReset}
                 title="Reset Conversation"
-                className="p-1.5 text-slate-900 hover:bg-black/10 rounded-lg transition cursor-pointer"
+                className="p-1.5 text-black hover:bg-black/10 rounded-lg transition cursor-pointer"
               >
                 <ArrowPathIcon className="w-3.5 h-3.5" />
               </button>
@@ -176,7 +176,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
                 type="button"
                 onClick={() => setIsMinimized(!isMinimized)}
                 title={isMinimized ? "Expand" : "Minimize"}
-                className="p-1.5 text-slate-900 hover:bg-black/10 rounded-lg transition cursor-pointer"
+                className="p-1.5 text-black hover:bg-black/10 rounded-lg transition cursor-pointer"
               >
                 <MinusIcon className="w-3.5 h-3.5" />
               </button>
@@ -184,7 +184,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
                 type="button"
                 onClick={() => setIsOpen(false)}
                 title="Close"
-                className="p-1.5 text-slate-900 hover:bg-black/10 rounded-lg transition cursor-pointer"
+                className="p-1.5 text-black hover:bg-black/10 rounded-lg transition cursor-pointer"
               >
                 <XMarkIcon className="w-4 h-4" />
               </button>
@@ -195,7 +195,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
           {!isMinimized && (
             <>
               {/* Messages scroll area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50 text-xs">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-black/5 text-xs">
                 {messages.map((m) => (
                   <div
                     key={m.id}
@@ -204,15 +204,15 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
                     }`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl p-3 shadow-2xs leading-relaxed ${
+                      className={`max-w-[85%] rounded-lg p-3 leading-relaxed ${
                         m.sender === "user"
-                          ? "bg-[#F7BC0F] text-slate-950 font-medium rounded-br-xs"
-                          : "bg-white text-slate-900 border border-slate-200 rounded-bl-xs"
+                          ? "bg-brand text-black font-medium rounded-br-xs"
+                          : "bg-white text-black border border-black/15 rounded-bl-xs"
                       }`}
                     >
                       <p className="whitespace-pre-line">{m.id === "welcome-1" && <> <HandRaisedIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> </>}{m.text}</p>
                     </div>
-                    <span className="text-[9px] text-slate-400 mt-1 px-1">
+                    <span className="text-[10px] text-black/65 mt-1 px-1">
                       {m.timestamp}
                     </span>
 
@@ -224,7 +224,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
                             key={idx}
                             type="button"
                             onClick={() => handleSend(opt)}
-                            className="text-[10px] bg-white hover:bg-[#F7BC0F] text-slate-800 hover:text-slate-950 border border-slate-200 rounded-full px-2.5 py-1 transition cursor-pointer font-medium shadow-2xs"
+                            className="text-[10px] bg-white hover:bg-brand text-black hover:text-black border border-black/15 rounded-md px-2.5 py-1 transition cursor-pointer font-medium"
                           >
                             {opt}
                           </button>
@@ -236,11 +236,11 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
 
                 {/* Typing indicator */}
                 {isTyping && (
-                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-2 rounded-2xl w-fit shadow-2xs">
-                    <span className="w-1.5 h-1.5 bg-[#F7BC0F] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="w-1.5 h-1.5 bg-[#F7BC0F] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="w-1.5 h-1.5 bg-[#F7BC0F] rounded-full animate-bounce"></span>
-                    <span className="text-[10px] text-slate-500 ml-1">Mark is typing...</span>
+                  <div className="flex items-center gap-1.5 bg-white border border-black/15 px-3 py-2 rounded-lg w-fit">
+                    <span className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce"></span>
+                    <span className="text-[10px] text-black/65 ml-1">Mark is typing...</span>
                   </div>
                 )}
 
@@ -248,7 +248,7 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
               </div>
 
               {/* Input Footer */}
-              <div className="p-3 bg-white border-t border-slate-200 space-y-1.5">
+              <div className="p-3 bg-white border-t border-black/15 space-y-1.5">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -261,18 +261,18 @@ export default function AskMarkBot({ applicationsCount = 0 }: AskMarkBotProps) {
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Ask Mark about cutoffs, applicants, rules..."
-                    className="flex-1 bg-white hover:bg-slate-50 focus:bg-white border border-slate-200 focus:border-[#F7BC0F] rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none transition shadow-2xs"
+                    className="flex-1 bg-white hover:bg-black/5 focus:bg-white border border-black/15 focus:border-brand rounded-md px-3 py-2 text-xs text-black placeholder:text-black/65 focus:outline-none transition"
                   />
                   <button
                     type="submit"
                     disabled={!inputText.trim()}
-                    className="p-2 bg-[#F7BC0F] hover:bg-[#eab007] disabled:opacity-40 disabled:hover:bg-[#F7BC0F] text-slate-950 rounded-xl transition cursor-pointer disabled:cursor-not-allowed shadow-xs"
+                    className="p-2 bg-brand hover:brightness-95 disabled:opacity-40 disabled:hover:bg-brand text-black rounded-md transition cursor-pointer disabled:cursor-not-allowed"
                     title="Send"
                   >
-                    <PaperAirplaneIcon className="w-4 h-4 -rotate-45 text-slate-950" />
+                    <PaperAirplaneIcon className="w-4 h-4 -rotate-45 text-black" />
                   </button>
                 </form>
-                <div className="flex items-center justify-between text-[9px] text-slate-400 px-1">
+                <div className="flex items-center justify-between text-[10px] text-black/65 px-1">
                   <span>Mark • Maatram AI Assistant</span>
                   <span>Online</span>
                 </div>

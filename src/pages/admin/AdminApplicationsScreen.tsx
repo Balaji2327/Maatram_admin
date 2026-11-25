@@ -1095,11 +1095,11 @@ export default function AdminApplicationsScreen() {
         // B. Family Information
         "Father Name": a.father_name || "",
         "Father Occupation": a.father_occupation || "",
-        "Father Monthly Income": a.father_income || a.fatherMonthlyIncome || "",
+        "Father Annual Income": a.father_income || a.fatherAnnualIncome || "",
         "Father Employment Status": a.fatherEmploymentStatus || "",
         "Mother Name": a.mother_name || "",
         "Mother Occupation": a.mother_occupation || "",
-        "Mother Monthly Income": a.mother_income || a.motherMonthlyIncome || "",
+        "Mother Annual Income": a.mother_income || a.motherAnnualIncome || "",
         "Mother Employment Status": a.motherEmploymentStatus || "",
         "Total Annual Family Income": a.family_annual_income || a.annual_income || a.annualFamilyIncome || "",
         "Family Members Count": a.familyMembersCount || a.family_members_count || "",
@@ -1107,7 +1107,7 @@ export default function AdminApplicationsScreen() {
         "Family Situation": a.familySituation || (a.orphan ? "Orphan" : a.single_parent ? "Single Parent" : "Both Parents"),
         "Guardian Name": a.guardian_name || a.guardianName || "",
         "Guardian Occupation": a.guardian_occupation || a.guardianOccupation || "",
-        "Guardian Monthly Income": a.guardian_income || a.guardianMonthlyIncome || "",
+        "Guardian Annual Income": a.guardian_income || a.guardianAnnualIncome || "",
         "Guardian Relation": a.guardianRelation || "",
 
         // C. Siblings Information
@@ -1151,7 +1151,6 @@ export default function AdminApplicationsScreen() {
         "Preferred College Location": a.preferredCollegeLocation || (Array.isArray(a.preferred_districts) ? a.preferred_districts.join(", ") : ""),
 
         // F. Financial Information
-        "Monthly Family Income": a.monthlyFamilyIncome || a.father_income || "",
         "Income Sources": a.incomeSources || "",
         "Family Debts": a.familyDebts || "",
         "Existing Education Loans": a.educationLoans || "",
@@ -1165,7 +1164,6 @@ export default function AdminApplicationsScreen() {
         "First Generation Learner": a.first_graduate ? "Yes" : "No",
         "Special Family Circumstances": a.specialCircumstances || "",
         "Career Ambition": a.careerAmbition || a.career_aspiration || "",
-        "Why Wants Higher Education": a.higherEducationReason || "",
         "Willing to Relocate in TN": a.willingToRelocateTN ? "Yes" : "No",
         "Future Goals": a.futureGoals || "",
         "Hostel Required": a.hostel_required || a.need_hostel ? "Yes" : "No",
@@ -1504,32 +1502,27 @@ export default function AdminApplicationsScreen() {
   };
 
   // Sign out
-  const handleAdminLogout = () => {
-    adminApi.logout();
-    router.push("/");
-  };
-
   // Status Badge Helper
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "submitted":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-brand/15 text-black border border-brand/60">
             <CheckCircleIcon className="w-3.5 h-3.5" />
             Submitted
           </span>
         );
       case "draft":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-300">
-            <ClockIcon className="w-3.5 h-3.5 text-slate-500" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-black/5 text-black border border-black/15">
+            <ClockIcon className="w-3.5 h-3.5 text-black/65" />
             Draft
           </span>
         );
       case "under_review":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-800 border border-amber-300">
-            <ClockIcon className="w-3.5 h-3.5 text-amber-600" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-brand/15 text-black border border-brand/60">
+            <ClockIcon className="w-3.5 h-3.5 text-black" />
             Phase 1: Televerification
           </span>
         );
@@ -1537,8 +1530,8 @@ export default function AdminApplicationsScreen() {
       case "televerification_done":
       case "physical_verification_in_progress":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
-            <ClockIcon className="w-3.5 h-3.5 text-indigo-600" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-brand/15 text-black border border-brand/60">
+            <ClockIcon className="w-3.5 h-3.5 text-black" />
             Phase 2: Physical Verification
           </span>
         );
@@ -1546,8 +1539,8 @@ export default function AdminApplicationsScreen() {
       case "home_visit_done":
       case "video_interview_in_progress":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
-            <ClockIcon className="w-3.5 h-3.5 text-sky-600" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-brand/15 text-black border border-brand/60">
+            <ClockIcon className="w-3.5 h-3.5 text-black" />
             Phase 3: Video Call Interview
           </span>
         );
@@ -1555,36 +1548,36 @@ export default function AdminApplicationsScreen() {
       case "shortlisted":
       case "direct_interview_in_progress":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200">
-            <ClockIcon className="w-3.5 h-3.5 text-purple-600" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-brand/15 text-black border border-brand/60">
+            <ClockIcon className="w-3.5 h-3.5 text-black" />
             Phase 4: Direct Interview (Final)
           </span>
         );
       case "direct_interview_done":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-teal-50 text-teal-800 border border-teal-300">
-            <CheckCircleIcon className="w-3.5 h-3.5 text-teal-600" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-brand/15 text-black border border-brand/60">
+            <CheckCircleIcon className="w-3.5 h-3.5 text-black" />
             Phase 4 Cleared
           </span>
         );
       case "selected":
 
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300">
-            <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-600" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-brand/15 text-black border border-brand/60">
+            <CheckCircleIcon className="w-3.5 h-3.5 text-black" />
             Selected & Awarded
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-            <XMarkIcon className="w-3.5 h-3.5 text-rose-500" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-brand/15 text-black border border-brand/60">
+            <XMarkIcon className="w-3.5 h-3.5 text-black/65" />
             Rejected
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-black/5 text-black border border-black/15">
             {status}
           </span>
         );
@@ -1606,7 +1599,7 @@ export default function AdminApplicationsScreen() {
   }, [applications]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-primary flex">
+    <div className="min-h-screen bg-white text-black font-primary flex">
       {/* 1. Dedicated Admin Sidebar Component */}
       <AdminSidebar
         activeTab="applications"
@@ -1621,27 +1614,27 @@ export default function AdminApplicationsScreen() {
       />
 
       {/* 2. Main Body Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC]">
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Main Content Area */}
-        <main className="w-full px-6 lg:px-10 py-8 space-y-6 flex-1">
+        <main className="w-full px-4 sm:px-6 lg:px-10 py-8 space-y-6 flex-1">
           {isRestoringApplicant && !selectedApplicant ? (
             <div className="min-h-[60vh] flex items-center justify-center">
-              <div className="text-sm font-semibold text-slate-500">Loading application...</div>
+              <div className="text-sm font-semibold text-black/65">Loading application...</div>
             </div>
           ) : selectedApplicant ? (
             /* ================= FULL PAGE APPLICATION DOCUMENT VIEW ================= */
             <div className="w-full space-y-6 animate-in fade-in duration-200">
               {/* Status Update Banner */}
               {statusUpdateMessage && (
-                <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between animate-in fade-in">
-                  <div className="flex items-center gap-2.5 text-emerald-800 text-xs font-bold">
-                    <CheckCircleIcon className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div className="p-4 bg-brand/15 border border-brand/60 rounded-lg flex items-center justify-between animate-in fade-in">
+                  <div className="flex items-center gap-2.5 text-black text-xs font-bold">
+                    <CheckCircleIcon className="w-5 h-5 text-black shrink-0" />
                     <span>{statusUpdateMessage}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setStatusUpdateMessage("")}
-                    className="text-emerald-700 hover:text-emerald-900 text-xs font-bold cursor-pointer"
+                    className="text-black hover:text-black text-xs font-bold cursor-pointer"
                   >
                     Dismiss
                   </button>
@@ -1649,14 +1642,14 @@ export default function AdminApplicationsScreen() {
               )}
 
               {/* Official Trust Application Sheet */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm space-y-7">
+              <div className="bg-white border border-black/15 rounded-xl p-6 sm:p-10 space-y-7">
                 {/* Trust Letterhead Header */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b-2 border-slate-900 gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b-2 border-black gap-4">
                   <div className="flex items-center gap-4">
                     <button
                       type="button"
                       onClick={handleCloseApplicant}
-                      className="p-2 -ml-2 text-slate-400 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition cursor-pointer shrink-0"
+                      className="p-2 -ml-2 text-black/65 hover:text-black rounded-md hover:bg-black/5 transition cursor-pointer shrink-0"
                       title="Back to Applicants List"
                     >
                       <ArrowLeftIcon className="w-5 h-5" />
@@ -1670,31 +1663,31 @@ export default function AdminApplicationsScreen() {
                       className="h-12 w-auto object-contain"
                     />
                     <div>
-                      <h3 className="font-heading font-black text-base sm:text-lg text-slate-900 uppercase tracking-wider">
+                      <h3 className="font-heading font-bold text-base sm:text-lg text-black uppercase tracking-wider">
                         Maatram Educational & Charitable Trust
                       </h3>
-                      <p className="text-xs text-slate-600 font-medium">
+                      <p className="text-xs text-black font-medium">
                         Higher Education 100% Free Sponsorship Program (Academic Year 2025 - 2026)
                       </p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-black/65">
                         Zero Donation • Zero Tuition Fee • Free Higher Education
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-2.5">
                     {selectedApplicant.status === "rejected" && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-300 text-rose-700 text-xs font-bold rounded-xl shadow-2xs">
-                        <XCircleIcon className="w-4 h-4 text-rose-600" />
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand/15 border border-brand/60 text-black text-xs font-bold rounded-md">
+                        <XCircleIcon className="w-4 h-4 text-black" />
                         <span>Application Rejected</span>
                       </span>
                     )}
                     <button
                       type="button"
                       onClick={handlePrint}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-black/5 border border-black/15 rounded-md text-xs font-bold text-black transition cursor-pointer"
                       title="Print official application form"
                     >
-                      <PrinterIcon className="w-4 h-4 text-slate-500" />
+                      <PrinterIcon className="w-4 h-4 text-black/65" />
                       <span>Print Form</span>
                     </button>
                   </div>
@@ -1713,23 +1706,23 @@ export default function AdminApplicationsScreen() {
 
                   if (isFinalSelected) {
                     return (
-                      <div className="p-5 rounded-2xl border bg-gradient-to-r from-emerald-50 via-teal-50 to-white border-emerald-300 shadow-xs">
+                      <div className="p-5 rounded-lg border bg-brand/10 border-brand/60">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+                            <div className="w-10 h-10 rounded-md bg-black text-white flex items-center justify-center">
                               <CheckBadgeIcon className="w-6 h-6 stroke-[2]" />
                             </div>
                             <div>
-                              <h4 className="font-heading font-black text-sm text-emerald-950 uppercase tracking-wider">
+                              <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                                 Admission Confirmed for Free Higher Education
                               </h4>
-                              <p className="text-xs text-emerald-800/90 mt-0.5">
+                              <p className="text-xs text-black/90 mt-0.5">
                                 Candidate has successfully cleared all 4 verification phases: Televerification, Physical Verification, Video Call Interview, and Direct Interview.
                               </p>
                             </div>
                           </div>
-                          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold rounded-xl shadow-2xs">
-                            <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
+                          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brand/15 text-black border border-brand/60 text-xs font-bold rounded-md">
+                            <CheckCircleIcon className="w-4 h-4 text-black" />
                             Admission Letter Granted
                           </span>
                         </div>
@@ -1780,17 +1773,17 @@ export default function AdminApplicationsScreen() {
                     );
 
                     return (
-                      <div className="p-6 rounded-3xl border bg-linear-to-r from-blue-50/70 via-indigo-50/40 to-white border-blue-200 shadow-sm space-y-5">
+                      <div className="p-6 rounded-xl border bg-brand/10 border-brand/60 space-y-5">
                         {/* Header Banner */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-blue-200/70">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-brand/60">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                                <HomeModernIcon className="w-5 h-5 text-indigo-600" />
+                              <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider flex items-center gap-2">
+                                <HomeModernIcon className="w-5 h-5 text-black" />
                                 <span>Second Phase: Physical Verification</span>
                               </h4>
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-100 border border-blue-300 text-blue-900 text-xs font-bold rounded-lg">
-                                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-brand/15 border border-brand/60 text-black text-xs font-bold rounded-lg">
+                                <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
                                 {hasPhysicalVolunteer
                                   ? hasPhysicalSuggestion
                                     ? "Report Submitted"
@@ -1798,7 +1791,7 @@ export default function AdminApplicationsScreen() {
                                   : "Waiting for Volunteer Assignment"}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-600 mt-1">
+                            <p className="text-xs text-black mt-1">
                               Phase 1 Televerification completed. Field / in-person verification of applicant residence, economic status, and living conditions.
                             </p>
                           </div>
@@ -1808,19 +1801,19 @@ export default function AdminApplicationsScreen() {
                               <button
                                 type="button"
                                 onClick={() => openVolunteerAssignment("physical")}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-blue-50 text-indigo-900 text-xs font-bold rounded-xl border border-indigo-200 shadow-2xs transition cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-brand/15 text-black text-xs font-bold rounded-md border border-brand/60 transition cursor-pointer"
                                 title="Change or reassign physical verification volunteer"
                               >
-                                <UserPlusIcon className="w-3.5 h-3.5 text-indigo-600" />
+                                <UserPlusIcon className="w-3.5 h-3.5 text-black" />
                                 <span>Reassign Physical Volunteer</span>
                               </button>
                             ) : (
                               <button
                                 type="button"
                                 onClick={() => openVolunteerAssignment("physical")}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#F7BC0F] hover:bg-[#e5ad0c] text-slate-950 text-xs font-heading font-bold uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-brand hover:brightness-95 text-black text-xs font-heading font-bold uppercase tracking-wider rounded-md transition cursor-pointer"
                               >
-                                <UserPlusIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                                <UserPlusIcon className="w-4 h-4 text-black stroke-[2.5]" />
                                 <span>Assign Volunteer for Physical Verification</span>
                               </button>
                             )}
@@ -1828,37 +1821,37 @@ export default function AdminApplicationsScreen() {
                         </div>
 
                         {/* SECTION A: Phase 1 Televerification Report (Completed) */}
-                        <div className="bg-white p-4.5 rounded-2xl border border-emerald-200 shadow-2xs space-y-2.5">
+                        <div className="bg-white p-4.5 rounded-lg border border-brand/60 space-y-2.5">
                           <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-black flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-black" />
                               Phase 1: Televerification Report (Completed)
                             </span>
-                            <span className="text-[11px] text-slate-500">
+                            <span className="text-[11px] text-black/65">
                               Verified by:{" "}
-                              <strong className="text-slate-900 font-bold">
+                              <strong className="text-black font-bold">
                                 {selectedApplicant.tele_volunteer_name || selectedApplicant.volunteer_name || "Admin Review"}
                               </strong>
                               {selectedApplicant.tele_volunteer_role ? ` (${selectedApplicant.tele_volunteer_role})` : ""}
                             </span>
                           </div>
 
-                          <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl">
-                            <p className="text-xs font-bold text-slate-900 leading-relaxed italic">
+                          <div className="p-3 bg-brand/15 border border-brand/60 rounded-md">
+                            <p className="text-xs font-bold text-black leading-relaxed italic">
                               &quot;{selectedApplicant.tele_volunteer_suggestion || selectedApplicant.volunteer_suggestion || "Telephonic screening cleared. Recommended for physical verification."}&quot;
                             </p>
                           </div>
 
                           {(selectedApplicant.tele_volunteer_affiliation || selectedApplicant.tele_volunteer_email || selectedApplicant.tele_volunteer_phone) && (
-                            <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
+                            <div className="text-[11px] text-black/65 flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
                               {selectedApplicant.tele_volunteer_affiliation && (
-                                <span>Affiliation: <strong className="text-slate-700">{selectedApplicant.tele_volunteer_affiliation}</strong></span>
+                                <span>Affiliation: <strong className="text-black">{selectedApplicant.tele_volunteer_affiliation}</strong></span>
                               )}
                               {selectedApplicant.tele_volunteer_email && (
-                                <span>Email: <strong className="text-slate-700">{selectedApplicant.tele_volunteer_email}</strong></span>
+                                <span>Email: <strong className="text-black">{selectedApplicant.tele_volunteer_email}</strong></span>
                               )}
                               {selectedApplicant.tele_volunteer_phone && (
-                                <span>Contact: <strong className="text-slate-700">{selectedApplicant.tele_volunteer_phone}</strong></span>
+                                <span>Contact: <strong className="text-black">{selectedApplicant.tele_volunteer_phone}</strong></span>
                               )}
                             </div>
                           )}
@@ -1866,16 +1859,16 @@ export default function AdminApplicationsScreen() {
 
                         {/* SECTION B: Phase 2 Physical Verification Status & Actions */}
                         {hasPhysicalVolunteer ? (
-                          <div className="bg-white p-5 rounded-2xl border border-indigo-200 shadow-2xs space-y-5">
+                          <div className="bg-white p-5 rounded-lg border border-brand/60 space-y-5">
                             {/* Volunteer info strip */}
                             <div className="flex items-center justify-between gap-2 flex-wrap">
                               <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs font-bold rounded-xl">
-                                  <UserIcon className="w-3.5 h-3.5 text-indigo-600" />
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand/15 border border-brand/60 text-black text-xs font-bold rounded-md">
+                                  <UserIcon className="w-3.5 h-3.5 text-black" />
                                   Assigned Physical Volunteer: {selectedApplicant.physical_volunteer_name}
                                 </span>
                                 {selectedApplicant.physical_volunteer_role && (
-                                  <span className="text-[11px] text-slate-500 font-medium">
+                                  <span className="text-[11px] text-black/65 font-medium">
                                     • {selectedApplicant.physical_volunteer_role} {selectedApplicant.physical_volunteer_affiliation ? `(${selectedApplicant.physical_volunteer_affiliation})` : ""}
                                   </span>
                                 )}
@@ -1883,8 +1876,8 @@ export default function AdminApplicationsScreen() {
 
                               <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
                                 hasPhysicalSuggestion
-                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                                  : "bg-amber-50 text-amber-800 border-amber-200"
+                                  ? "bg-brand/15 text-black border-brand/60"
+                                  : "bg-brand/15 text-black border-brand/60"
                               }`}>
                                 {hasPhysicalSuggestion ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Physical Findings Submitted</> : "Waiting for Volunteer Suggestion"}
                               </span>
@@ -1892,19 +1885,19 @@ export default function AdminApplicationsScreen() {
 
                             {/* Editing / Recording mode */}
                             {editingVolunteerId === `physical_${selectedApplicant.id}` ? (
-                              <div className="space-y-4 bg-indigo-50/50 p-5 rounded-2xl border border-indigo-200">
+                              <div className="space-y-4 bg-brand/15 p-5 rounded-lg border border-brand/60">
                                 <div className="flex items-center justify-between">
-                                  <span className="font-heading font-black text-xs text-indigo-950 uppercase tracking-wider">
+                                  <span className="font-heading font-bold text-xs text-black uppercase tracking-wider">
                                     Record / Edit Physical Verification Report
                                   </span>
-                                  <span className="text-[10px] text-slate-500 font-medium">
+                                  <span className="text-[10px] text-black/65 font-medium">
                                     Capture 5 home visit photos, student description & final suggestion
                                   </span>
                                 </div>
 
                                 {/* 1. Photos */}
                                 <div>
-                                  <label className="block text-xs font-bold text-slate-800 mb-2">
+                                  <label className="block text-xs font-bold text-black mb-2">
                                     1. Five Mandatory Home Visit Photos
                                   </label>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -1913,41 +1906,41 @@ export default function AdminApplicationsScreen() {
                                       return (
                                         <div
                                           key={slot.key}
-                                          className="bg-white p-2.5 rounded-xl border border-slate-200 flex flex-col justify-between"
+                                          className="bg-white p-2.5 rounded-md border border-black/15 flex flex-col justify-between"
                                         >
                                           <div className="flex items-center justify-between mb-1.5">
-                                            <span className="font-heading font-bold text-[11px] text-slate-800 line-clamp-1">
+                                            <span className="font-heading font-bold text-[11px] text-black line-clamp-1">
                                               {idx + 1}. {slot.title}
                                             </span>
                                             {photoUrl ? (
-                                              <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded">
+                                              <span className="px-1.5 py-0.5 bg-brand/15 text-black text-[10px] font-bold rounded">
                                                 <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Added
                                               </span>
                                             ) : (
-                                              <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-bold rounded">
+                                              <span className="px-1.5 py-0.5 bg-brand/15 text-black text-[10px] font-bold rounded">
                                                 Required
                                               </span>
                                             )}
                                           </div>
 
                                           {photoUrl ? (
-                                            <div className="relative group rounded-lg overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900">
+                                            <div className="relative group rounded-lg overflow-hidden border border-black/15 aspect-[4/3] bg-black">
                                               <img
                                                 src={photoUrl}
                                                 alt={slot.title}
                                                 className="w-full h-full object-cover"
                                               />
-                                              <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
                                                 <button
                                                   type="button"
                                                   onClick={() => setPreviewImage({ url: photoUrl, title: slot.title })}
-                                                  className="p-1.5 bg-white text-slate-900 rounded-lg shadow-xs hover:bg-slate-100 transition cursor-pointer"
+                                                  className="p-1.5 bg-white text-black rounded-lg hover:bg-black/5 transition cursor-pointer"
                                                   title="View Full Size"
                                                 >
                                                   <EyeIcon className="w-4 h-4" />
                                                 </button>
                                                 <label
-                                                  className="p-1.5 bg-white text-slate-900 rounded-lg shadow-xs hover:bg-slate-100 transition cursor-pointer"
+                                                  className="p-1.5 bg-white text-black rounded-lg hover:bg-black/5 transition cursor-pointer"
                                                   title="Replace Photo"
                                                 >
                                                   <ArrowUpTrayIcon className="w-4 h-4" />
@@ -1961,7 +1954,7 @@ export default function AdminApplicationsScreen() {
                                                 <button
                                                   type="button"
                                                   onClick={() => handleAdminRemovePhoto(slot.key)}
-                                                  className="p-1.5 bg-rose-600 text-white rounded-lg shadow-xs hover:bg-rose-700 transition cursor-pointer"
+                                                  className="p-1.5 bg-black text-white rounded-lg hover:bg-black transition cursor-pointer"
                                                   title="Delete Photo"
                                                 >
                                                   <TrashIcon className="w-4 h-4" />
@@ -1969,9 +1962,9 @@ export default function AdminApplicationsScreen() {
                                               </div>
                                             </div>
                                           ) : (
-                                            <label className="border-2 border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50/50 rounded-lg aspect-[4/3] flex flex-col items-center justify-center gap-1 cursor-pointer transition p-2 text-center">
-                                              <CameraIcon className="w-5 h-5 text-slate-400" />
-                                              <span className="text-[10px] font-bold text-slate-600">Upload Photo</span>
+                                            <label className="border-2 border-dashed border-black/15 hover:border-brand bg-black/5 hover:bg-brand/15 rounded-lg aspect-[4/3] flex flex-col items-center justify-center gap-1 cursor-pointer transition p-2 text-center">
+                                              <CameraIcon className="w-5 h-5 text-black/65" />
+                                              <span className="text-[10px] font-bold text-black">Upload Photo</span>
                                               <input
                                                 type="file"
                                                 accept="image/*"
@@ -1988,7 +1981,7 @@ export default function AdminApplicationsScreen() {
 
                                 {/* 2. Student description */}
                                 <div className="space-y-1.5">
-                                  <label className="block text-xs font-bold text-slate-800">
+                                  <label className="block text-xs font-bold text-black">
                                     2. Description about the Student
                                   </label>
                                   <textarea
@@ -1996,13 +1989,13 @@ export default function AdminApplicationsScreen() {
                                     onChange={(e) => setVolunteerStudentDescriptionInput(e.target.value)}
                                     placeholder="Enter description about student's family, living conditions, environment observed during home visit..."
                                     rows={3}
-                                    className="w-full text-xs p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 font-medium"
+                                    className="w-full text-xs p-3 bg-white border border-black/15 rounded-md focus:outline-none focus:ring-2 focus:ring-brand text-black font-medium"
                                   />
                                 </div>
 
                                 {/* 3. Final suggestion */}
                                 <div className="space-y-1.5">
-                                  <label className="block text-xs font-bold text-slate-800">
+                                  <label className="block text-xs font-bold text-black">
                                     3. Final Suggestion
                                   </label>
                                   <textarea
@@ -2010,11 +2003,11 @@ export default function AdminApplicationsScreen() {
                                     onChange={(e) => setVolunteerNoteInput(e.target.value)}
                                     placeholder="Enter final recommendation (e.g. Recommended for admission due to genuine financial distress and verified academic drive)..."
                                     rows={2}
-                                    className="w-full text-xs p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 font-medium"
+                                    className="w-full text-xs p-3 bg-white border border-black/15 rounded-md focus:outline-none focus:ring-2 focus:ring-brand text-black font-medium"
                                   />
                                 </div>
 
-                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-indigo-200">
+                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-brand/60">
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -2022,7 +2015,7 @@ export default function AdminApplicationsScreen() {
                                       setVolunteerNoteInput("");
                                       setVolunteerStudentDescriptionInput("");
                                     }}
-                                    className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                                    className="px-4 py-2 text-xs font-bold text-black hover:bg-black/10 rounded-md transition cursor-pointer"
                                   >
                                     Cancel
                                   </button>
@@ -2030,7 +2023,7 @@ export default function AdminApplicationsScreen() {
                                     type="button"
                                     disabled={isSavingVolunteerNote || PHYSICAL_PHOTO_SLOTS.some(({ key }) => !adminPhysicalPhotos[key]) || !volunteerStudentDescriptionInput.trim() || !volunteerNoteInput.trim()}
                                     onClick={() => handleSavePhysicalVolunteerNote(selectedApplicant.id)}
-                                    className="px-5 py-2 text-xs font-heading font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition cursor-pointer shadow-xs"
+                                    className="px-5 py-2 text-xs font-heading font-bold text-white bg-black hover:bg-black rounded-md transition cursor-pointer"
                                   >
                                     {isSavingVolunteerNote ? "Saving..." : "Save Physical Report"}
                                   </button>
@@ -2038,22 +2031,22 @@ export default function AdminApplicationsScreen() {
                               </div>
                             ) : !hasPhysicalSuggestion ? (
                               /* Case 1: Waiting for volunteer report */
-                              <div className="bg-amber-50/70 p-5 rounded-2xl border border-amber-200 shadow-2xs space-y-4">
+                              <div className="bg-brand/15 p-5 rounded-lg border border-brand/60 space-y-4">
                                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                                  <span className="text-xs font-heading font-black uppercase tracking-wider text-amber-900 flex items-center gap-2">
-                                    <ClockIcon className="w-4 h-4 text-amber-600 animate-spin" />
+                                  <span className="text-xs font-heading font-bold uppercase tracking-wider text-black flex items-center gap-2">
+                                    <ClockIcon className="w-4 h-4 text-black animate-spin" />
                                     Physical Verification Status: Waiting for Volunteer Suggestion
                                   </span>
-                                  <span className="text-[11px] text-slate-600">
-                                    Assigned Volunteer: <strong className="text-slate-900 font-bold">{selectedApplicant.physical_volunteer_name}</strong>
+                                  <span className="text-[11px] text-black">
+                                    Assigned Volunteer: <strong className="text-black font-bold">{selectedApplicant.physical_volunteer_name}</strong>
                                   </span>
                                 </div>
 
-                                <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                                <p className="text-xs text-black leading-relaxed font-medium">
                                   Waiting for volunteer suggestion. Assigned volunteer <strong>{selectedApplicant.physical_volunteer_name}</strong> is conducting in-person/home verification. Once the 5 pictures, student description, and final suggestion are submitted, the decision options to Move to Next Phase or Reject will appear here.
                                 </p>
 
-                                <div className="pt-3 border-t border-amber-200/70 flex flex-wrap items-center justify-end gap-2.5">
+                                <div className="pt-3 border-t border-brand/60 flex flex-wrap items-center justify-end gap-2.5">
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -2062,27 +2055,27 @@ export default function AdminApplicationsScreen() {
                                       setVolunteerStudentDescriptionInput(selectedApplicant.physical_student_description || selectedApplicant.student_description || "");
                                       setAdminPhysicalPhotos(physicalPhotos);
                                     }}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-heading font-bold shadow-2xs transition cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-brand/15 text-black border border-brand/60 rounded-md text-xs font-heading font-bold transition cursor-pointer"
                                   >
-                                    <PencilSquareIcon className="w-3.5 h-3.5 text-amber-700" />
+                                    <PencilSquareIcon className="w-3.5 h-3.5 text-black" />
                                     <span>Record Suggestion</span>
                                   </button>
 
                                   <button
                                     type="button"
                                     onClick={() => openVolunteerAssignment("physical")}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-heading font-bold shadow-2xs transition cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-black/5 text-black border border-black/15 rounded-md text-xs font-heading font-bold transition cursor-pointer"
                                   >
-                                    <UserPlusIcon className="w-3.5 h-3.5 text-slate-600" />
+                                    <UserPlusIcon className="w-3.5 h-3.5 text-black" />
                                     <span>Reassign Volunteer</span>
                                   </button>
 
                                   <button
                                     type="button"
                                     onClick={() => setIsRejectModalOpen(true)}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 rounded-xl text-xs font-heading font-bold shadow-2xs transition cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-brand/15 text-black border border-brand/60 rounded-md text-xs font-heading font-bold transition cursor-pointer"
                                   >
-                                    <XCircleIcon className="w-3.5 h-3.5 text-rose-500" />
+                                    <XCircleIcon className="w-3.5 h-3.5 text-black/65" />
                                     <span>Reject</span>
                                   </button>
                                 </div>
@@ -2093,11 +2086,11 @@ export default function AdminApplicationsScreen() {
                                 {/* 1. Photos Gallery */}
                                 <div className="space-y-2">
                                   <div className="flex items-center justify-between">
-                                    <span className="text-[11px] font-heading font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                                      <PhotoIcon className="w-4 h-4 text-indigo-600" />
+                                    <span className="text-[11px] font-heading font-bold uppercase tracking-wider text-black flex items-center gap-1.5">
+                                      <PhotoIcon className="w-4 h-4 text-black" />
                                       Five Mandatory Home Visit Photos
                                     </span>
-                                    <span className="text-[10px] text-slate-500 font-medium">
+                                    <span className="text-[10px] text-black/65 font-medium">
                                       Click any photo to view full size
                                     </span>
                                   </div>
@@ -2108,18 +2101,18 @@ export default function AdminApplicationsScreen() {
                                       return (
                                         <div
                                           key={slot.key}
-                                          className="bg-slate-50 p-2 rounded-xl border border-slate-200 flex flex-col justify-between"
+                                          className="bg-black/5 p-2 rounded-md border border-black/15 flex flex-col justify-between"
                                         >
                                           <div className="flex items-center justify-between mb-1.5">
-                                            <span className="font-heading font-bold text-[10px] text-slate-800 line-clamp-1">
+                                            <span className="font-heading font-bold text-[10px] text-black line-clamp-1">
                                               {idx + 1}. {slot.title}
                                             </span>
                                             {photoUrl ? (
-                                              <span className="px-1 py-0.5 bg-emerald-100 text-emerald-800 text-[8px] font-bold rounded">
+                                              <span className="px-1 py-0.5 bg-brand/15 text-black text-[10px] font-bold rounded">
                                                 <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Added
                                               </span>
                                             ) : (
-                                              <span className="px-1 py-0.5 bg-slate-200 text-slate-600 text-[8px] font-bold rounded">
+                                              <span className="px-1 py-0.5 bg-black/10 text-black text-[10px] font-bold rounded">
                                                 Pending
                                               </span>
                                             )}
@@ -2129,23 +2122,23 @@ export default function AdminApplicationsScreen() {
                                             <button
                                               type="button"
                                               onClick={() => setPreviewImage({ url: photoUrl, title: slot.title })}
-                                              className="relative group rounded-lg overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900 cursor-pointer block w-full text-left"
+                                              className="relative group rounded-lg overflow-hidden border border-black/15 aspect-[4/3] bg-black cursor-pointer block w-full text-left"
                                             >
                                               <img
                                                 src={photoUrl}
                                                 alt={slot.title}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
                                               />
-                                              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                                <span className="px-2 py-1 bg-white/90 text-slate-950 text-[10px] font-bold rounded-md shadow-xs flex items-center gap-1">
+                                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                                <span className="px-2 py-1 bg-white/90 text-black text-[10px] font-bold rounded-md flex items-center gap-1">
                                                   <EyeIcon className="w-3 h-3" /> View
                                                 </span>
                                               </div>
                                             </button>
                                           ) : (
-                                            <div className="rounded-lg border border-dashed border-slate-300 bg-white aspect-[4/3] flex flex-col items-center justify-center text-slate-400 gap-1">
-                                              <CameraIcon className="w-5 h-5 text-slate-300" />
-                                              <span className="text-[9px] font-medium">Not Captured</span>
+                                            <div className="rounded-lg border border-dashed border-black/15 bg-white aspect-[4/3] flex flex-col items-center justify-center text-black/65 gap-1">
+                                              <CameraIcon className="w-5 h-5 text-black/65" />
+                                              <span className="text-[10px] font-medium">Not Captured</span>
                                             </div>
                                           )}
                                         </div>
@@ -2155,11 +2148,11 @@ export default function AdminApplicationsScreen() {
                                 </div>
 
                                 {/* 2. Student Description */}
-                                <div className="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                  <span className="text-[10px] font-heading font-black uppercase tracking-wider text-slate-600 block">
+                                <div className="space-y-1 bg-black/5 p-4 rounded-md border border-black/15">
+                                  <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-black block">
                                     Description about the Student:
                                   </span>
-                                  <p className="text-xs font-medium text-slate-800 leading-relaxed">
+                                  <p className="text-xs font-medium text-black leading-relaxed">
                                     {selectedApplicant.physical_student_description ||
                                       selectedApplicant.student_description ||
                                       "Student description recorded during field visit."}
@@ -2167,22 +2160,22 @@ export default function AdminApplicationsScreen() {
                                 </div>
 
                                 {/* 3. Final Suggestion */}
-                                <div className="space-y-1 bg-indigo-50/70 p-4 rounded-xl border border-indigo-200/80">
+                                <div className="space-y-1 bg-brand/15 p-4 rounded-md border border-brand/60">
                                   <div className="flex items-center justify-between gap-2">
-                                    <span className="text-[10px] font-heading font-black uppercase tracking-wider text-indigo-950 block">
+                                    <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-black block">
                                       Final Suggestion:
                                     </span>
-                                    <span className="text-[10px] text-indigo-800 font-bold">
+                                    <span className="text-[10px] text-black font-bold">
                                       — {selectedApplicant.physical_volunteer_name || "Volunteer"}
                                     </span>
                                   </div>
-                                  <p className="text-xs font-bold text-slate-900 leading-relaxed italic">
+                                  <p className="text-xs font-bold text-black leading-relaxed italic">
                                     &quot;{selectedApplicant.physical_volunteer_suggestion || "Recommended for next stage."}&quot;
                                   </p>
                                 </div>
 
                                 {/* Phase 2 Decision Bar */}
-                                <div className="pt-3 border-t border-indigo-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <div className="pt-3 border-t border-brand/60 flex flex-col sm:flex-row items-center justify-between gap-3">
                                   <div className="flex items-center gap-2">
                                     <button
                                       type="button"
@@ -2192,18 +2185,18 @@ export default function AdminApplicationsScreen() {
                                         setVolunteerStudentDescriptionInput(selectedApplicant.physical_student_description || selectedApplicant.student_description || "");
                                         setAdminPhysicalPhotos(physicalPhotos);
                                       }}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-black/5 text-black border border-black/15 rounded-lg text-xs font-bold transition cursor-pointer"
                                     >
-                                      <PencilSquareIcon className="w-3.5 h-3.5 text-indigo-600" />
+                                      <PencilSquareIcon className="w-3.5 h-3.5 text-black" />
                                       <span>Edit Report</span>
                                     </button>
 
                                     <button
                                       type="button"
                                       onClick={() => openVolunteerAssignment("physical")}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-black/5 text-black border border-black/15 rounded-lg text-xs font-bold transition cursor-pointer"
                                     >
-                                      <UserPlusIcon className="w-3.5 h-3.5 text-slate-500" />
+                                      <UserPlusIcon className="w-3.5 h-3.5 text-black/65" />
                                       <span>Reassign Volunteer</span>
                                     </button>
                                   </div>
@@ -2213,7 +2206,7 @@ export default function AdminApplicationsScreen() {
                                       type="button"
                                       disabled={isAdvancingPhase || selectedApplicant.status === "rejected"}
                                       onClick={handleMoveNextPhase}
-                                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-black hover:bg-black disabled:opacity-50 text-white font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                                       title="Approve physical verification and move to Phase 3 (Video Call Interview)"
                                     >
                                       {isAdvancingPhase ? (
@@ -2234,10 +2227,10 @@ export default function AdminApplicationsScreen() {
                                       type="button"
                                       onClick={() => setIsRejectModalOpen(true)}
                                       disabled={selectedApplicant.status === "rejected"}
-                                      className="inline-flex items-center gap-2 px-4 py-2.5 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                      className="inline-flex items-center gap-2 px-4 py-2.5 font-heading font-bold text-xs uppercase tracking-wider rounded-md border bg-white hover:bg-brand/15 text-black border-brand/60 hover:border-brand cursor-pointer"
                                       title="Reject application based on physical verification"
                                     >
-                                      <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                      <XCircleIcon className="w-4 h-4 text-black/65" />
                                       <span>Reject</span>
                                     </button>
                                   </div>
@@ -2247,12 +2240,12 @@ export default function AdminApplicationsScreen() {
                           </div>
                         ) : (
                           /* No physical volunteer assigned yet */
-                          <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="bg-white p-5 rounded-lg border border-brand/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                              <span className="text-xs font-bold text-amber-900 block mb-0.5">
+                              <span className="text-xs font-bold text-black block mb-0.5">
                                 Action Required: Assign Volunteer for Physical Verification
                               </span>
-                              <p className="text-xs text-slate-600">
+                              <p className="text-xs text-black">
                                 Select a verified volunteer located near <strong>{selectedApplicant.district || "student residence"}</strong> to conduct physical field / home verification.
                               </p>
                             </div>
@@ -2260,17 +2253,17 @@ export default function AdminApplicationsScreen() {
                               <button
                                 type="button"
                                 onClick={() => openVolunteerAssignment("physical")}
-                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F7BC0F] hover:bg-[#e5ad0c] text-slate-950 font-heading font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand hover:brightness-95 text-black font-heading font-bold text-xs uppercase tracking-wider rounded-md transition cursor-pointer"
                               >
-                                <UserPlusIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                                <UserPlusIcon className="w-4 h-4 text-black stroke-[2.5]" />
                                 <span>Assign Volunteer</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setIsRejectModalOpen(true)}
-                                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-brand/15 text-black border border-brand/60 rounded-md font-heading font-bold text-xs uppercase tracking-wider transition cursor-pointer"
                               >
-                                <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                <XCircleIcon className="w-4 h-4 text-black/65" />
                                 <span>Reject</span>
                               </button>
                             </div>
@@ -2306,44 +2299,44 @@ export default function AdminApplicationsScreen() {
                     }
 
                     return (
-                      <div className="p-5 rounded-2xl border bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-white border-blue-300 shadow-xs space-y-4">
+                      <div className="p-5 rounded-lg border bg-brand/10 border-brand/60 space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                              <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                                 {phaseTitle}
                               </h4>
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-100 border border-blue-300 text-blue-900 text-xs font-bold rounded-lg">
-                                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-brand/15 border border-brand/60 text-black text-xs font-bold rounded-lg">
+                                <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
                                 {phaseBadge}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-600 mt-0.5">{phaseDesc}</p>
-                            {selectedApplicant.direct_interview_location && <p className="mt-2 text-sm font-semibold text-slate-900">Interview location: {selectedApplicant.direct_interview_location}</p>}
+                            <p className="text-xs text-black mt-0.5">{phaseDesc}</p>
+                            {selectedApplicant.direct_interview_location && <p className="mt-2 text-sm font-semibold text-black">Interview location: {selectedApplicant.direct_interview_location}</p>}
                           </div>
                         </div>
 
                         {/* Verification History / Remarks */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {selectedApplicant.tele_volunteer_suggestion && (
-                            <div className="bg-white p-3.5 rounded-xl border border-blue-200/80">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                            <div className="bg-white p-3.5 rounded-md border border-brand/60">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-black/65 block mb-1">
                                 Phase 1 Televerification ({selectedApplicant.tele_volunteer_name || selectedApplicant.volunteer_name || "Volunteer"}):
                               </span>
-                              <p className="text-xs font-bold text-slate-800 italic">
+                              <p className="text-xs font-bold text-black italic">
                                 &quot;{selectedApplicant.tele_volunteer_suggestion || selectedApplicant.volunteer_suggestion}&quot;
                               </p>
                             </div>
                           )}
                           {selectedApplicant.physical_volunteer_suggestion && (
-                            <div className="bg-white p-3.5 rounded-xl border border-indigo-200/80">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 block mb-1">
+                            <div className="bg-white p-3.5 rounded-md border border-brand/60">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-black block mb-1">
                                 Phase 2 Physical Verification ({selectedApplicant.physical_volunteer_name || "Volunteer"}):
                               </span>
-                              <p className="text-xs font-bold text-slate-800 italic">
+                              <p className="text-xs font-bold text-black italic">
                                 &quot;{selectedApplicant.physical_volunteer_suggestion}&quot;
                               </p>
-                              <p className="mt-2 text-xs text-slate-700">{selectedApplicant.physical_student_description}</p>
+                              <p className="mt-2 text-xs text-black">{selectedApplicant.physical_student_description}</p>
                               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
                                 {PHYSICAL_PHOTO_SLOTS.map(({ key, title }) => {
                                   const url = getPhysicalPhotoUrl(selectedApplicant.physical_verification_photos?.[key] || selectedApplicant[key]);
@@ -2363,37 +2356,37 @@ export default function AdminApplicationsScreen() {
                         {(selectedApplicant.status === "physical_verification_done" ||
                           selectedApplicant.status === "home_visit_done" ||
                           selectedApplicant.status === "video_interview_in_progress") && (
-                          <div className="bg-white p-4.5 rounded-2xl border-2 border-indigo-300 shadow-sm space-y-3">
+                          <div className="bg-white p-4.5 rounded-lg border-2 border-brand/60 space-y-3">
                             <div className="flex items-center justify-between gap-2 flex-wrap">
                               <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                                <div className="w-8 h-8 rounded-lg bg-brand/15 text-black flex items-center justify-center border border-brand/60">
                                   <VideoCameraIcon className="w-5 h-5 stroke-[2.2]" />
                                 </div>
                                 <div>
-                                  <span className="text-xs font-heading font-black text-slate-900 uppercase tracking-wider block">
+                                  <span className="text-xs font-heading font-bold text-black uppercase tracking-wider block">
                                     Google Meet Video Interview Room
                                   </span>
-                                  <span className="text-[11px] text-slate-500">
+                                  <span className="text-[11px] text-black/65">
                                     Auto-generated link available to both Admin & Applicant Student
                                   </span>
                                 </div>
                               </div>
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-200">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand/15 text-black text-[11px] font-bold rounded-lg border border-brand/60">
+                                <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
                                 Meeting Ready
                               </span>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-black/5 rounded-md border border-black/15">
                               <div className="min-w-0 flex-1">
-                                <span className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5">
+                                <span className="text-[10px] uppercase font-bold text-black/65 block mb-0.5">
                                   Meeting URL
                                 </span>
                                 <a
                                   href={selectedApplicant.video_interview_link || selectedApplicant.google_meet_link || "https://meet.google.com"}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-xs font-mono font-bold text-indigo-700 hover:text-indigo-900 hover:underline truncate block"
+                                  className="text-xs font-mono font-bold text-black hover:text-black hover:underline truncate block"
                                 >
                                   {selectedApplicant.video_interview_link || selectedApplicant.google_meet_link || "https://meet.google.com/mtr-vid-room"}
                                 </a>
@@ -2407,7 +2400,7 @@ export default function AdminApplicationsScreen() {
                                     navigator.clipboard.writeText(link);
                                     alert("Google Meet link copied to clipboard!");
                                   }}
-                                  className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer"
+                                  className="px-3 py-1.5 bg-white hover:bg-black/5 text-black border border-black/15 rounded-lg text-xs font-bold transition cursor-pointer"
                                 >
                                   Copy Link
                                 </button>
@@ -2415,7 +2408,7 @@ export default function AdminApplicationsScreen() {
                                   href={selectedApplicant.video_interview_link || selectedApplicant.google_meet_link || "https://meet.google.com"}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-heading font-black uppercase tracking-wider shadow-xs transition hover:shadow-md cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-black hover:bg-black text-white rounded-lg text-xs font-heading font-bold uppercase tracking-wider transition hover:shadow-sm cursor-pointer"
                                 >
                                   <VideoCameraIcon className="w-3.5 h-3.5 stroke-[2.5]" />
                                   <span>Join Interview</span>
@@ -2426,8 +2419,8 @@ export default function AdminApplicationsScreen() {
                         )}
 
                         {/* Decision Bar */}
-                        <div className="pt-2 border-t border-blue-200/60 flex flex-col sm:flex-row items-center justify-between gap-3">
-                          <span className="text-xs text-slate-600 font-medium">
+                        <div className="pt-2 border-t border-brand/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+                          <span className="text-xs text-black font-medium">
                             Admin decision for {phaseTitle}:
                           </span>
                           <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
@@ -2436,7 +2429,7 @@ export default function AdminApplicationsScreen() {
                                 type="button"
                                 disabled={isAdvancingPhase}
                                 onClick={handleMoveNextPhase}
-                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-black hover:bg-black disabled:opacity-50 text-white font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                               >
                                 {isAdvancingPhase ? (
                                   <>
@@ -2456,9 +2449,9 @@ export default function AdminApplicationsScreen() {
                             <button
                               type="button"
                               onClick={() => setIsRejectModalOpen(true)}
-                              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 hover:border-rose-400 font-heading font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs active:scale-98 cursor-pointer"
+                              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-brand/15 text-black border border-brand/60 hover:border-brand font-heading font-bold text-xs uppercase tracking-wider rounded-md cursor-pointer"
                             >
-                              <XCircleIcon className="w-4 h-4 text-rose-500" />
+                              <XCircleIcon className="w-4 h-4 text-black/65" />
                               <span>Reject</span>
                             </button>
                           </div>
@@ -2486,35 +2479,35 @@ export default function AdminApplicationsScreen() {
                   // Phase 1: Volunteer Assigned, waiting for suggestion:
                   if (!hasVolunteerFeedback) {
                     return (
-                      <div className="p-5 rounded-2xl border bg-linear-to-r from-amber-50/70 to-orange-50/60 border-amber-300 shadow-2xs">
+                      <div className="p-5 rounded-lg border bg-brand/10 border-brand/60">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                                <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                                   First Phase: Volunteer Televerification
                                 </h4>
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-lg">
-                                  <UserIcon className="w-3.5 h-3.5 text-amber-700" />
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-brand/15 border border-brand/60 text-black text-xs font-bold rounded-lg">
+                                  <UserIcon className="w-3.5 h-3.5 text-black" />
                                   Assigned Volunteer: {selectedApplicant.volunteer_name}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-600 mt-0.5">
+                              <p className="text-xs text-black mt-0.5">
                                 Telephonic verification in progress by assigned volunteer.
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-900 text-[11px] font-bold rounded-lg border border-amber-300">
-                              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand/15 text-black text-[11px] font-bold rounded-lg border border-brand/60">
+                              <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
                               Waiting for Volunteer Suggestion
                             </span>
                             <button
                               type="button"
                               onClick={() => openVolunteerAssignment("televerification")}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-amber-100 text-slate-900 text-xs font-bold rounded-xl border border-amber-300 shadow-2xs transition cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-brand/15 text-black text-xs font-bold rounded-md border border-brand/60 transition cursor-pointer"
                             >
-                              <UserPlusIcon className="w-3.5 h-3.5 text-amber-600" />
+                              <UserPlusIcon className="w-3.5 h-3.5 text-black" />
                               <span>Reassign Volunteer</span>
                             </button>
                           </div>
@@ -2522,8 +2515,8 @@ export default function AdminApplicationsScreen() {
 
                         <div className="mt-4">
                           {editingVolunteerId === selectedApplicant.id ? (
-                            <div className="space-y-3 bg-white p-4 rounded-xl border border-amber-200">
-                              <label className="block text-xs font-bold text-slate-700">
+                            <div className="space-y-3 bg-white p-4 rounded-md border border-brand/60">
+                              <label className="block text-xs font-bold text-black">
                                 Enter Volunteer Feedback / Suggestion:
                               </label>
                               <textarea
@@ -2531,7 +2524,7 @@ export default function AdminApplicationsScreen() {
                                 onChange={(e) => setVolunteerNoteInput(e.target.value)}
                                 placeholder="Enter volunteer suggestion (e.g., student verified via phone call, genuine financial need, mother is daily wage worker, strongly recommended for support)..."
                                 rows={3}
-                                className="w-full text-xs p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] text-slate-900 font-medium"
+                                className="w-full text-xs p-3 bg-white border border-black/15 rounded-md focus:outline-none focus:ring-2 focus:ring-brand text-black font-medium"
                               />
                               <div className="flex items-center justify-end gap-2">
                                 <button
@@ -2540,7 +2533,7 @@ export default function AdminApplicationsScreen() {
                                     setEditingVolunteerId(null);
                                     setVolunteerNoteInput("");
                                   }}
-                                  className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition cursor-pointer"
+                                  className="px-3 py-1.5 text-xs font-bold text-black hover:bg-black/10 rounded-lg transition cursor-pointer"
                                 >
                                   Cancel
                                 </button>
@@ -2548,21 +2541,21 @@ export default function AdminApplicationsScreen() {
                                   type="button"
                                   disabled={isSavingVolunteerNote}
                                   onClick={() => handleSaveVolunteerNote(selectedApplicant.id)}
-                                  className="px-4 py-1.5 text-xs font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-lg transition cursor-pointer shadow-xs"
+                                  className="px-4 py-1.5 text-xs font-bold text-black bg-brand hover:brightness-95 rounded-lg transition cursor-pointer"
                                 >
                                   {isSavingVolunteerNote ? "Saving..." : "Save Suggestion"}
                                 </button>
                               </div>
                             </div>
                           ) : (
-                            <div className="bg-white p-4 rounded-xl border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="bg-white p-4 rounded-md border border-brand/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                               <div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block mb-1">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-black block mb-1">
                                   Telephonic Verification Status:
                                 </span>
-                                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                                <p className="text-xs text-black font-medium leading-relaxed">
                                   Waiting for volunteer suggestion. Assigned volunteer{" "}
-                                  <strong className="text-slate-900 font-bold">{selectedApplicant.volunteer_name}</strong>{" "}
+                                  <strong className="text-black font-bold">{selectedApplicant.volunteer_name}</strong>{" "}
                                   is conducting telephonic verification. Once the suggestion is submitted, the decision options to Move to Phase 2 (Physical Verification) or Reject will appear here.
                                 </p>
                               </div>
@@ -2572,10 +2565,10 @@ export default function AdminApplicationsScreen() {
                                   setEditingVolunteerId(selectedApplicant.id);
                                   setVolunteerNoteInput(selectedApplicant.volunteer_suggestion || "");
                                 }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 rounded-lg text-xs font-semibold shrink-0 cursor-pointer transition"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/5 hover:bg-brand/15 text-black hover:text-black border border-black/15 hover:border-brand/60 rounded-lg text-xs font-semibold shrink-0 cursor-pointer transition"
                                 title="Enter volunteer feedback manually"
                               >
-                                <PencilSquareIcon className="w-3.5 h-3.5 text-amber-600" />
+                                <PencilSquareIcon className="w-3.5 h-3.5 text-black" />
                                 <span>Record Suggestion</span>
                               </button>
                             </div>
@@ -2587,36 +2580,36 @@ export default function AdminApplicationsScreen() {
 
                   // Phase 1: Volunteer Suggestion Submitted
                   return (
-                    <div className="p-5 rounded-2xl border bg-linear-to-r from-emerald-50/80 via-amber-50/60 to-white border-emerald-300 shadow-xs">
+                    <div className="p-5 rounded-lg border bg-brand/10 border-brand/60">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                              <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                                 First Phase: Volunteer Verification & Remarks
                               </h4>
                               {selectedApplicant.volunteer_name && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-lg">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-brand/15 border border-brand/60 text-black text-xs font-bold rounded-lg">
                                   <UserIcon className="w-3.5 h-3.5" />
                                   Verified by: {selectedApplicant.volunteer_name}
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-slate-600 mt-0.5">
+                            <p className="text-xs text-black mt-0.5">
                               Telephonic verification feedback submitted by assigned volunteer.
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-300">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-brand/15 text-black text-[11px] font-bold rounded-lg border border-brand/60">
                             <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Phase 1 Feedback Recorded
                           </span>
                           <button
                             type="button"
                             onClick={() => openVolunteerAssignment("televerification")}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-amber-100 text-slate-900 text-xs font-bold rounded-xl border border-amber-300 shadow-2xs transition cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-brand/15 text-black text-xs font-bold rounded-md border border-brand/60 transition cursor-pointer"
                           >
-                            <UserPlusIcon className="w-3.5 h-3.5 text-amber-600" />
+                            <UserPlusIcon className="w-3.5 h-3.5 text-black" />
                             <span>Reassign Volunteer</span>
                           </button>
                         </div>
@@ -2624,13 +2617,13 @@ export default function AdminApplicationsScreen() {
 
                       <div className="mt-4">
                         {editingVolunteerId === selectedApplicant.id ? (
-                          <div className="space-y-3 bg-white p-4 rounded-xl border border-emerald-200">
+                          <div className="space-y-3 bg-white p-4 rounded-md border border-brand/60">
                             <textarea
                               value={volunteerNoteInput}
                               onChange={(e) => setVolunteerNoteInput(e.target.value)}
                               placeholder="Enter volunteer feedback..."
                               rows={4}
-                              className="w-full text-xs p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] text-slate-900 font-medium"
+                              className="w-full text-xs p-3 bg-white border border-black/15 rounded-md focus:outline-none focus:ring-2 focus:ring-brand text-black font-medium"
                             />
                             <div className="flex items-center justify-end gap-2">
                               <button
@@ -2639,7 +2632,7 @@ export default function AdminApplicationsScreen() {
                                   setEditingVolunteerId(null);
                                   setVolunteerNoteInput("");
                                 }}
-                                className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition cursor-pointer"
+                                className="px-3 py-1.5 text-xs font-bold text-black hover:bg-black/10 rounded-lg transition cursor-pointer"
                               >
                                 Cancel
                               </button>
@@ -2647,7 +2640,7 @@ export default function AdminApplicationsScreen() {
                                 type="button"
                                 disabled={isSavingVolunteerNote}
                                 onClick={() => handleSaveVolunteerNote(selectedApplicant.id)}
-                                className="px-4 py-1.5 text-xs font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-lg transition cursor-pointer shadow-xs"
+                                className="px-4 py-1.5 text-xs font-bold text-black bg-brand hover:brightness-95 rounded-lg transition cursor-pointer"
                               >
                                 {isSavingVolunteerNote ? "Saving..." : "Save Suggestion"}
                               </button>
@@ -2655,18 +2648,18 @@ export default function AdminApplicationsScreen() {
                           </div>
                         ) : (
                           /* ================= VOLUNTEER SUGGESTION CARD WITH BOUND ACTIONS ================= */
-                          <div className="bg-white p-4.5 rounded-2xl border-2 border-emerald-300 shadow-xs space-y-4">
+                          <div className="bg-white p-4.5 rounded-lg border-2 border-brand/60 space-y-4">
                             <div className="space-y-2">
                               <div className="flex items-center justify-between gap-2 flex-wrap">
-                                <span className="text-[11px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-black flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
                                   Volunteer Suggestion / Feedback:
                                 </span>
                                 <div className="flex items-center gap-3">
                                   {selectedApplicant.volunteer_name && (
-                                    <span className="text-[11px] text-slate-600 font-medium">
+                                    <span className="text-[11px] text-black font-medium">
                                       Verified by Volunteer:{" "}
-                                      <strong className="text-slate-900 font-bold">
+                                      <strong className="text-black font-bold">
                                         {selectedApplicant.volunteer_name}
                                       </strong>
                                     </span>
@@ -2677,22 +2670,22 @@ export default function AdminApplicationsScreen() {
                                       setEditingVolunteerId(selectedApplicant.id);
                                       setVolunteerNoteInput(selectedApplicant.volunteer_suggestion || "");
                                     }}
-                                    className="text-[11px] text-slate-500 hover:text-emerald-700 font-semibold cursor-pointer underline"
+                                    className="text-[11px] text-black/65 hover:text-black font-semibold cursor-pointer underline"
                                   >
                                     Edit
                                   </button>
                                 </div>
                               </div>
-                              <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl">
-                                <p className="text-sm font-bold text-slate-900 leading-relaxed italic">
+                              <div className="p-3.5 bg-brand/15 border border-brand/60 rounded-md">
+                                <p className="text-sm font-bold text-black leading-relaxed italic">
                                   &quot;{selectedApplicant.volunteer_suggestion}&quot;
                                 </p>
                               </div>
                             </div>
 
                             {/* BOUND ACTIONS: Move to Phase 2 (Physical Verification) & Reject */}
-                            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                              <span className="text-xs text-slate-500 font-medium">
+                            <div className="pt-3 border-t border-black/15 flex flex-col sm:flex-row items-center justify-between gap-3">
+                              <span className="text-xs text-black/65 font-medium">
                                 Admin decision for Phase 1:
                               </span>
                               <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
@@ -2700,7 +2693,7 @@ export default function AdminApplicationsScreen() {
                                   type="button"
                                   disabled={isAdvancingPhase || selectedApplicant.status === "rejected"}
                                   onClick={handleMoveNextPhase}
-                                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-black hover:bg-black disabled:opacity-50 text-white font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                                   title="Approve televerification and advance applicant to Second Phase: Physical Verification"
                                 >
                                   {isAdvancingPhase ? (
@@ -2721,10 +2714,10 @@ export default function AdminApplicationsScreen() {
                                   type="button"
                                   onClick={() => setIsRejectModalOpen(true)}
                                   disabled={selectedApplicant.status === "rejected"}
-                                  className="inline-flex items-center gap-2 px-4 py-2.5 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 font-heading font-bold text-xs uppercase tracking-wider rounded-md border bg-white hover:bg-brand/15 text-black border-brand/60 hover:border-brand cursor-pointer"
                                   title="Reject application based on televerification"
                                 >
-                                  <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                  <XCircleIcon className="w-4 h-4 text-black/65" />
                                   <span>Reject</span>
                                 </button>
                               </div>
@@ -2737,177 +2730,177 @@ export default function AdminApplicationsScreen() {
                 })()}
 
                 {/* Quick Jump Navigation Strip */}
-                <div className="flex border border-slate-200 bg-slate-50/80 p-1.5 rounded-2xl gap-2 overflow-x-auto text-xs font-heading font-bold text-slate-700 shadow-2xs">
+                <div className="flex border border-black/15 bg-black/5 p-1.5 rounded-lg gap-2 overflow-x-auto text-xs font-heading font-bold text-black">
                   <button
                     type="button"
                     onClick={() => document.getElementById("sec-personal")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#F7BC0F]/20 hover:text-slate-950 transition cursor-pointer whitespace-nowrap"
+                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
                   >
                     1. Personal
                   </button>
                   <button
                     type="button"
                     onClick={() => document.getElementById("sec-family")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#F7BC0F]/20 hover:text-slate-950 transition cursor-pointer whitespace-nowrap"
+                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
                   >
                     2. Family
                   </button>
                   <button
                     type="button"
                     onClick={() => document.getElementById("sec-siblings")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#F7BC0F]/20 hover:text-slate-950 transition cursor-pointer whitespace-nowrap"
+                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
                   >
                     3. Siblings
                   </button>
                   <button
                     type="button"
                     onClick={() => document.getElementById("sec-address")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#F7BC0F]/20 hover:text-slate-950 transition cursor-pointer whitespace-nowrap"
+                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
                   >
                     4. Address
                   </button>
                   <button
                     type="button"
                     onClick={() => document.getElementById("sec-academic")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#F7BC0F]/20 hover:text-slate-950 transition cursor-pointer whitespace-nowrap"
+                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
                   >
                     5. Educational
                   </button>
                   <button
                     type="button"
                     onClick={() => document.getElementById("sec-financial")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#F7BC0F]/20 hover:text-slate-950 transition cursor-pointer whitespace-nowrap"
+                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
                   >
                     6. Financial
                   </button>
                   <button
                     type="button"
                     onClick={() => document.getElementById("sec-background")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#F7BC0F]/20 hover:text-slate-950 transition cursor-pointer whitespace-nowrap"
+                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
                   >
                     7. Background & Goals
                   </button>
                   <button
                     type="button"
                     onClick={() => document.getElementById("sec-documents")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-[#F7BC0F]/20 hover:text-slate-950 transition cursor-pointer whitespace-nowrap"
+                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
                   >
                     8. Documents
                   </button>
                 </div>
 
                 {/* Single Scroll Sections Container */}
-                <div className="space-y-8 text-xs text-slate-800">
+                <div className="space-y-8 text-xs text-black">
                   {/* SECTION 1: PERSONAL DETAILS */}
                   <section id="sec-personal" className="scroll-mt-6 space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                      <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                    <div className="flex items-center gap-2 pb-2 border-b border-black/15">
+                      <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                         Personal Information
                       </h4>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Student Full Name</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.full_name || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Student Full Name</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.full_name || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Date of Birth</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.dob || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Date of Birth</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.dob || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Gender</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.gender || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Gender</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.gender || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Blood Group</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.blood_group || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Blood Group</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.blood_group || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Mobile Number</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.mobile_number || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Mobile Number</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.mobile_number || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">WhatsApp Number</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.whatsappNumber || selectedApplicant.alt_mobile_number || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">WhatsApp Number</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.whatsappNumber || selectedApplicant.alt_mobile_number || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Email Address</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5 truncate">{selectedApplicant.email || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Email Address</span>
+                        <p className="font-bold text-sm text-black mt-0.5 truncate">{selectedApplicant.email || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Aadhaar Number</span>
-                        <p className="font-mono font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.aadhaar_number || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Aadhaar Number</span>
+                        <p className="font-mono font-bold text-sm text-black mt-0.5">{selectedApplicant.aadhaar_number || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Community / Category</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.community || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Community / Category</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.community || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Nationality</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.nationality || "Indian"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Nationality</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.nationality || "Indian"}</p>
                       </div>
                     </div>
                   </section>
 
                   {/* SECTION 2: FAMILY DETAILS */}
-                  <section id="sec-family" className="scroll-mt-6 space-y-4 pt-6 border-t border-slate-200">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                      <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                  <section id="sec-family" className="scroll-mt-6 space-y-4 pt-6 border-t border-black/15">
+                    <div className="flex items-center gap-2 pb-2 border-b border-black/15">
+                      <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                         Family Information
                       </h4>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Father's Name</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.father_name || "—"}</p>
-                        <p className="text-slate-500 text-[11px] mt-1">Occupation: {selectedApplicant.father_occupation || "—"}</p>
-                        <p className="text-slate-500 text-[11px]">Monthly Income: {selectedApplicant.father_income || selectedApplicant.fatherMonthlyIncome || "—"}</p>
-                        <p className="text-slate-500 text-[11px]">Status: {selectedApplicant.fatherEmploymentStatus || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Father's Name</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.father_name || "—"}</p>
+                        <p className="text-black/65 text-[11px] mt-1">Occupation: {selectedApplicant.father_occupation || "—"}</p>
+                        <p className="text-black/65 text-[11px]">Annual Income: {selectedApplicant.father_income || selectedApplicant.fatherAnnualIncome || "—"}</p>
+                        <p className="text-black/65 text-[11px]">Status: {selectedApplicant.fatherEmploymentStatus || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Mother's Name</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.mother_name || "—"}</p>
-                        <p className="text-slate-500 text-[11px] mt-1">Occupation: {selectedApplicant.mother_occupation || "—"}</p>
-                        <p className="text-slate-500 text-[11px]">Monthly Income: {selectedApplicant.mother_income || selectedApplicant.motherMonthlyIncome || "—"}</p>
-                        <p className="text-slate-500 text-[11px]">Status: {selectedApplicant.motherEmploymentStatus || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Mother's Name</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.mother_name || "—"}</p>
+                        <p className="text-black/65 text-[11px] mt-1">Occupation: {selectedApplicant.mother_occupation || "—"}</p>
+                        <p className="text-black/65 text-[11px]">Annual Income: {selectedApplicant.mother_income || selectedApplicant.motherAnnualIncome || "—"}</p>
+                        <p className="text-black/65 text-[11px]">Status: {selectedApplicant.motherEmploymentStatus || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Total Family Income & Members</span>
-                        <p className="font-bold text-sm text-emerald-800 mt-0.5">{selectedApplicant.family_annual_income || selectedApplicant.annual_income || selectedApplicant.annualFamilyIncome || "—"}</p>
-                        <p className="text-slate-500 text-[11px] mt-1">Family Members: {selectedApplicant.familyMembersCount || selectedApplicant.family_members_count || "—"}</p>
-                        <p className="text-slate-500 text-[11px]">Family Type: {selectedApplicant.familyType || "Nuclear"}</p>
-                        <p className="text-slate-500 text-[11px]">Situation: {selectedApplicant.familySituation || (selectedApplicant.orphan ? "Orphan" : selectedApplicant.single_parent ? "Single Parent" : "Both Parents")}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Total Family Income & Members</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.family_annual_income || selectedApplicant.annual_income || selectedApplicant.annualFamilyIncome || "—"}</p>
+                        <p className="text-black/65 text-[11px] mt-1">Family Members: {selectedApplicant.familyMembersCount || selectedApplicant.family_members_count || "—"}</p>
+                        <p className="text-black/65 text-[11px]">Family Type: {selectedApplicant.familyType || "Nuclear"}</p>
+                        <p className="text-black/65 text-[11px]">Situation: {selectedApplicant.familySituation || (selectedApplicant.orphan ? "Orphan" : selectedApplicant.single_parent ? "Single Parent" : "Both Parents")}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Guardian Details (If Applicable)</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.guardian_name || selectedApplicant.guardianName || "—"}</p>
-                        <p className="text-slate-500 text-[11px] mt-1">Relation: {selectedApplicant.guardianRelation || "—"}</p>
-                        <p className="text-slate-500 text-[11px]">Occupation: {selectedApplicant.guardian_occupation || selectedApplicant.guardianOccupation || "—"}</p>
-                        <p className="text-slate-500 text-[11px]">Income: {selectedApplicant.guardian_income || selectedApplicant.guardianMonthlyIncome || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Guardian Details (If Applicable)</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.guardian_name || selectedApplicant.guardianName || "—"}</p>
+                        <p className="text-black/65 text-[11px] mt-1">Relation: {selectedApplicant.guardianRelation || "—"}</p>
+                        <p className="text-black/65 text-[11px]">Occupation: {selectedApplicant.guardian_occupation || selectedApplicant.guardianOccupation || "—"}</p>
+                        <p className="text-black/65 text-[11px]">Annual Income: {selectedApplicant.guardian_income || selectedApplicant.guardianAnnualIncome || "—"}</p>
                       </div>
                     </div>
                   </section>
 
                   {/* SECTION 3: SIBLINGS DETAILS */}
-                  <section id="sec-siblings" className="scroll-mt-6 space-y-4 pt-6 border-t border-slate-200">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                      <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                  <section id="sec-siblings" className="scroll-mt-6 space-y-4 pt-6 border-t border-black/15">
+                    <div className="flex items-center gap-2 pb-2 border-b border-black/15">
+                      <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                         Siblings Information
                       </h4>
                     </div>
                     <div className="flex flex-wrap gap-4 text-xs mb-3">
-                      <div className="bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
-                        <span className="text-slate-500">Number of Siblings: </span>
-                        <strong className="text-slate-900">{selectedApplicant.siblingCount || (Array.isArray(selectedApplicant.siblings) ? selectedApplicant.siblings.length : 0)}</strong>
+                      <div className="bg-black/5 px-3.5 py-2 rounded-md border border-black/15">
+                        <span className="text-black/65">Number of Siblings: </span>
+                        <strong className="text-black">{selectedApplicant.siblingCount || (Array.isArray(selectedApplicant.siblings) ? selectedApplicant.siblings.length : 0)}</strong>
                       </div>
-                      <div className="bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
-                        <span className="text-slate-500">Siblings Currently Studying: </span>
-                        <strong className="text-slate-900">{selectedApplicant.siblingsStudyingCount || "—"}</strong>
+                      <div className="bg-black/5 px-3.5 py-2 rounded-md border border-black/15">
+                        <span className="text-black/65">Siblings Currently Studying: </span>
+                        <strong className="text-black">{selectedApplicant.siblingsStudyingCount || "—"}</strong>
                       </div>
                     </div>
                     {selectedApplicant.siblings && selectedApplicant.siblings.length > 0 ? (
-                      <table className="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
-                        <thead className="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                      <table className="w-full text-left text-xs border border-black/15 rounded-md overflow-hidden">
+                        <thead className="bg-black/5 text-black font-bold uppercase text-[10px]">
                           <tr>
                             <th className="py-2.5 px-3">Name</th>
                             <th className="py-2.5 px-3">Relationship</th>
@@ -2916,248 +2909,240 @@ export default function AdminApplicationsScreen() {
                             <th className="py-2.5 px-3">School / Institution</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 bg-white">
+                        <tbody className="divide-y divide-black/15 bg-white">
                           {selectedApplicant.siblings.map((s: any, i: number) => (
-                            <tr key={i} className="hover:bg-slate-50">
-                              <td className="py-2 px-3 font-bold text-slate-900">{s.name || "—"}</td>
-                              <td className="py-2 px-3 text-slate-600">{s.relationship || "—"}</td>
-                              <td className="py-2 px-3 text-slate-600">{s.age || "—"}</td>
-                              <td className="py-2 px-3 text-slate-600">{s.education || s.occupation || "—"}</td>
-                              <td className="py-2 px-3 text-slate-600">{s.institution || "—"}</td>
+                            <tr key={i} className="hover:bg-black/5">
+                              <td className="py-2 px-3 font-bold text-black">{s.name || "—"}</td>
+                              <td className="py-2 px-3 text-black">{s.relationship || "—"}</td>
+                              <td className="py-2 px-3 text-black">{s.age || "—"}</td>
+                              <td className="py-2 px-3 text-black">{s.education || s.occupation || "—"}</td>
+                              <td className="py-2 px-3 text-black">{s.institution || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     ) : (
-                      <p className="text-slate-400 italic bg-slate-50 p-4 rounded-xl border border-slate-200">No siblings recorded</p>
+                      <p className="text-black/65 italic bg-black/5 p-4 rounded-md border border-black/15">No siblings recorded</p>
                     )}
                   </section>
 
                   {/* SECTION 4: ADDRESS INFORMATION */}
-                  <section id="sec-address" className="scroll-mt-6 space-y-4 pt-6 border-t border-slate-200">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                      <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                  <section id="sec-address" className="scroll-mt-6 space-y-4 pt-6 border-t border-black/15">
+                    <div className="flex items-center gap-2 pb-2 border-b border-black/15">
+                      <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                         Address & Residence Details
                       </h4>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 sm:col-span-2">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Permanent Address</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.permanentAddress || selectedApplicant.address || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15 sm:col-span-2">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Permanent Address</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.permanentAddress || selectedApplicant.address || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 sm:col-span-2">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Current Residential Address</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.currentAddress || selectedApplicant.address || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15 sm:col-span-2">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Current Residential Address</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.currentAddress || selectedApplicant.address || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Village / Town</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.villageTown || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Village / Town</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.villageTown || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">District & State</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.district || "—"}, {selectedApplicant.state || "Tamil Nadu"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">District & State</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.district || "—"}, {selectedApplicant.state || "Tamil Nadu"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">PIN Code</span>
-                        <p className="font-mono font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.pincode || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">PIN Code</span>
+                        <p className="font-mono font-bold text-sm text-black mt-0.5">{selectedApplicant.pincode || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Residence Type</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.residenceType || selectedApplicant.housing_status || "Own"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Residence Type</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.residenceType || selectedApplicant.housing_status || "Own"}</p>
                       </div>
                       {(selectedApplicant.residenceType || selectedApplicant.housing_status) === "Rented" && (
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                          <span className="text-[10px] text-slate-500 uppercase font-bold">Monthly Rent</span>
-                          <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.rentAmount || selectedApplicant.rent_amount || "—"}</p>
+                        <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                          <span className="text-[10px] text-black/65 uppercase font-bold">Monthly Rent</span>
+                          <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.rentAmount || selectedApplicant.rent_amount || "—"}</p>
                         </div>
                       )}
                     </div>
                   </section>
 
                   {/* SECTION 5: EDUCATIONAL INFORMATION */}
-                  <section id="sec-academic" className="scroll-mt-6 space-y-4 pt-6 border-t border-slate-200">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                      <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                  <section id="sec-academic" className="scroll-mt-6 space-y-4 pt-6 border-t border-black/15">
+                    <div className="flex items-center gap-2 pb-2 border-b border-black/15">
+                      <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                         Educational Information (10th, 12th & Preferences)
                       </h4>
                     </div>
 
                     {/* 12th Standard Section (Most critical) */}
-                    <div className="p-5 bg-amber-50/60 border border-amber-300 rounded-2xl">
+                    <div className="p-5 bg-brand/15 border border-brand/60 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-heading font-black text-sm text-amber-950">
+                        <span className="font-heading font-bold text-sm text-black">
                           12th Higher Secondary Marks (HSC)
                         </span>
                         {(selectedApplicant.twelfth_cutoff || selectedApplicant.twelfthCutoff) && (
-                          <span className="px-3 py-1 bg-[#F7BC0F] font-mono font-black text-sm text-slate-950 rounded-xl shadow-xs">
+                          <span className="px-3 py-1 bg-brand font-mono font-bold text-sm text-black rounded-md">
                             Cutoff: {selectedApplicant.twelfth_cutoff || selectedApplicant.twelfthCutoff} / 200
                           </span>
                         )}
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs mt-3">
                         <div>
-                          <span className="text-slate-500 block">School Name:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.twelfth_school_name || selectedApplicant.twelfthSchool || "—"}</p>
+                          <span className="text-black/65 block">School Name:</span>
+                          <p className="font-bold text-black">{selectedApplicant.twelfth_school_name || selectedApplicant.twelfthSchool || "—"}</p>
                         </div>
                         <div>
-                          <span className="text-slate-500 block">Board & Passing Year:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.twelfth_board || selectedApplicant.twelfthBoard || "State Board"} ({selectedApplicant.twelfth_pass_year || selectedApplicant.twelfthYear || "—"})</p>
+                          <span className="text-black/65 block">Board & Passing Year:</span>
+                          <p className="font-bold text-black">{selectedApplicant.twelfth_board || selectedApplicant.twelfthBoard || "State Board"} ({selectedApplicant.twelfth_pass_year || selectedApplicant.twelfthYear || "—"})</p>
                         </div>
                         <div>
-                          <span className="text-slate-500 block">Group / Stream:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.twelfth_group || selectedApplicant.twelfthStream || "—"}</p>
+                          <span className="text-black/65 block">Group / Stream:</span>
+                          <p className="font-bold text-black">{selectedApplicant.twelfth_group || selectedApplicant.twelfthStream || "—"}</p>
                         </div>
                         <div>
-                          <span className="text-slate-500 block">Total Marks & %:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.twelfth_total_marks || selectedApplicant.twelfthTotalMarks || "—"} / {selectedApplicant.twelfth_max_marks || "600"} ({selectedApplicant.twelfth_percentage || selectedApplicant.twelfthPercentage || "—"}%)</p>
+                          <span className="text-black/65 block">Total Marks & %:</span>
+                          <p className="font-bold text-black">{selectedApplicant.twelfth_total_marks || selectedApplicant.twelfthTotalMarks || "—"} / {selectedApplicant.twelfth_max_marks || "600"} ({selectedApplicant.twelfth_percentage || selectedApplicant.twelfthPercentage || "—"}%)</p>
                         </div>
                       </div>
                     </div>
 
                     {/* 10th Standard Section */}
-                    <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl">
-                      <span className="font-heading font-bold text-sm text-slate-900">10th Secondary School Marks (SSLC)</span>
+                    <div className="p-5 bg-black/5 border border-black/15 rounded-lg">
+                      <span className="font-heading font-bold text-sm text-black">10th Secondary School Marks (SSLC)</span>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs mt-3">
                         <div>
-                          <span className="text-slate-500 block">School Name:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.tenth_school_name || selectedApplicant.tenthSchool || "—"}</p>
+                          <span className="text-black/65 block">School Name:</span>
+                          <p className="font-bold text-black">{selectedApplicant.tenth_school_name || selectedApplicant.tenthSchool || "—"}</p>
                         </div>
                         <div>
-                          <span className="text-slate-500 block">Board & Passing Year:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.tenth_board || selectedApplicant.tenthBoard || "State Board"} ({selectedApplicant.tenth_pass_year || selectedApplicant.tenthYear || "—"})</p>
+                          <span className="text-black/65 block">Board & Passing Year:</span>
+                          <p className="font-bold text-black">{selectedApplicant.tenth_board || selectedApplicant.tenthBoard || "State Board"} ({selectedApplicant.tenth_pass_year || selectedApplicant.tenthYear || "—"})</p>
                         </div>
                         <div>
-                          <span className="text-slate-500 block">Total Marks:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.tenth_marks_obtained || selectedApplicant.tenthTotalMarks || "—"} / {selectedApplicant.tenth_max_marks || "500"}</p>
+                          <span className="text-black/65 block">Total Marks:</span>
+                          <p className="font-bold text-black">{selectedApplicant.tenth_marks_obtained || selectedApplicant.tenthTotalMarks || "—"} / {selectedApplicant.tenth_max_marks || "500"}</p>
                         </div>
                         <div>
-                          <span className="text-slate-500 block">Percentage:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.tenth_percentage || selectedApplicant.tenthPercentage || "—"}%</p>
+                          <span className="text-black/65 block">Percentage:</span>
+                          <p className="font-bold text-black">{selectedApplicant.tenth_percentage || selectedApplicant.tenthPercentage || "—"}%</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Course & Degree Preferences */}
-                    <div className="p-5 bg-white border border-slate-200 rounded-2xl">
-                      <span className="font-heading font-bold text-sm text-slate-900">Course & Degree Preferences</span>
+                    <div className="p-5 bg-white border border-black/15 rounded-lg">
+                      <span className="font-heading font-bold text-sm text-black">Course & Degree Preferences</span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs mt-3">
                         <div>
-                          <span className="text-slate-500 block">Preferred Degree:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.preferred_degree || selectedApplicant.preferredDegree || "—"}</p>
+                          <span className="text-black/65 block">Preferred Degree:</span>
+                          <p className="font-bold text-black">{selectedApplicant.preferred_degree || selectedApplicant.preferredDegree || "—"}</p>
                         </div>
                         <div>
-                          <span className="text-slate-500 block">Preferred Course (1st):</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.preferred_branch || (Array.isArray(selectedApplicant.preferred_courses) ? selectedApplicant.preferred_courses[0] : "") || "—"}</p>
+                          <span className="text-black/65 block">Preferred Course (1st):</span>
+                          <p className="font-bold text-black">{selectedApplicant.preferred_branch || (Array.isArray(selectedApplicant.preferred_courses) ? selectedApplicant.preferred_courses[0] : "") || "—"}</p>
                         </div>
                         <div>
-                          <span className="text-slate-500 block">Preferred Course (2nd):</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.secondBranch || (Array.isArray(selectedApplicant.preferred_courses) ? selectedApplicant.preferred_courses[1] : "") || "—"}</p>
+                          <span className="text-black/65 block">Preferred Course (2nd):</span>
+                          <p className="font-bold text-black">{selectedApplicant.secondBranch || (Array.isArray(selectedApplicant.preferred_courses) ? selectedApplicant.preferred_courses[1] : "") || "—"}</p>
                         </div>
                         <div>
-                          <span className="text-slate-500 block">Preferred College / Location:</span>
-                          <p className="font-bold text-slate-900">{selectedApplicant.preferredCollegeLocation || (Array.isArray(selectedApplicant.preferred_districts) ? selectedApplicant.preferred_districts.join(", ") : "") || "—"}</p>
+                          <span className="text-black/65 block">Preferred College / Location:</span>
+                          <p className="font-bold text-black">{selectedApplicant.preferredCollegeLocation || (Array.isArray(selectedApplicant.preferred_districts) ? selectedApplicant.preferred_districts.join(", ") : "") || "—"}</p>
                         </div>
                       </div>
                     </div>
                   </section>
 
                   {/* SECTION 6: FINANCIAL INFORMATION */}
-                  <section id="sec-financial" className="scroll-mt-6 space-y-4 pt-6 border-t border-slate-200">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                      <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                  <section id="sec-financial" className="scroll-mt-6 space-y-4 pt-6 border-t border-black/15">
+                    <div className="flex items-center gap-2 pb-2 border-b border-black/15">
+                      <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                         Financial Information & Needs
                       </h4>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Annual Family Income</span>
-                        <p className="font-bold text-sm text-emerald-800 mt-0.5">{selectedApplicant.annualIncome || selectedApplicant.family_annual_income || selectedApplicant.annualFamilyIncome || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Annual Family Income</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.annualIncome || selectedApplicant.family_annual_income || selectedApplicant.annualFamilyIncome || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Monthly Family Income</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.monthlyFamilyIncome || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Income Sources</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.incomeSources || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Income Sources</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.incomeSources || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Family Debts</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.familyDebts || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Family Debts</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.familyDebts || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Existing Education Loans</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.educationLoans || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Existing Education Loans</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.educationLoans || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Can Afford Without Support?</span>
+                        <p className="font-bold text-sm text-black mt-0.5">{selectedApplicant.affordabilityWithoutSupport || "No"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Can Afford Without Support?</span>
-                        <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedApplicant.affordabilityWithoutSupport || "No"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15 sm:col-span-3">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Financial Difficulties Faced by Family</span>
+                        <p className="text-black mt-1 leading-relaxed">{selectedApplicant.financialDifficulties || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 sm:col-span-3">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Financial Difficulties Faced by Family</span>
-                        <p className="text-slate-800 mt-1 leading-relaxed">{selectedApplicant.financialDifficulties || "—"}</p>
-                      </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 sm:col-span-3">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Why the Student Needs Financial Support</span>
-                        <p className="text-slate-800 mt-1 leading-relaxed">{selectedApplicant.whyNeedSupport || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15 sm:col-span-3">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Why the Student Needs Financial Support</span>
+                        <p className="text-black mt-1 leading-relaxed">{selectedApplicant.whyNeedSupport || "—"}</p>
                       </div>
                     </div>
                   </section>
 
                   {/* SECTION 7: PERSONAL BACKGROUND & GOALS */}
-                  <section id="sec-background" className="scroll-mt-6 space-y-4 pt-6 border-t border-slate-200">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                      <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                  <section id="sec-background" className="scroll-mt-6 space-y-4 pt-6 border-t border-black/15">
+                    <div className="flex items-center gap-2 pb-2 border-b border-black/15">
+                      <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                         Background, Career Ambition & Goals
                       </h4>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${selectedApplicant.orphan ? "bg-rose-100 border-rose-300 text-rose-950" : "bg-white border-slate-200 text-slate-500"}`}>
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${selectedApplicant.orphan ? "bg-brand/15 border-brand/60 text-black" : "bg-white border-black/15 text-black/65"}`}>
                         {selectedApplicant.orphan ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Orphan Student</> : "Not Orphan"}
                       </span>
-                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${selectedApplicant.single_parent ? "bg-purple-100 border-purple-300 text-purple-950" : "bg-white border-slate-200 text-slate-500"}`}>
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${selectedApplicant.single_parent ? "bg-brand/15 border-brand/60 text-black" : "bg-white border-black/15 text-black/65"}`}>
                         {selectedApplicant.single_parent ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Single Parent Child</> : "Both Parents"}
                       </span>
-                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${selectedApplicant.first_graduate ? "bg-amber-100 border-amber-300 text-amber-950" : "bg-white border-slate-200 text-slate-500"}`}>
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${selectedApplicant.first_graduate ? "bg-brand/15 border-brand/60 text-black" : "bg-white border-black/15 text-black/65"}`}>
                         {selectedApplicant.first_graduate ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> First-Generation Learner</> : "Non-First Graduate"}
                       </span>
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-bold border bg-emerald-50 border-emerald-300 text-emerald-950">
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-bold border bg-brand/15 border-brand/60 text-black">
                         {selectedApplicant.willingToRelocateTN !== false ? <> <CheckIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden="true" /> Willing to Relocate in Tamil Nadu</> : "Local Only"}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 sm:col-span-2">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Career Ambition</span>
-                        <p className="font-medium text-slate-800 mt-1">{selectedApplicant.careerAmbition || selectedApplicant.career_aspiration || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15 sm:col-span-2">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Career Ambition</span>
+                        <p className="font-medium text-black mt-1">{selectedApplicant.careerAmbition || selectedApplicant.career_aspiration || "—"}</p>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Why the Student Wants Higher Education</span>
-                        <p className="font-medium text-slate-800 mt-1">{selectedApplicant.higherEducationReason || "—"}</p>
-                      </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold">Future Goals</span>
-                        <p className="font-medium text-slate-800 mt-1">{selectedApplicant.futureGoals || "—"}</p>
+                      <div className="bg-black/5 p-4 rounded-md border border-black/15">
+                        <span className="text-[10px] text-black/65 uppercase font-bold">Future Goals</span>
+                        <p className="font-medium text-black mt-1">{selectedApplicant.futureGoals || "—"}</p>
                       </div>
                       {selectedApplicant.specialCircumstances && (
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 sm:col-span-2">
-                          <span className="text-[10px] text-slate-500 uppercase font-bold">Special Family Circumstances</span>
-                          <p className="font-medium text-slate-800 mt-1">{selectedApplicant.specialCircumstances}</p>
+                        <div className="bg-black/5 p-4 rounded-md border border-black/15 sm:col-span-2">
+                          <span className="text-[10px] text-black/65 uppercase font-bold">Special Family Circumstances</span>
+                          <p className="font-medium text-black mt-1">{selectedApplicant.specialCircumstances}</p>
                         </div>
                       )}
                     </div>
                   </section>
 
                   {/* SECTION 8: DOCUMENTS CHECKLIST */}
-                  <section id="sec-documents" className="scroll-mt-6 space-y-4 pt-6 border-t border-slate-200">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                      <h4 className="font-heading font-black text-sm text-slate-900 uppercase tracking-wider">
+                  <section id="sec-documents" className="scroll-mt-6 space-y-4 pt-6 border-t border-black/15">
+                    <div className="flex items-center gap-2 pb-2 border-b border-black/15">
+                      <h4 className="font-heading font-bold text-sm text-black uppercase tracking-wider">
                         Document Uploads & Checklist
                       </h4>
                     </div>
-                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                    <div className="p-4 bg-black/5 border border-black/15 rounded-lg">
                       <div className="flex items-center justify-between">
-                        <span className="font-heading font-bold text-sm text-slate-900">Uploaded Documents</span>
+                        <span className="font-heading font-bold text-sm text-black">Uploaded Documents</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-3">
                         {[
@@ -3166,24 +3151,24 @@ export default function AdminApplicationsScreen() {
                           { label: "12th Marksheet", url: selectedApplicant.document12thMarksheet || selectedApplicant.document_12th_marksheet },
                           { label: "Aadhaar Document", url: selectedApplicant.documentAadhaarCard || selectedApplicant.document_aadhaar_card },
                         ].map((doc, idx) => (
-                          <div key={idx} className="p-3 bg-white rounded-xl border border-slate-200 flex flex-col justify-between gap-2 shadow-2xs">
-                            <span className="font-semibold text-slate-800 text-xs">{doc.label}</span>
+                          <div key={idx} className="p-3 bg-white rounded-md border border-black/15 flex flex-col justify-between gap-2">
+                            <span className="font-semibold text-black text-xs">{doc.label}</span>
                             {doc.url ? (
-                              <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
-                                <span className="font-bold text-emerald-600 text-[11px] flex items-center gap-1">
-                                  <CheckBadgeIcon className="w-3.5 h-3.5 text-emerald-500" /> Uploaded
+                              <div className="flex items-center justify-between gap-2 pt-1 border-t border-black/15">
+                                <span className="font-bold text-black text-[11px] flex items-center gap-1">
+                                  <CheckBadgeIcon className="w-3.5 h-3.5 text-black/65" /> Uploaded
                                 </span>
                                 <a
                                   href={doc.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-black hover:text-black hover:underline"
                                 >
                                   <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" /> View
                                 </a>
                               </div>
                             ) : (
-                              <div className="pt-1 border-t border-slate-100 text-slate-400 text-[11px] italic">
+                              <div className="pt-1 border-t border-black/15 text-black/65 text-[11px] italic">
                                 Not provided
                               </div>
                             )}
@@ -3192,9 +3177,9 @@ export default function AdminApplicationsScreen() {
                       </div>
                     </div>
 
-                    <div className="p-4 bg-amber-50/50 border border-amber-200 rounded-2xl text-xs text-amber-950">
+                    <div className="p-4 bg-brand/15 border border-brand/60 rounded-lg text-xs text-black">
                       <p className="font-bold">Applicant Declaration</p>
-                      <p className="mt-1 text-slate-700">
+                      <p className="mt-1 text-black">
                         "I hereby declare that all details furnished in this application are true and correct to the best of my knowledge and belief. I agree to abide by the rules of Maatram Foundation."
                       </p>
                     </div>
@@ -3205,14 +3190,14 @@ export default function AdminApplicationsScreen() {
                     // 0. REJECTED STATE: Reject means reject done. No reassign volunteer, no suggestions.
                     if (selectedApplicant.status === "rejected") {
                       return (
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t-2 border-slate-200">
-                          <div className="text-xs text-rose-700 font-semibold flex items-center gap-2">
-                            <XCircleIcon className="w-5 h-5 text-rose-600 shrink-0" />
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t-2 border-black/15">
+                          <div className="text-xs text-black font-semibold flex items-center gap-2">
+                            <XCircleIcon className="w-5 h-5 text-black shrink-0" />
                             <span>This application has been rejected by Admin. Notification email has been sent to the student.</span>
                           </div>
                           <div>
-                            <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-50 text-rose-700 border border-rose-300 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-2xs">
-                              <XCircleIcon className="w-4 h-4 text-rose-600 stroke-[2.5]" />
+                            <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand/15 text-black border border-brand/60 font-heading font-bold text-xs uppercase tracking-wider rounded-md">
+                              <XCircleIcon className="w-4 h-4 text-black stroke-[2.5]" />
                               <span>Application Rejected</span>
                             </span>
                           </div>
@@ -3232,22 +3217,22 @@ export default function AdminApplicationsScreen() {
                     );
 
                     return (
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t-2 border-slate-200">
-                        <div className="text-xs text-slate-500">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t-2 border-black/15">
+                        <div className="text-xs text-black/65">
                           {!isVolunteerAssigned && !hasVolunteerFeedback && (
-                            <span className="font-semibold text-slate-700">
+                            <span className="font-semibold text-black">
                               Applicant Review: Review the complete application details above and assign a volunteer for televerification or reject.
                             </span>
                           )}
                           {isVolunteerAssigned && !hasVolunteerFeedback && (
-                            <span className="font-semibold text-amber-800 flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                              Waiting for volunteer suggestion from <strong className="text-slate-900">{selectedApplicant.volunteer_name}</strong>
+                            <span className="font-semibold text-black flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+                              Waiting for volunteer suggestion from <strong className="text-black">{selectedApplicant.volunteer_name}</strong>
                             </span>
                           )}
                           {hasVolunteerFeedback && (
-                            <span className="font-semibold text-emerald-800 flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <span className="font-semibold text-black flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-black" />
                               Volunteer suggestion recorded — choose next action below:
                             </span>
                           )}
@@ -3261,8 +3246,8 @@ export default function AdminApplicationsScreen() {
 
                             if (isFinalSelected) {
                               return (
-                                <span className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-900 border border-emerald-300 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-2xs">
-                                  <CheckBadgeIcon className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
+                                <span className="inline-flex items-center gap-2 px-6 py-3 bg-brand/15 text-black border border-brand/60 font-heading font-bold text-xs uppercase tracking-wider rounded-md">
+                                  <CheckBadgeIcon className="w-4 h-4 text-black stroke-[2.5]" />
                                   <span>Admission Confirmed</span>
                                 </span>
                               );
@@ -3293,18 +3278,18 @@ export default function AdminApplicationsScreen() {
                                     <button
                                       type="button"
                                       onClick={() => openVolunteerAssignment("physical")}
-                                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#F7BC0F] hover:bg-[#e5ad0c] text-slate-950 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                      className="inline-flex items-center gap-2 px-6 py-3 bg-brand hover:brightness-95 text-black font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                                     >
-                                      <UserPlusIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                                      <UserPlusIcon className="w-4 h-4 text-black stroke-[2.5]" />
                                       <span>Assign Volunteer for Physical Verification</span>
                                     </button>
 
                                     <button
                                       type="button"
                                       onClick={() => setIsRejectModalOpen(true)}
-                                      className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                      className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-md border bg-white hover:bg-brand/15 text-black border-brand/60 hover:border-brand cursor-pointer"
                                     >
-                                      <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                      <XCircleIcon className="w-4 h-4 text-black/65" />
                                       <span>Reject</span>
                                     </button>
                                   </>
@@ -3314,27 +3299,27 @@ export default function AdminApplicationsScreen() {
                               if (!hasPhysicalSugg) {
                                 return (
                                   <>
-                                    <span className="inline-flex items-center gap-1.5 px-4 py-3 bg-amber-50 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold">
-                                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                    <span className="inline-flex items-center gap-1.5 px-4 py-3 bg-brand/15 text-black border border-brand/60 rounded-md text-xs font-bold">
+                                      <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
                                       <span>Waiting for Physical Verification Report</span>
                                     </span>
 
                                     <button
                                       type="button"
                                       onClick={() => openVolunteerAssignment("physical")}
-                                      className="inline-flex items-center gap-1.5 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-300 transition cursor-pointer"
+                                      className="inline-flex items-center gap-1.5 px-4 py-3 bg-black/5 hover:bg-black/10 text-black font-heading font-bold text-xs uppercase tracking-wider rounded-md border border-black/15 transition cursor-pointer"
                                       title="Reassign physical verification volunteer"
                                     >
-                                      <UserPlusIcon className="w-3.5 h-3.5 text-slate-600" />
+                                      <UserPlusIcon className="w-3.5 h-3.5 text-black" />
                                       <span>Reassign Volunteer</span>
                                     </button>
 
                                     <button
                                       type="button"
                                       onClick={() => setIsRejectModalOpen(true)}
-                                      className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                      className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-md border bg-white hover:bg-brand/15 text-black border-brand/60 hover:border-brand cursor-pointer"
                                     >
-                                      <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                      <XCircleIcon className="w-4 h-4 text-black/65" />
                                       <span>Reject</span>
                                     </button>
                                   </>
@@ -3348,7 +3333,7 @@ export default function AdminApplicationsScreen() {
                                       type="button"
                                       disabled={isAdvancingPhase}
                                       onClick={handleMoveNextPhase}
-                                      className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                      className="inline-flex items-center gap-2 px-6 py-3 bg-black hover:bg-black disabled:opacity-50 text-white font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                                       title={currentAction.buttonText}
                                     >
                                       {isAdvancingPhase ? (
@@ -3369,19 +3354,19 @@ export default function AdminApplicationsScreen() {
                                   <button
                                     type="button"
                                     onClick={() => openVolunteerAssignment("physical")}
-                                    className="inline-flex items-center gap-1.5 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-300 transition cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-4 py-3 bg-black/5 hover:bg-black/10 text-black font-heading font-bold text-xs uppercase tracking-wider rounded-md border border-black/15 transition cursor-pointer"
                                     title="Reassign physical verification volunteer"
                                   >
-                                    <UserPlusIcon className="w-3.5 h-3.5 text-slate-600" />
+                                    <UserPlusIcon className="w-3.5 h-3.5 text-black" />
                                     <span>Reassign Volunteer</span>
                                   </button>
 
                                   <button
                                     type="button"
                                     onClick={() => setIsRejectModalOpen(true)}
-                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-md border bg-white hover:bg-brand/15 text-black border-brand/60 hover:border-brand cursor-pointer"
                                   >
-                                    <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                    <XCircleIcon className="w-4 h-4 text-black/65" />
                                     <span>Reject</span>
                                   </button>
                                 </>
@@ -3405,7 +3390,7 @@ export default function AdminApplicationsScreen() {
                                       type="button"
                                       disabled={isAdvancingPhase}
                                       onClick={handleMoveNextPhase}
-                                      className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                      className="inline-flex items-center gap-2 px-6 py-3 bg-black hover:bg-black disabled:opacity-50 text-white font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                                       title={currentAction.buttonText}
                                     >
                                       {isAdvancingPhase ? (
@@ -3426,9 +3411,9 @@ export default function AdminApplicationsScreen() {
                                   <button
                                     type="button"
                                     onClick={() => setIsRejectModalOpen(true)}
-                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-md border bg-white hover:bg-brand/15 text-black border-brand/60 hover:border-brand cursor-pointer"
                                   >
-                                    <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                    <XCircleIcon className="w-4 h-4 text-black/65" />
                                     <span>Reject</span>
                                   </button>
                                 </>
@@ -3442,18 +3427,18 @@ export default function AdminApplicationsScreen() {
                                   <button
                                     type="button"
                                     onClick={() => openVolunteerAssignment("televerification")}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#F7BC0F] hover:bg-[#e5ad0c] text-slate-950 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-brand hover:brightness-95 text-black font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                                   >
-                                    <UserPlusIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                                    <UserPlusIcon className="w-4 h-4 text-black stroke-[2.5]" />
                                     <span>Assign Volunteer for Televerification</span>
                                   </button>
 
                                   <button
                                     type="button"
                                     onClick={() => setIsRejectModalOpen(true)}
-                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-md border bg-white hover:bg-brand/15 text-black border-brand/60 hover:border-brand cursor-pointer"
                                   >
-                                    <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                    <XCircleIcon className="w-4 h-4 text-black/65" />
                                     <span>Reject</span>
                                   </button>
                                 </>
@@ -3467,18 +3452,18 @@ export default function AdminApplicationsScreen() {
                                   <button
                                     type="button"
                                     onClick={() => openVolunteerAssignment("televerification")}
-                                    className="inline-flex items-center gap-2 px-5 py-3 bg-amber-100 hover:bg-amber-200 text-amber-950 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border border-amber-300 shadow-2xs transition active:scale-98 cursor-pointer"
+                                    className="inline-flex items-center gap-2 px-5 py-3 bg-brand/15 hover:bg-brand/30 text-black font-heading font-bold text-xs uppercase tracking-wider rounded-md border border-brand/60 transition cursor-pointer"
                                   >
-                                    <UserPlusIcon className="w-4 h-4 text-amber-700 stroke-[2.5]" />
+                                    <UserPlusIcon className="w-4 h-4 text-black stroke-[2.5]" />
                                     <span>Reassign Volunteer</span>
                                   </button>
 
                                   <button
                                     type="button"
                                     onClick={() => setIsRejectModalOpen(true)}
-                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                    className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-md border bg-white hover:bg-brand/15 text-black border-brand/60 hover:border-brand cursor-pointer"
                                   >
-                                    <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                    <XCircleIcon className="w-4 h-4 text-black/65" />
                                     <span>Reject</span>
                                   </button>
                                 </>
@@ -3492,7 +3477,7 @@ export default function AdminApplicationsScreen() {
                                   type="button"
                                   disabled={isAdvancingPhase}
                                   onClick={handleMoveNextPhase}
-                                  className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md active:scale-98 cursor-pointer"
+                                  className="inline-flex items-center gap-2 px-6 py-3 bg-black hover:bg-black disabled:opacity-50 text-white font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                                   title="Approve televerification and move to Phase 2 (Physical Verification)"
                                 >
                                   {isAdvancingPhase ? (
@@ -3512,19 +3497,19 @@ export default function AdminApplicationsScreen() {
                                 <button
                                   type="button"
                                   onClick={() => setIsRejectModalOpen(true)}
-                                  className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border bg-white hover:bg-rose-50 text-rose-600 border-rose-300 hover:border-rose-400 shadow-xs active:scale-98 cursor-pointer"
+                                  className="inline-flex items-center gap-2 px-5 py-3 font-heading font-bold text-xs uppercase tracking-wider rounded-md border bg-white hover:bg-brand/15 text-black border-brand/60 hover:border-brand cursor-pointer"
                                 >
-                                  <XCircleIcon className="w-4 h-4 text-rose-500" />
+                                  <XCircleIcon className="w-4 h-4 text-black/65" />
                                   <span>Reject</span>
                                 </button>
 
                                 <button
                                   type="button"
                                   onClick={() => openVolunteerAssignment("televerification")}
-                                  className="inline-flex items-center gap-1.5 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-heading font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-300 transition cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 px-4 py-3 bg-black/5 hover:bg-black/10 text-black font-heading font-bold text-xs uppercase tracking-wider rounded-md border border-black/15 transition cursor-pointer"
                                   title="Change assigned volunteer"
                                 >
-                                  <UserPlusIcon className="w-3.5 h-3.5 text-slate-600" />
+                                  <UserPlusIcon className="w-3.5 h-3.5 text-black" />
                                   <span>Reassign</span>
                                 </button>
                               </>
@@ -3543,10 +3528,10 @@ export default function AdminApplicationsScreen() {
               {/* Title & Banner with Export CSV */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+                  <h1 className="font-heading font-bold text-2xl sm:text-3xl text-black tracking-tight">
                     Applicants Details
                   </h1>
-                  <p className="font-primary text-xs sm:text-sm text-slate-600 mt-1">
+                  <p className="font-primary text-xs sm:text-sm text-black mt-1">
                     Review and manage student applications for the Maatram Foundation 2025-26 program.
                   </p>
                 </div>
@@ -3555,7 +3540,7 @@ export default function AdminApplicationsScreen() {
                 <button
                   type="button"
                   onClick={handleExportExcel}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-sm border border-[#e5ad0c]"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-heading font-bold text-black bg-brand hover:brightness-95 rounded-md transition cursor-pointer border border-brand"
                   title="Download complete student details as Excel (.xlsx) with Volunteer Suggestion column"
                 >
                   <TableCellsIcon className="w-4 h-4 stroke-[2.2]" />
@@ -3565,11 +3550,11 @@ export default function AdminApplicationsScreen() {
 
               {/* Error message */}
               {errorMessage && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-600 font-medium flex items-center justify-between">
+                <div className="p-4 bg-brand/15 border border-brand/60 rounded-lg text-xs text-black font-medium flex items-center justify-between">
                   <span>{errorMessage}</span>
                   <button
                     onClick={fetchApplications}
-                    className="underline font-bold text-red-700 cursor-pointer"
+                    className="underline font-bold text-black cursor-pointer"
                   >
                     Retry
                   </button>
@@ -3578,25 +3563,25 @@ export default function AdminApplicationsScreen() {
 
               {/* Status update alert toast */}
               {statusUpdateMessage && (
-                <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-2xl text-xs text-emerald-800 font-bold flex items-center gap-2 animate-in fade-in">
-                  <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
+                <div className="p-3 bg-brand/15 border border-brand/60 rounded-lg text-xs text-black font-bold flex items-center gap-2 animate-in fade-in">
+                  <CheckCircleIcon className="w-4 h-4 text-black" />
                   <span>{statusUpdateMessage}</span>
                 </div>
               )}
 
               {/* 2. Search, Filter & Controls Bar */}
-              <section className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3">
+              <section className="bg-white border border-black/15 rounded-lg p-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3">
                 {/* Search Box */}
                 <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />
+                    <MagnifyingGlassIcon className="w-4 h-4 text-black/65" />
                   </div>
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by student name, application no, mobile, email, or district..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:bg-white focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                    className="w-full bg-black/5 border border-black/15 rounded-md pl-10 pr-4 py-2.5 text-xs text-black placeholder-black/65 focus:outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20 transition"
                   />
                 </div>
 
@@ -3608,7 +3593,7 @@ export default function AdminApplicationsScreen() {
                     <select
                       value={districtFilter}
                       onChange={(e) => setDistrictFilter(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#F7BC0F] cursor-pointer"
+                      className="bg-black/5 border border-black/15 rounded-md px-3 py-2.5 text-xs font-semibold text-black focus:outline-none focus:border-brand cursor-pointer"
                     >
                       <option value="all">All Districts</option>
                       {districtList.map((d) => (
@@ -3622,13 +3607,13 @@ export default function AdminApplicationsScreen() {
               </section>
 
               {/* 3. Applicants Table */}
-              <section className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs">
-                <div className="p-4 sm:p-6 border-b border-slate-200 flex items-center justify-between">
+              <section className="bg-white border border-black/15 rounded-xl overflow-hidden">
+                <div className="p-4 sm:p-6 border-b border-black/15 flex items-center justify-between">
                   <div>
-                    <h2 className="font-heading font-black text-base sm:text-lg text-slate-900">
+                    <h2 className="font-heading font-bold text-base sm:text-lg text-black">
                       Applicant Records
                     </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-black/65 mt-0.5">
                       Showing {filteredApplications.length} of {applications.length} students
                     </p>
                   </div>
@@ -3637,7 +3622,7 @@ export default function AdminApplicationsScreen() {
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="text-xs font-bold text-slate-600 hover:text-slate-900 underline cursor-pointer"
+                      className="text-xs font-bold text-black hover:text-black underline cursor-pointer"
                     >
                       Clear Search
                     </button>
@@ -3645,16 +3630,16 @@ export default function AdminApplicationsScreen() {
                 </div>
 
                 {filteredApplications.length === 0 ? (
-                  <div className="py-20 text-center text-slate-500 text-xs">
-                    <DocumentTextIcon className="w-10 h-10 mx-auto text-slate-300 mb-2" />
-                    <p className="font-bold text-slate-700">No applicants found</p>
-                    <p className="text-slate-400 mt-1">Try adjusting your search or filter options.</p>
+                  <div className="py-20 text-center text-black/65 text-xs">
+                    <DocumentTextIcon className="w-10 h-10 mx-auto text-black/65 mb-2" />
+                    <p className="font-bold text-black">No applicants found</p>
+                    <p className="text-black/65 mt-1">Try adjusting your search or filter options.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200 font-heading font-bold text-slate-600 tracking-wider uppercase text-[10px]">
+                        <tr className="bg-black/5 border-b border-black/15 font-heading font-bold text-black tracking-wider uppercase text-[10px]">
                           <th className="py-3 px-4">Application No</th>
                           <th className="py-3 px-4">Student Name</th>
                           <th className="py-3 px-4">Contact Info</th>
@@ -3667,59 +3652,59 @@ export default function AdminApplicationsScreen() {
                           <th className="py-3 px-4 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-black/15">
                         {filteredApplications.map((app) => (
                           <tr
                             key={app.id}
-                            className="hover:bg-amber-50/30 transition duration-150 cursor-pointer"
+                            className="hover:bg-brand/15 transition duration-150 cursor-pointer"
                             onClick={() => handleSelectApplicant(app)}
                           >
                             {/* Application Number */}
-                            <td className="py-3.5 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
+                            <td className="py-3.5 px-4 font-mono font-bold text-black whitespace-nowrap">
                               {app.application_number || "MF-2025-001"}
-                              <p className="text-[10px] text-slate-400 font-primary">
+                              <p className="text-[10px] text-black/65 font-primary">
                                 {app.created_at ? new Date(app.created_at).toLocaleDateString() : ""}
                               </p>
                             </td>
 
                             {/* Student Name */}
                             <td className="py-3.5 px-4">
-                              <p className="font-bold text-slate-900 font-heading text-sm">
+                              <p className="font-bold text-black font-heading text-sm">
                                 {app.full_name || "Untitled Applicant"}
                               </p>
-                              <p className="text-[11px] text-slate-500">
+                              <p className="text-[11px] text-black/65">
                                 {app.gender || "Gender not specified"} • {app.first_graduate ? "First Graduate" : "Non-FG"}
                               </p>
                             </td>
 
                             {/* Contact Info */}
                             <td className="py-3.5 px-4">
-                              <div className="flex items-center gap-1.5 text-slate-700">
-                                <PhoneIcon className="w-3.5 h-3.5 text-slate-400" />
+                              <div className="flex items-center gap-1.5 text-black">
+                                <PhoneIcon className="w-3.5 h-3.5 text-black/65" />
                                 <span className="font-semibold">{app.mobile_number || "—"}</span>
                               </div>
-                              <div className="flex items-center gap-1.5 text-slate-500 mt-0.5 text-[11px]">
-                                <EnvelopeIcon className="w-3.5 h-3.5 text-slate-400" />
+                              <div className="flex items-center gap-1.5 text-black/65 mt-0.5 text-[11px]">
+                                <EnvelopeIcon className="w-3.5 h-3.5 text-black/65" />
                                 <span className="truncate max-w-[160px]">{app.email || "—"}</span>
                               </div>
                             </td>
 
                             {/* District */}
                             <td className="py-3.5 px-4">
-                              <p className="font-semibold text-slate-800">{app.district || "—"}</p>
-                              <p className="text-[10px] text-slate-500">{app.pincode || ""}</p>
+                              <p className="font-semibold text-black">{app.district || "—"}</p>
+                              <p className="text-[10px] text-black/65">{app.pincode || ""}</p>
                             </td>
 
                             {/* 12th Cutoff */}
                             <td className="py-3.5 px-4 whitespace-nowrap">
                               {app.twelfth_cutoff ? (
-                                <div className="inline-block px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-md font-mono font-bold text-amber-900 text-xs">
+                                <div className="inline-block px-2 py-0.5 bg-brand/15 border border-brand/60 rounded-md font-mono font-bold text-black text-xs">
                                   {app.twelfth_cutoff}
                                 </div>
                               ) : (
-                                <span className="text-slate-400">—</span>
+                                <span className="text-black/65">—</span>
                               )}
-                              <p className="text-[10px] text-slate-500 truncate max-w-[120px]">
+                              <p className="text-[10px] text-black/65 truncate max-w-[120px]">
                                 {app.twelfth_group || ""}
                               </p>
                             </td>
@@ -3728,29 +3713,29 @@ export default function AdminApplicationsScreen() {
                             <td className="py-3.5 px-4">
                               {app.preferred_degree || (Array.isArray(app.preferred_courses) && app.preferred_courses.length > 0) || app.preferred_branch ? (
                                 <div>
-                                  <span className="inline-flex items-center gap-1 font-semibold text-slate-900">
-                                    <AcademicCapIcon className="w-3.5 h-3.5 text-[#F7BC0F] shrink-0" />
+                                  <span className="inline-flex items-center gap-1 font-semibold text-black">
+                                    <AcademicCapIcon className="w-3.5 h-3.5 text-brand shrink-0" />
                                     <span>{app.preferred_degree || (Array.isArray(app.preferred_courses) ? app.preferred_courses[0] : app.preferred_branch)}</span>
                                   </span>
                                   {(app.preferred_branch || (Array.isArray(app.preferred_courses) && app.preferred_courses[0] && app.preferred_courses[0] !== app.preferred_degree)) && (
-                                    <p className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                                    <p className="text-[10px] text-black/65 truncate max-w-[140px]">
                                       {app.preferred_branch || app.preferred_courses[0]}
                                     </p>
                                   )}
                                 </div>
                               ) : (
-                                <span className="text-slate-400">—</span>
+                                <span className="text-black/65">—</span>
                               )}
                             </td>
 
                             {/* Family Income */}
                             <td className="py-3.5 px-4 whitespace-nowrap">
                               {app.family_annual_income || app.annual_income ? (
-                                <span className="inline-block px-2.5 py-0.5 bg-emerald-50 border border-emerald-200 rounded-md font-mono font-bold text-emerald-800 text-[11px]">
+                                <span className="inline-block px-2.5 py-0.5 bg-brand/15 border border-brand/60 rounded-md font-mono font-bold text-black text-[11px]">
                                   {app.family_annual_income || app.annual_income}
                                 </span>
                               ) : (
-                                <span className="text-slate-400">—</span>
+                                <span className="text-black/65">—</span>
                               )}
                             </td>
 
@@ -3766,7 +3751,7 @@ export default function AdminApplicationsScreen() {
                                     onChange={(e) => setVolunteerNoteInput(e.target.value)}
                                     placeholder="Type volunteer feedback..."
                                     rows={2}
-                                    className="w-full text-xs p-2 bg-white border border-amber-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-slate-900"
+                                    className="w-full text-xs p-2 bg-white border border-brand/60 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand text-black"
                                   />
                                   <div className="flex items-center justify-end gap-1">
                                     <button
@@ -3775,7 +3760,7 @@ export default function AdminApplicationsScreen() {
                                         setEditingVolunteerId(null);
                                         setVolunteerNoteInput("");
                                       }}
-                                      className="px-2 py-0.5 text-[10px] text-slate-500 hover:text-slate-700"
+                                      className="px-2 py-0.5 text-[10px] text-black/65 hover:text-black"
                                     >
                                       Cancel
                                     </button>
@@ -3783,7 +3768,7 @@ export default function AdminApplicationsScreen() {
                                       type="button"
                                       disabled={isSavingVolunteerNote}
                                       onClick={() => handleSaveVolunteerNote(app.id)}
-                                      className="px-2.5 py-0.5 text-[10px] font-bold bg-[#F7BC0F] text-slate-950 rounded hover:bg-[#e5ad0c]"
+                                      className="px-2.5 py-0.5 text-[10px] font-bold bg-brand text-black rounded hover:bg-brand"
                                     >
                                       Save
                                     </button>
@@ -3791,17 +3776,17 @@ export default function AdminApplicationsScreen() {
                                 </div>
                               ) : (app.physical_volunteer_suggestion || app.volunteer_suggestion) ? (
                                 <div className="group/note flex items-start justify-between gap-1">
-                                  <div className="p-2 bg-amber-50/80 border border-amber-200/90 rounded-lg text-slate-800 text-[11px] leading-snug w-full">
+                                  <div className="p-2 bg-brand/15 border border-brand/60 rounded-lg text-black text-[11px] leading-snug w-full">
                                     <p className="line-clamp-3">{app.physical_volunteer_suggestion || app.volunteer_suggestion}</p>
                                     {(app.physical_volunteer_name || app.volunteer_name) && (
-                                      <p className="text-[9px] text-amber-800 font-bold mt-1">
+                                      <p className="text-[10px] text-black font-bold mt-1">
                                         — {app.physical_volunteer_name || app.volunteer_name} {app.physical_volunteer_suggestion ? "(Physical)" : ""}
                                       </p>
                                     )}
                                   </div>
                                 </div>
                               ) : (
-                                <span className="text-[11px] text-slate-400">No remarks</span>
+                                <span className="text-[11px] text-black/65">No remarks</span>
                               )}
                             </td>
 
@@ -3814,12 +3799,12 @@ export default function AdminApplicationsScreen() {
                                     ? app.siblings_count
                                     : (app.family_members_count ? parseInt(app.family_members_count, 10) : 0);
                                 return count > 0 ? (
-                                  <span className="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                    <UserGroupIcon className="w-3 h-3 text-slate-500" />
+                                  <span className="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-black/5 text-black border border-black/15">
+                                    <UserGroupIcon className="w-3 h-3 text-black/65" />
                                     {count} {count === 1 ? "Sibling" : "Siblings"}
                                   </span>
                                 ) : (
-                                  <span className="text-slate-400 font-mono text-xs">0</span>
+                                  <span className="text-black/65 font-mono text-xs">0</span>
                                 );
                               })()}
                             </td>
@@ -3833,7 +3818,7 @@ export default function AdminApplicationsScreen() {
                                 <button
                                   type="button"
                                   onClick={() => handleSelectApplicant(app)}
-                                  className="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition cursor-pointer"
+                                  className="p-1.5 text-black hover:text-black hover:bg-brand/15 rounded-lg transition cursor-pointer"
                                   title="View full application"
                                 >
                                   <EyeIcon className="w-4 h-4" />
@@ -3856,25 +3841,24 @@ export default function AdminApplicationsScreen() {
       <SignOutModal
         isOpen={isSignOutModalOpen}
         onClose={() => setIsSignOutModalOpen(false)}
-        onConfirm={handleAdminLogout}
         title="Admin Sign Out"
         description="Are you sure you want to sign out of the Maatram Admin Portal?"
       />
 
       {/* Sync Volunteer Notes Modal (Google Sheets live sync & Excel upload) */}
       {isSyncModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-150">
+          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-sm border border-black/15 space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-black/15">
               <div className="flex items-center gap-2.5">
-                <span className="p-2 bg-emerald-100 text-emerald-800 rounded-xl">
+                <span className="p-2 bg-brand/15 text-black rounded-md">
                   <ArrowUpTrayIcon className="w-5 h-5 stroke-[2.2]" />
                 </span>
                 <div>
-                  <h3 className="font-heading font-black text-base text-slate-900">
+                  <h3 className="font-heading font-bold text-base text-black">
                     Sync Volunteer Suggestions
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-black/65">
                     Pull volunteer verification feedback into the Admin Dashboard
                   </p>
                 </div>
@@ -3885,21 +3869,21 @@ export default function AdminApplicationsScreen() {
                   setIsSyncModalOpen(false);
                   setSyncStatusMsg("");
                 }}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                className="p-1 text-black/65 hover:text-black rounded-lg hover:bg-black/5 transition cursor-pointer"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
 
             {/* Method 1: Google Sheets Live Link Sync */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+            <div className="p-4 bg-black/5 border border-black/15 rounded-lg space-y-3">
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">1</span>
-                <span className="font-heading font-bold text-xs text-slate-900 uppercase tracking-wide">
+                <span className="w-5 h-5 rounded-full bg-black text-white font-bold text-xs flex items-center justify-center">1</span>
+                <span className="font-heading font-bold text-xs text-black uppercase tracking-wide">
                   Option A: Live Sync via Google Sheets Link
                 </span>
               </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-black leading-relaxed">
                 If you uploaded the exported Excel to Google Sheets and shared the link with volunteers, paste the Google Sheet URL below to automatically pull all volunteer comments:
               </p>
               <div className="space-y-2">
@@ -3908,13 +3892,13 @@ export default function AdminApplicationsScreen() {
                   value={googleSheetUrl}
                   onChange={(e) => setGoogleSheetUrl(e.target.value)}
                   placeholder="https://docs.google.com/spreadsheets/d/your-sheet-id/edit"
-                  className="w-full text-xs p-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] text-slate-900 font-medium"
+                  className="w-full text-xs p-2.5 bg-white border border-black/15 rounded-md focus:outline-none focus:ring-2 focus:ring-brand text-black font-medium"
                 />
                 <button
                   type="button"
                   disabled={isSyncing}
                   onClick={handleGoogleSheetUrlSync}
-                  className="w-full py-2 px-3 text-xs font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-xs disabled:opacity-50"
+                  className="w-full py-2 px-3 text-xs font-bold text-black bg-brand hover:brightness-95 rounded-md transition cursor-pointer disabled:opacity-50"
                 >
                   {isSyncing ? "Syncing with Google Sheets..." : "Sync from Google Sheet Link"}
                 </button>
@@ -3922,20 +3906,20 @@ export default function AdminApplicationsScreen() {
             </div>
 
             {/* Method 2: Upload Returned Excel File */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+            <div className="p-4 bg-black/5 border border-black/15 rounded-lg space-y-3">
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-slate-700 text-white font-bold text-xs flex items-center justify-center">2</span>
-                <span className="font-heading font-bold text-xs text-slate-900 uppercase tracking-wide">
+                <span className="w-5 h-5 rounded-full bg-black text-white font-bold text-xs flex items-center justify-center">2</span>
+                <span className="font-heading font-bold text-xs text-black uppercase tracking-wide">
                   Option B: Upload Volunteer Excel / CSV File
                 </span>
               </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-black leading-relaxed">
                 If volunteers edited the Excel/CSV file locally and sent it back via WhatsApp, select the file to import their suggestions:
               </p>
-              <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 hover:border-[#F7BC0F] bg-white rounded-xl cursor-pointer transition">
-                <TableCellsIcon className="w-7 h-7 text-slate-400 mb-1" />
-                <span className="text-xs font-bold text-slate-800">Choose Filled Excel / CSV File</span>
-                <span className="text-[10px] text-slate-400">.xlsx, .xls, or .csv</span>
+              <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-black/15 hover:border-brand bg-white rounded-md cursor-pointer transition">
+                <TableCellsIcon className="w-7 h-7 text-black/65 mb-1" />
+                <span className="text-xs font-bold text-black">Choose Filled Excel / CSV File</span>
+                <span className="text-[10px] text-black/65">.xlsx, .xls, or .csv</span>
                 <input
                   type="file"
                   accept=".xlsx, .xls, .csv"
@@ -3946,7 +3930,7 @@ export default function AdminApplicationsScreen() {
             </div>
 
             {syncStatusMsg && (
-              <p className="text-xs text-center font-bold text-amber-700 animate-pulse">
+              <p className="text-xs text-center font-bold text-black animate-pulse">
                 {syncStatusMsg}
               </p>
             )}
@@ -3958,7 +3942,7 @@ export default function AdminApplicationsScreen() {
                   setIsSyncModalOpen(false);
                   setSyncStatusMsg("");
                 }}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-black hover:bg-black/5 rounded-md transition cursor-pointer"
               >
                 Close
               </button>
@@ -3969,21 +3953,21 @@ export default function AdminApplicationsScreen() {
 
       {/* ================= ASSIGN VOLUNTEER FOR TELEVERIFICATION MODAL ================= */}
       {isAssignVolunteerModalOpen && selectedApplicant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-150">
+          <div className="bg-white rounded-xl shadow-sm border border-black/15 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-linear-to-r from-amber-500/10 via-amber-50/50 to-white">
+            <div className="p-6 border-b border-black/15 flex items-center justify-between bg-brand/10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#F7BC0F]/20 border border-[#F7BC0F] flex items-center justify-center text-slate-900">
-                  <UserPlusIcon className="w-5 h-5 text-amber-600 stroke-[2.5]" />
+                <div className="w-10 h-10 rounded-lg bg-brand/20 border border-brand flex items-center justify-center text-black">
+                  <UserPlusIcon className="w-5 h-5 text-black stroke-[2.5]" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-black text-base text-slate-900 tracking-wide uppercase">
+                  <h3 className="font-heading font-bold text-base text-black tracking-wide uppercase">
                     {assignVolunteerPhase === "physical"
                       ? "Assign Volunteer for Physical Verification (Phase 2)"
                       : "Assign Volunteer for Televerification (Phase 1)"}
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-black/65">
                     {assignVolunteerPhase === "physical"
                       ? "Allocate this application to an active volunteer for in-person / home verification."
                       : "Allocate this application to an active volunteer for telephonic screening and review."}
@@ -3996,7 +3980,7 @@ export default function AdminApplicationsScreen() {
                   setIsAssignVolunteerModalOpen(false);
                   setSelectedVolunteerId(null);
                 }}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                className="p-2 text-black/65 hover:text-black hover:bg-black/5 rounded-md transition cursor-pointer"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -4005,29 +3989,29 @@ export default function AdminApplicationsScreen() {
             {/* Modal Scrollable Body */}
             <div className="overflow-y-auto p-6 space-y-6 flex-1">
               {/* Applicant Context Strip */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+              <div className="p-4 bg-black/5 border border-black/15 rounded-lg flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-400 block">
+                  <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-black/65 block">
                     Target Applicant
                   </span>
-                  <span className="font-heading font-black text-sm text-slate-900">
+                  <span className="font-heading font-bold text-sm text-black">
                     {selectedApplicant.full_name}
                   </span>
-                  <span className="font-mono text-xs text-slate-500 ml-2">
+                  <span className="font-mono text-xs text-black/65 ml-2">
                     ({selectedApplicant.application_number || "MF-2025-APP"})
                   </span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs flex-wrap">
-                  <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-bold text-slate-700">
-                    Cutoff: <span className="text-amber-600 font-extrabold">{selectedApplicant.twelfth_cutoff || "N/A"}</span>
+                  <span className="px-2.5 py-1 bg-white border border-black/15 rounded-lg font-bold text-black">
+                    Cutoff: <span className="text-black font-bold">{selectedApplicant.twelfth_cutoff || "N/A"}</span>
                   </span>
-                  <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-medium text-slate-700">
+                  <span className="px-2.5 py-1 bg-white border border-black/15 rounded-lg font-medium text-black">
                     Target: <span className="font-bold">{selectedApplicant.preferred_degree || "Engineering"}</span>
                   </span>
-                  <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-medium text-slate-700">
+                  <span className="px-2.5 py-1 bg-white border border-black/15 rounded-lg font-medium text-black">
                     District: <span className="font-bold">{selectedApplicant.district || "Tamil Nadu"}</span>
                   </span>
-                  <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-medium text-slate-700">
+                  <span className="px-2.5 py-1 bg-white border border-black/15 rounded-lg font-medium text-black">
                     Mobile: <span className="font-bold">{selectedApplicant.mobile_number || "N/A"}</span>
                   </span>
                 </div>
@@ -4038,28 +4022,28 @@ export default function AdminApplicationsScreen() {
                 <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2.5">
                   {/* Search Input */}
                   <div className="relative min-w-0 flex-1">
-                    <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <MagnifyingGlassIcon className="w-4 h-4 text-black/65 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={volunteerSearchQuery}
                       onChange={(e) => setVolunteerSearchQuery(e.target.value)}
                       placeholder="Search by name, company, college..."
-                      className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] font-medium"
+                      className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-black/15 rounded-md focus:outline-none focus:ring-2 focus:ring-brand font-medium"
                     />
                   </div>
 
                   {/* Near the filter: Event Dropdown + Role Filter Tabs */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {/* Event Dropdown */}
-                    <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
-                      <span className="flex items-center gap-1 px-2 text-xs font-bold text-slate-700 shrink-0">
-                        <CalendarDaysIcon className="w-4 h-4 text-amber-600" />
+                    <div className="flex items-center gap-1.5 bg-black/5 p-1 rounded-md border border-black/15">
+                      <span className="flex items-center gap-1 px-2 text-xs font-bold text-black shrink-0">
+                        <CalendarDaysIcon className="w-4 h-4 text-black" />
                         <span className="hidden sm:inline">Event:</span>
                       </span>
                       <select
                         value={selectedEventId}
                         onChange={(e) => setSelectedEventId(e.target.value)}
-                        className="text-xs font-semibold bg-white text-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#F7BC0F] max-w-[230px] truncate cursor-pointer shadow-2xs"
+                        className="text-xs font-semibold bg-white text-black rounded-lg px-2.5 py-1.5 border border-black/15 focus:outline-none focus:ring-2 focus:ring-brand max-w-[230px] truncate cursor-pointer"
                       >
                         {phaseEvents.length > 0 ? (
                           phaseEvents.map((ev) => {
@@ -4083,12 +4067,12 @@ export default function AdminApplicationsScreen() {
                     </div>
 
                     {/* Role Filter Tabs */}
-                    <div className="inline-flex shrink-0 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">
+                    <div className="inline-flex shrink-0 p-1 bg-black/5 rounded-md border border-black/15 text-xs font-bold text-black">
                       <button
                         type="button"
                         onClick={() => setVolunteerRoleFilter("all")}
                         className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                          volunteerRoleFilter === "all" ? "bg-white text-slate-900 shadow-2xs" : "hover:text-slate-900"
+                          volunteerRoleFilter === "all" ? "bg-white text-black " : "hover:text-black"
                         }`}
                       >
                         All Volunteers
@@ -4097,7 +4081,7 @@ export default function AdminApplicationsScreen() {
                         type="button"
                         onClick={() => setVolunteerRoleFilter("alumni")}
                         className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                          volunteerRoleFilter === "alumni" ? "bg-white text-slate-900 shadow-2xs" : "hover:text-slate-900"
+                          volunteerRoleFilter === "alumni" ? "bg-white text-black " : "hover:text-black"
                         }`}
                       >
                         Alumni Volunteers
@@ -4106,7 +4090,7 @@ export default function AdminApplicationsScreen() {
                         type="button"
                         onClick={() => setVolunteerRoleFilter("student")}
                         className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                          volunteerRoleFilter === "student" ? "bg-white text-slate-900 shadow-2xs" : "hover:text-slate-900"
+                          volunteerRoleFilter === "student" ? "bg-white text-black " : "hover:text-black"
                         }`}
                       >
                         Student Volunteers
@@ -4117,16 +4101,16 @@ export default function AdminApplicationsScreen() {
 
                 {/* Event Context Strip */}
                 {selectedEventId && (
-                  <div className="flex items-center justify-between px-3.5 py-1.5 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs">
-                    <div className="flex items-center gap-1.5 text-amber-900 truncate mr-2">
+                  <div className="flex items-center justify-between px-3.5 py-1.5 bg-brand/15 border border-brand/60 rounded-md text-xs">
+                    <div className="flex items-center gap-1.5 text-black truncate mr-2">
                       <span className="font-bold shrink-0">Selected Event:</span>
-                      <span className="font-medium text-amber-800 truncate">
+                      <span className="font-medium text-black truncate">
                         {eventsList.find((ev) => String(ev.id) === String(selectedEventId))?.title ||
                           eventsList.find((ev) => String(ev.id) === String(selectedEventId))?.name ||
                           "Selected Event"}
                       </span>
                     </div>
-                    <span className="text-amber-700 font-bold bg-white px-2 py-0.5 rounded-md border border-amber-200 shrink-0 text-[11px]">
+                    <span className="text-black font-bold bg-white px-2 py-0.5 rounded-md border border-brand/60 shrink-0 text-[11px]">
                       {filteredVolunteers.length} volunteer{filteredVolunteers.length === 1 ? "" : "s"} enrolled
                     </span>
                   </div>
@@ -4135,21 +4119,21 @@ export default function AdminApplicationsScreen() {
                 {/* Volunteer Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1">
                   {isLoadingVolunteers ? (
-                    <div className="col-span-2 py-12 text-center text-xs font-bold text-slate-400">
+                    <div className="col-span-2 py-12 text-center text-xs font-bold text-black/65">
                       Loading volunteer roster...
                     </div>
                   ) : filteredVolunteers.length === 0 ? (
-                    <div className="col-span-2 py-8 px-4 text-center text-xs font-medium text-slate-500 bg-amber-50/40 rounded-xl border border-dashed border-amber-200 space-y-2">
-                      <p className="font-bold text-slate-700">
+                    <div className="col-span-2 py-8 px-4 text-center text-xs font-medium text-black/65 bg-brand/15 rounded-md border border-dashed border-brand/60 space-y-2">
+                      <p className="font-bold text-black">
                         No volunteers registered for this event yet.
                       </p>
-                      <p className="text-slate-500 text-[11px] max-w-md mx-auto">
+                      <p className="text-black/65 text-[11px] max-w-md mx-auto">
                         Only volunteers who registered / accepted this verification event in their portal appear here.
                       </p>
                       <button
                         type="button"
                         onClick={() => setSelectedEventId("general_pool")}
-                        className="inline-block mt-1 px-3 py-1.5 bg-white hover:bg-amber-100 border border-amber-300 rounded-lg text-amber-900 font-bold text-xs transition cursor-pointer shadow-2xs"
+                        className="inline-block mt-1 px-3 py-1.5 bg-white hover:bg-brand/15 border border-brand/60 rounded-lg text-black font-bold text-xs transition cursor-pointer"
                       >
                         Show All Volunteers (General Pool)
                       </button>
@@ -4163,39 +4147,39 @@ export default function AdminApplicationsScreen() {
                         <div
                           key={vol.id}
                           onClick={() => setSelectedVolunteerId(String(vol.id))}
-                          className={`p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between gap-3 ${
+                          className={`p-3.5 rounded-lg border-2 transition cursor-pointer flex flex-col justify-between gap-3 ${
                             isSelected
-                              ? "bg-amber-50/70 border-amber-500 shadow-xs ring-2 ring-amber-400/30"
-                              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+                              ? "bg-brand/15 border-brand ring-2 ring-brand/30"
+                              : "bg-white border-black/15 hover:border-black/15 hover:bg-black/5"
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex items-center gap-2.5">
                               <div
-                                className={`w-9 h-9 rounded-xl flex items-center justify-center font-heading font-black text-xs ${
+                                className={`w-9 h-9 rounded-md flex items-center justify-center font-heading font-bold text-xs ${
                                   isAlumni
-                                    ? "bg-blue-100 text-blue-800 border border-blue-200"
-                                    : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                    ? "bg-brand/15 text-black border border-brand/60"
+                                    : "bg-brand/15 text-black border border-brand/60"
                                 }`}
                               >
                                 {vol.name?.substring(0, 2).toUpperCase()}
                               </div>
                               <div>
                                 <div className="flex items-center gap-1.5">
-                                  <span className="font-heading font-bold text-xs text-slate-900">
+                                  <span className="font-heading font-bold text-xs text-black">
                                     {vol.name}
                                   </span>
                                   <span
                                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
                                       isAlumni
-                                        ? "bg-blue-50 text-blue-700 border border-blue-200"
-                                        : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                        ? "bg-brand/15 text-black border border-brand/60"
+                                        : "bg-brand/15 text-black border border-brand/60"
                                     }`}
                                   >
                                     {isAlumni ? "Alumni" : "Student"}
                                   </span>
                                 </div>
-                                <p className="text-[11px] text-slate-500 truncate max-w-[200px]">
+                                <p className="text-[11px] text-black/65 truncate max-w-[200px]">
                                   {isAlumni
                                     ? `${vol.designation || "Alumni"} • ${vol.company || "Maatram Alumni"}`
                                     : `${vol.department || "Scholar"} • ${vol.college || "Anna University"}`}
@@ -4206,20 +4190,20 @@ export default function AdminApplicationsScreen() {
                             <div
                               className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
                                 isSelected
-                                  ? "border-amber-500 bg-amber-500 text-white"
-                                  : "border-slate-300 bg-white"
+                                  ? "border-brand bg-brand text-black"
+                                  : "border-black/15 bg-white"
                               }`}
                             >
                               {isSelected && <span className="block w-2 h-2 rounded-full bg-white" />}
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-2">
+                          <div className="flex items-center justify-between text-[11px] text-black/65 border-t border-black/15 pt-2">
                             <span className="flex items-center gap-1">
-                              <PhoneIcon className="w-3 h-3 text-slate-400" />
+                              <PhoneIcon className="w-3 h-3 text-black/65" />
                               {vol.phone || "Phone verified"}
                             </span>
-                            <span className="text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+                            <span className="text-black font-bold bg-brand/15 px-2 py-0.5 rounded-md border border-brand/60">
                               {vol.assigned_count || 0} Assigned
                             </span>
                           </div>
@@ -4232,12 +4216,12 @@ export default function AdminApplicationsScreen() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+            <div className="p-5 border-t border-black/15 bg-black/5 flex items-center justify-between gap-4">
               <div className="text-xs">
                 {selectedVolunteerId ? (
-                  <span className="text-slate-700">
+                  <span className="text-black">
                     Ready to assign to:{" "}
-                    <span className="font-bold text-slate-900">
+                    <span className="font-bold text-black">
                       {
                         (volunteersList.length > 0 ? volunteersList : DEFAULT_VOLUNTEERS).find(
                           (v) => String(v.id) === String(selectedVolunteerId)
@@ -4246,7 +4230,7 @@ export default function AdminApplicationsScreen() {
                     </span>
                   </span>
                 ) : (
-                  <span className="text-slate-400 italic">Select a volunteer from the list above</span>
+                  <span className="text-black/65 italic">Select a volunteer from the list above</span>
                 )}
               </div>
 
@@ -4257,7 +4241,7 @@ export default function AdminApplicationsScreen() {
                     setIsAssignVolunteerModalOpen(false);
                     setSelectedVolunteerId(null);
                   }}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-black hover:bg-black/10 rounded-md transition cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -4265,16 +4249,16 @@ export default function AdminApplicationsScreen() {
                   type="button"
                   disabled={!selectedVolunteerId || isAssigningVolunteer}
                   onClick={handleAssignVolunteer}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-amber-400 to-[#F7BC0F] hover:from-amber-500 hover:to-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand disabled:opacity-50 disabled:cursor-not-allowed text-black font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                 >
                   {isAssigningVolunteer ? (
                     <>
-                      <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
                       <span>Assigning...</span>
                     </>
                   ) : (
                     <>
-                      <CheckCircleIcon className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                      <CheckCircleIcon className="w-4 h-4 text-black stroke-[2.5]" />
                       <span>Confirm Assignment</span>
                     </>
                   )}
@@ -4286,20 +4270,20 @@ export default function AdminApplicationsScreen() {
       )}
 
       {interviewLocation !== null && selectedApplicant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <form role="dialog" aria-modal="true" aria-labelledby="direct-interview-heading"
-            className="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-xl"
+            className="w-full max-w-md space-y-4 rounded-lg bg-white p-6 shadow-sm"
             onSubmit={e => { e.preventDefault(); if (interviewLocation.trim() && !isAdvancingPhase) void advancePhase(interviewLocation.trim()); }}>
-            <h2 id="direct-interview-heading" className="text-lg font-bold text-slate-900">Move to direct interview</h2>
-            <label className="block text-sm font-semibold text-slate-800">
+            <h2 id="direct-interview-heading" className="text-lg font-bold text-black">Move to direct interview</h2>
+            <label className="block text-sm font-semibold text-black">
               Interview location
               <textarea autoFocus required rows={3} value={interviewLocation} disabled={isAdvancingPhase}
                 onChange={e => setInterviewLocation(e.target.value)} placeholder="Venue name and address"
-                className="mt-2 block w-full rounded-lg border border-slate-300 p-3 text-sm" />
+                className="mt-2 block w-full rounded-lg border border-black/15 p-3 text-sm" />
             </label>
             <div className="flex justify-end gap-3">
               <button type="button" disabled={isAdvancingPhase} onClick={() => setInterviewLocation(null)}>Cancel</button>
-              <button type="submit" disabled={isAdvancingPhase || !interviewLocation.trim()} className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
+              <button type="submit" disabled={isAdvancingPhase || !interviewLocation.trim()} className="rounded-lg bg-black px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
                 {isAdvancingPhase ? "Saving..." : "Confirm direct interview"}
               </button>
             </div>
@@ -4309,18 +4293,18 @@ export default function AdminApplicationsScreen() {
 
       {/* ================= REJECT APPLICATION CONFIRMATION MODAL ================= */}
       {isRejectModalOpen && selectedApplicant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-rose-50/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-150">
+          <div className="bg-white rounded-xl shadow-sm border border-black/15 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-black/15 flex items-center justify-between bg-brand/15">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600">
+                <div className="w-10 h-10 rounded-lg bg-brand/15 border border-brand/60 flex items-center justify-center text-black">
                   <XCircleIcon className="w-6 h-6 stroke-[2]" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-black text-base text-slate-900 tracking-wide uppercase">
+                  <h3 className="font-heading font-bold text-base text-black tracking-wide uppercase">
                     Reject Application
                   </h3>
-                  <p className="text-xs text-rose-600 font-semibold">
+                  <p className="text-xs text-black font-semibold">
                     Action will close this application in the pipeline
                   </p>
                 </div>
@@ -4331,31 +4315,31 @@ export default function AdminApplicationsScreen() {
                   setIsRejectModalOpen(false);
                   setRejectionReason("");
                 }}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                className="p-2 text-black/65 hover:text-black hover:bg-black/5 rounded-md transition cursor-pointer"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6">
-              <p className="text-sm text-slate-700 leading-relaxed">
+              <p className="text-sm text-black leading-relaxed">
                 Are you sure you want to reject the application for{" "}
-                <strong className="text-slate-900 font-bold">{selectedApplicant.full_name}</strong>{" "}
-                <span className="font-mono text-slate-500">({selectedApplicant.application_number || "MF-2025-APP"})</span>?
+                <strong className="text-black font-bold">{selectedApplicant.full_name}</strong>{" "}
+                <span className="font-mono text-black/65">({selectedApplicant.application_number || "MF-2025-APP"})</span>?
               </p>
-              <p className="text-xs text-rose-600 mt-2 font-semibold">
+              <p className="text-xs text-black mt-2 font-semibold">
                 This will update the selection pipeline status to REJECTED.
               </p>
             </div>
 
-            <div className="p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
+            <div className="p-5 border-t border-black/15 bg-black/5 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setIsRejectModalOpen(false);
                   setRejectionReason("");
                 }}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-black hover:bg-black/10 rounded-md transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -4363,7 +4347,7 @@ export default function AdminApplicationsScreen() {
                 type="button"
                 disabled={isRejecting}
                 onClick={handleConfirmReject}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-heading font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition hover:shadow-md cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-black hover:bg-black disabled:opacity-50 text-white font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
               >
                 {isRejecting ? (
                   <>
@@ -4385,26 +4369,26 @@ export default function AdminApplicationsScreen() {
       {/* Lightbox Modal for Physical Verification Photo Preview */}
       {previewImage && (
         <div
-          className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4"
           onClick={() => setPreviewImage(null)}
         >
           <div
-            className="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-200"
+            className="bg-white rounded-lg max-w-3xl w-full overflow-hidden shadow-sm border border-black/15"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
-              <span className="font-heading font-bold text-sm text-slate-800">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-black/15 bg-black/5">
+              <span className="font-heading font-bold text-sm text-black">
                 {previewImage.title}
               </span>
               <button
                 type="button"
                 onClick={() => setPreviewImage(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition cursor-pointer"
+                className="p-1 rounded-lg text-black/65 hover:text-black hover:bg-black/10 transition cursor-pointer"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-4 bg-slate-950 flex items-center justify-center max-h-[75vh]">
+            <div className="p-4 bg-black flex items-center justify-center max-h-[75vh]">
               <img
                 src={previewImage.url}
                 alt={previewImage.title}

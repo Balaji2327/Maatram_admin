@@ -31,7 +31,6 @@ export default function AdminEventsScreen() {
   const router = useRouter();
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
   const [toastMessage, setToastMessage] = useState("");
 
   // Delete Confirmation Modal State
@@ -432,26 +431,17 @@ export default function AdminEventsScreen() {
     }
   };
 
-  // Filtered Events
   const filteredEvents = useMemo(() => {
-    return eventsList.filter((ev) => {
-      const matchSearch =
-        ev.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ev.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ev.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchCat =
-        selectedCategory === "All" ||
-        (selectedCategory === "Remote" && ev.mode === "remote") ||
-        (selectedCategory === "Offline" && ev.mode === "offline") ||
-        ev.category.toLowerCase() === selectedCategory.toLowerCase();
-      return matchSearch && matchCat;
-    });
-  }, [eventsList, searchTerm, selectedCategory]);
-
-  const categories = ["All", "Remote", "Offline", "Volunteer Drive", "Workshop", "Annual Meet", "Mentorship"];
+    const query = searchTerm.trim().toLowerCase();
+    return eventsList.filter((event) =>
+      [event.title, event.location, event.description].some((value) =>
+        value?.toLowerCase().includes(query)
+      )
+    );
+  }, [eventsList, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-primary flex">
+    <div className="min-h-screen bg-white text-black font-primary flex">
       {/* 1. Yellow & White Sidebar */}
       <AdminSidebar
         activeTab="events"
@@ -459,15 +449,15 @@ export default function AdminEventsScreen() {
       />
 
       {/* 2. Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC]">
-        <main className="w-full px-6 lg:px-10 py-8 space-y-8 flex-1">
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
+        <main className="w-full px-4 sm:px-6 lg:px-10 py-8 space-y-8 flex-1">
           {/* Header Banner */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight mt-1">
+              <h1 className="font-heading font-bold text-2xl sm:text-3xl text-black tracking-tight mt-1">
                 Volunteer Events
               </h1>
-              <p className="font-primary text-xs sm:text-sm text-slate-600 mt-1">
+              <p className="font-primary text-xs sm:text-sm text-black mt-1">
                 Create Remote or Offline volunteer events, set student and alumni quotas, and broadcast instant email invitations.
               </p>
             </div>
@@ -476,7 +466,7 @@ export default function AdminEventsScreen() {
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] transition cursor-pointer shadow-xs border border-[#e5ad0c]"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md text-xs font-heading font-bold text-black bg-brand hover:brightness-95 transition cursor-pointer border border-brand"
               >
                 <PlusIcon className="w-4 h-4 stroke-[2.5]" />
                 <span>Create Event</span>
@@ -486,55 +476,38 @@ export default function AdminEventsScreen() {
 
           {/* Toast Notification */}
           {toastMessage && (
-            <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-xs text-emerald-950 font-bold flex items-center gap-2.5 animate-in fade-in">
-              <CheckCircleIcon className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div className="p-4 bg-brand/15 border border-brand/60 rounded-lg text-xs text-black font-bold flex items-center gap-2.5 animate-in fade-in">
+              <CheckCircleIcon className="w-5 h-5 text-black shrink-0" />
               <span>{toastMessage}</span>
             </div>
           )}
 
-          {/* Search & Category Filter Bar */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="relative w-full sm:w-80">
-              <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <div className="bg-white border border-black/15 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="relative w-full sm:w-96">
+              <MagnifyingGlassIcon aria-hidden="true" className="pointer-events-none w-4 h-4 text-black/65 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
-                type="text"
+                type="search"
+                aria-label="Search events"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search events by title or venue..."
-                className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:bg-white transition"
+                className="w-full pl-9 pr-3.5 py-2 text-xs rounded-md border border-black/15 bg-black/5 text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:bg-white transition"
               />
-            </div>
-
-            <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-heading font-semibold transition shrink-0 ${
-                    selectedCategory.toLowerCase() === cat.toLowerCase()
-                      ? "bg-[#F7BC0F] text-slate-950 font-bold border border-[#e5ad0c]"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
             </div>
           </div>
 
           {/* Events Grid */}
           {filteredEvents.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-3xl p-16 text-center space-y-3 shadow-2xs">
-              <CalendarDaysIcon className="w-12 h-12 mx-auto text-slate-300 stroke-1" />
-              <p className="text-sm font-heading font-bold text-slate-800">No Volunteer Events Found</p>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                No events match your filter. Click "Create Event" to post a new Remote or Offline volunteer event.
+            <div className="bg-white border border-black/15 rounded-xl p-16 text-center space-y-3">
+              <CalendarDaysIcon className="w-12 h-12 mx-auto text-black/65 stroke-1" />
+              <p className="text-sm font-heading font-bold text-black">No Volunteer Events Found</p>
+              <p className="text-xs text-black/65 max-w-sm mx-auto">
+                {searchTerm.trim() ? "Try a different title or venue." : "Create an event to start inviting volunteers."}
               </p>
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="inline-flex items-center gap-2 px-4 py-2 mt-2 rounded-xl text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] transition border border-[#e5ad0c]"
+                className="inline-flex items-center gap-2 px-4 py-2 mt-2 rounded-md text-xs font-heading font-bold text-black bg-brand hover:brightness-95 transition border border-brand"
               >
                 <PlusIcon className="w-4 h-4 stroke-[2.5]" />
                 <span>Create Volunteer Event</span>
@@ -562,24 +535,24 @@ export default function AdminEventsScreen() {
 
       {/* CREATE / EDIT EVENT POPUP MODAL */}
       {isEventModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-3 sm:p-5">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-5">
+          <div className="bg-white rounded-lg border border-black/15 shadow-sm max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* STEP 1: CHOOSE REMOTE OR OFFLINE */}
             {modalStep === "choose_mode" && !editingEventId ? (
               <div className="p-6 sm:p-8 space-y-6 overflow-y-auto">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center justify-between pb-3 border-b border-black/15">
                   <div>
-                    <h3 className="font-heading font-extrabold text-lg sm:text-xl text-slate-900">
+                    <h3 className="font-heading font-bold text-lg sm:text-xl text-black">
                       Create Volunteer Event
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-black/65 mt-0.5">
                       First, select the format of the event you wish to post:
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsEventModalOpen(false)}
-                    className="text-slate-400 hover:text-slate-600 font-bold text-sm w-8 h-8 rounded-xl hover:bg-slate-100 flex items-center justify-center transition cursor-pointer"
+                    className="text-black/65 hover:text-black font-bold text-sm w-8 h-8 rounded-md hover:bg-black/5 flex items-center justify-center transition cursor-pointer"
                   >
                     <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
                   </button>
@@ -590,20 +563,20 @@ export default function AdminEventsScreen() {
                   <button
                     type="button"
                     onClick={() => pickMode("remote")}
-                    className="p-6 rounded-2xl border-2 border-slate-200 hover:border-slate-800 hover:bg-slate-50 transition cursor-pointer text-left space-y-3 group"
+                    className="p-6 rounded-lg border-2 border-black/15 hover:border-black hover:bg-black/5 transition cursor-pointer text-left space-y-3 group"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition">
+                    <div className="w-12 h-12 rounded-md bg-black/5 text-black flex items-center justify-center group-hover:bg-black group-hover:text-white transition">
                       <GlobeAltIcon className="w-6 h-6 stroke-[2]" />
                     </div>
                     <div>
-                      <h4 className="font-heading font-bold text-base text-slate-900">
+                      <h4 className="font-heading font-bold text-base text-black">
                         Remote Event
                       </h4>
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      <p className="text-xs text-black/65 mt-1 leading-relaxed">
                         Online tasks, applicant verification calling drives, peer tutoring, and virtual mentoring sessions.
                       </p>
                     </div>
-                    <span className="inline-block text-[11px] font-bold text-slate-700 group-hover:underline">
+                    <span className="inline-block text-[11px] font-bold text-black group-hover:underline">
                       Duration-based completion &rarr;
                     </span>
                   </button>
@@ -612,20 +585,20 @@ export default function AdminEventsScreen() {
                   <button
                     type="button"
                     onClick={() => pickMode("offline")}
-                    className="p-6 rounded-2xl border-2 border-slate-200 hover:border-slate-800 hover:bg-slate-50 transition cursor-pointer text-left space-y-3 group"
+                    className="p-6 rounded-lg border-2 border-black/15 hover:border-black hover:bg-black/5 transition cursor-pointer text-left space-y-3 group"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition">
+                    <div className="w-12 h-12 rounded-md bg-black/5 text-black flex items-center justify-center group-hover:bg-black group-hover:text-white transition">
                       <BuildingOfficeIcon className="w-6 h-6 stroke-[2]" />
                     </div>
                     <div>
-                      <h4 className="font-heading font-bold text-base text-slate-900">
+                      <h4 className="font-heading font-bold text-base text-black">
                         Offline Event
                       </h4>
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      <p className="text-xs text-black/65 mt-1 leading-relaxed">
                         On-ground physical drives, venue registration desks, annual meets, ceremonies, and field visit verification.
                       </p>
                     </div>
-                    <span className="inline-block text-[11px] font-bold text-slate-700 group-hover:underline">
+                    <span className="inline-block text-[11px] font-bold text-black group-hover:underline">
                       Venue & scheduled time slot &rarr;
                     </span>
                   </button>
@@ -635,16 +608,16 @@ export default function AdminEventsScreen() {
               /* STEP 2: FORM POPUP (CUSTOMIZED FOR REMOTE OR OFFLINE) */
               <form onSubmit={handleSaveEvent} className="flex flex-col flex-1 overflow-hidden min-h-0">
                 {/* Fixed Header */}
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                <div className="px-6 py-4 border-b border-black/15 flex items-center justify-between shrink-0 bg-white">
                   <div className="flex items-center gap-2.5">
-                    <span className="text-[10px] font-heading font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                    <span className="text-[10px] font-heading font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-black/5 text-black border border-black/15">
                       {eventMode === "remote" ? "Remote Event" : "Offline Event"}
                     </span>
                     {!editingEventId && (
                       <button
                         type="button"
                         onClick={() => setModalStep("choose_mode")}
-                        className="text-[11px] text-slate-500 hover:text-slate-800 underline underline-offset-2 transition cursor-pointer"
+                        className="text-[11px] text-black/65 hover:text-black underline underline-offset-2 transition cursor-pointer"
                       >
                         Change Format
                       </button>
@@ -654,7 +627,7 @@ export default function AdminEventsScreen() {
                   <button
                     type="button"
                     onClick={() => setIsEventModalOpen(false)}
-                    className="text-slate-400 hover:text-slate-600 font-bold text-sm w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition cursor-pointer"
+                    className="text-black/65 hover:text-black font-bold text-sm w-7 h-7 rounded-lg hover:bg-black/5 flex items-center justify-center transition cursor-pointer"
                   >
                     <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
                   </button>
@@ -663,15 +636,15 @@ export default function AdminEventsScreen() {
                 {/* Scrollable Form Body with Wide 2-Column Responsive Layout */}
                 <div className="px-6 sm:px-7 py-5 overflow-y-auto flex-1 space-y-4">
                   {formError && (
-                    <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold">
+                    <div className="p-3.5 rounded-md bg-brand/15 border border-brand/60 text-black text-xs font-semibold">
                       {formError}
                     </div>
                   )}
 
                   {/* Full-Width: Event Name */}
                   <div>
-                    <label className="block text-xs font-heading font-bold text-slate-700 mb-1">
-                      {eventMode === "remote" ? "Event Name" : "Name of the Event"} <span className="text-red-500">*</span>
+                    <label className="block text-xs font-heading font-bold text-black mb-1">
+                      {eventMode === "remote" ? "Event Name" : "Name of the Event"} <span className="text-black/65">*</span>
                     </label>
                     <input
                       type="text"
@@ -683,7 +656,7 @@ export default function AdminEventsScreen() {
                           ? "e.g. Telephonic Candidate Background Calling Drive"
                           : "e.g. Annual Scholars Meet & Registration Desk"
                       }
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800/10 transition"
+                      className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black/10 transition"
                     />
                   </div>
 
@@ -692,19 +665,19 @@ export default function AdminEventsScreen() {
                     {/* LEFT COLUMN: Quotas, Task, Schedule/Location, Description */}
                     <div className="space-y-4">
                       {/* SEPARATE VOLUNTEER COUNTS */}
-                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+                      <div className="p-3.5 rounded-md bg-black/5 border border-black/15 space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="block text-[11px] font-heading font-bold text-slate-700 uppercase tracking-wider">
+                          <span className="block text-[11px] font-heading font-bold text-black uppercase tracking-wider">
                             Number of Volunteers Needed
                           </span>
-                          <span className="text-[10px] text-slate-500 font-medium bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                          <span className="text-[10px] text-black/65 font-medium bg-white px-2 py-0.5 rounded-md border border-black/15">
                             First-Come Basis
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs font-medium text-slate-600 mb-1">
-                              Student Count <span className="text-red-500">*</span>
+                            <label className="block text-xs font-medium text-black mb-1">
+                              Student Count <span className="text-black/65">*</span>
                             </label>
                             <input
                               type="number"
@@ -713,12 +686,12 @@ export default function AdminEventsScreen() {
                               value={studentVolunteersNeeded}
                               onChange={(e) => setStudentVolunteersNeeded(e.target.value)}
                               placeholder="e.g. 50"
-                              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-slate-800"
+                              className="w-full px-3.5 py-2 rounded-md border border-black/15 bg-white text-xs font-bold text-black focus:outline-none focus:border-black"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-slate-600 mb-1">
-                              Alumni Count <span className="text-red-500">*</span>
+                            <label className="block text-xs font-medium text-black mb-1">
+                              Alumni Count <span className="text-black/65">*</span>
                             </label>
                             <input
                               type="number"
@@ -727,7 +700,7 @@ export default function AdminEventsScreen() {
                               value={alumniVolunteersNeeded}
                               onChange={(e) => setAlumniVolunteersNeeded(e.target.value)}
                               placeholder="e.g. 20"
-                              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-slate-800"
+                              className="w-full px-3.5 py-2 rounded-md border border-black/15 bg-white text-xs font-bold text-black focus:outline-none focus:border-black"
                             />
                           </div>
                         </div>
@@ -735,8 +708,8 @@ export default function AdminEventsScreen() {
 
                       {/* Task to Complete */}
                       <div>
-                        <label className="block text-xs font-heading font-bold text-slate-700 mb-1">
-                          Task to Complete <span className="text-red-500">*</span>
+                        <label className="block text-xs font-heading font-bold text-black mb-1">
+                          Task to Complete <span className="text-black/65">*</span>
                         </label>
                         <input
                           type="text"
@@ -748,15 +721,15 @@ export default function AdminEventsScreen() {
                               ? "e.g. Call 15 shortlisted 12th standard applicants to verify family details"
                               : "e.g. Manage registration desk, name badges, and guest felicitation"
                           }
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800/10 transition"
+                          className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black/10 transition"
                         />
                       </div>
 
                       {/* REMOTE SPECIFIC: Duration to Complete the Task */}
                       {eventMode === "remote" && (
                         <div>
-                          <label className="block text-xs font-heading font-bold text-slate-700 mb-1">
-                            Duration to Complete the Task <span className="text-red-500">*</span>
+                          <label className="block text-xs font-heading font-bold text-black mb-1">
+                            Duration to Complete the Task <span className="text-black/65">*</span>
                           </label>
                           <input
                             type="text"
@@ -764,7 +737,7 @@ export default function AdminEventsScreen() {
                             value={duration}
                             onChange={(e) => setDuration(e.target.value)}
                             placeholder="e.g. 3 Days (Complete by Sunday 5:00 PM)"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800/10 transition"
+                            className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black/10 transition"
                           />
                         </div>
                       )}
@@ -774,21 +747,21 @@ export default function AdminEventsScreen() {
                         <>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                              <label className="block text-xs font-heading font-bold text-slate-700 mb-1">
-                                Date <span className="text-red-500">*</span>
+                              <label className="block text-xs font-heading font-bold text-black mb-1">
+                                Date <span className="text-black/65">*</span>
                               </label>
                               <input
                                 type="date"
                                 required
                                 value={eventDate}
                                 onChange={(e) => setEventDate(e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-800"
+                                className="w-full px-3 py-2 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-black"
                               />
                             </div>
 
                             <div>
-                              <label className="block text-xs font-heading font-bold text-slate-700 mb-1">
-                                Start Time <span className="text-red-500">*</span>
+                              <label className="block text-xs font-heading font-bold text-black mb-1">
+                                Start Time <span className="text-black/65">*</span>
                               </label>
                               <input
                                 type="text"
@@ -796,13 +769,13 @@ export default function AdminEventsScreen() {
                                 value={startTime}
                                 onChange={(e) => setStartTime(e.target.value)}
                                 placeholder="09:00 AM"
-                                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-800"
+                                className="w-full px-3 py-2 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-black"
                               />
                             </div>
 
                             <div>
-                              <label className="block text-xs font-heading font-bold text-slate-700 mb-1">
-                                End Time <span className="text-red-500">*</span>
+                              <label className="block text-xs font-heading font-bold text-black mb-1">
+                                End Time <span className="text-black/65">*</span>
                               </label>
                               <input
                                 type="text"
@@ -810,14 +783,14 @@ export default function AdminEventsScreen() {
                                 value={endTime}
                                 onChange={(e) => setEndTime(e.target.value)}
                                 placeholder="01:30 PM"
-                                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-800"
+                                className="w-full px-3 py-2 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-black"
                               />
                             </div>
                           </div>
 
                           <div>
-                            <label className="block text-xs font-heading font-bold text-slate-700 mb-1">
-                              Location <span className="text-red-500">*</span>
+                            <label className="block text-xs font-heading font-bold text-black mb-1">
+                              Location <span className="text-black/65">*</span>
                             </label>
                             <input
                               type="text"
@@ -825,7 +798,7 @@ export default function AdminEventsScreen() {
                               value={eventLocation}
                               onChange={(e) => setEventLocation(e.target.value)}
                               placeholder="e.g. Kamaraj Arangam, T. Nagar, Chennai"
-                              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-800"
+                              className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-black"
                             />
                           </div>
                         </>
@@ -833,7 +806,7 @@ export default function AdminEventsScreen() {
 
                       {/* Description */}
                       <div>
-                        <label className="block text-xs font-heading font-bold text-slate-700 mb-1">
+                        <label className="block text-xs font-heading font-bold text-black mb-1">
                           Description
                         </label>
                         <textarea
@@ -841,7 +814,7 @@ export default function AdminEventsScreen() {
                           value={eventDescription}
                           onChange={(e) => setEventDescription(e.target.value)}
                           placeholder="Provide background, guidelines, and expectations for the volunteers..."
-                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-800"
+                          className="w-full px-3.5 py-2 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-black"
                         />
                       </div>
                     </div>
@@ -851,10 +824,10 @@ export default function AdminEventsScreen() {
                       {/* Eligible Year Student (1, 2, 3, 4) */}
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-xs font-heading font-bold text-slate-700">
-                            Eligible Year Student (1, 2, 3, 4) <span className="text-red-500">*</span>
+                          <label className="block text-xs font-heading font-bold text-black">
+                            Eligible Year Student (1, 2, 3, 4) <span className="text-black/65">*</span>
                           </label>
-                          <span className="text-[11px] text-slate-500">
+                          <span className="text-[11px] text-black/65">
                             Select eligible college years
                           </span>
                         </div>
@@ -866,14 +839,14 @@ export default function AdminEventsScreen() {
                                 key={yr}
                                 type="button"
                                 onClick={() => toggleEligibleYear(yr)}
-                                className={`py-2 px-3 rounded-xl text-xs font-heading font-bold transition cursor-pointer border text-center flex items-center justify-center gap-1.5 ${
+                                className={`py-2 px-3 rounded-md text-xs font-heading font-bold transition cursor-pointer border text-center flex items-center justify-center gap-1.5 ${
                                   isSelected
-                                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                                    ? "bg-black text-white border-black "
+                                    : "bg-white text-black border-black/15 hover:bg-black/5"
                                 }`}
                               >
                                 <span>Year {yr}</span>
-                                {isSelected && <CheckCircleIcon className="w-3.5 h-3.5 text-[#F7BC0F] shrink-0" />}
+                                {isSelected && <CheckCircleIcon className="w-3.5 h-3.5 text-brand shrink-0" />}
                               </button>
                             );
                           })}
@@ -883,25 +856,25 @@ export default function AdminEventsScreen() {
                       {/* Banner Image Upload (SAME AS POST SECTION) */}
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-heading font-bold text-slate-700">
-                            Banner Image (Optional) <span className="text-slate-400 font-normal">(PNG, JPG, WEBP up to 10MB)</span>
+                          <label className="block text-xs font-heading font-bold text-black">
+                            Banner Image (Optional) <span className="text-black/65 font-normal">(PNG, JPG, WEBP up to 10MB)</span>
                           </label>
                           {eventImageUrl && (
-                            <span className="text-[10px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+                            <span className="text-[10px] font-bold text-black bg-black/5 border border-black/15 px-2 py-0.5 rounded-md">
                               1 Image selected
                             </span>
                           )}
                         </div>
 
                         {!eventImageUrl ? (
-                          <label className="flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-200 hover:border-slate-800 rounded-2xl bg-slate-50 hover:bg-slate-100/50 transition cursor-pointer group">
-                            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 group-hover:text-slate-900 group-hover:scale-105 transition shadow-2xs mb-2">
+                          <label className="flex flex-col items-center justify-center p-5 border-2 border-dashed border-black/15 hover:border-black rounded-lg bg-black/5 hover:bg-black/10 transition cursor-pointer group">
+                            <div className="w-10 h-10 rounded-md bg-white border border-black/15 flex items-center justify-center text-black/65 group-hover:text-black transition mb-2">
                               <PhotoIcon className="w-5 h-5 stroke-[2]" />
                             </div>
-                            <p className="text-xs font-heading font-bold text-slate-700">
+                            <p className="text-xs font-heading font-bold text-black">
                               Click to upload banner image
                             </p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
+                            <p className="text-[11px] text-black/65 mt-0.5">
                               Supports PNG, JPG, WEBP up to 10MB
                             </p>
                             <input
@@ -912,18 +885,18 @@ export default function AdminEventsScreen() {
                             />
                           </label>
                         ) : (
-                          <div className="relative rounded-2xl border border-slate-200 bg-slate-100 overflow-hidden h-36 group">
+                          <div className="relative rounded-lg border border-black/15 bg-black/5 overflow-hidden h-36 group">
                             <img
                               src={eventImageUrl}
                               alt="Banner preview"
                               className="w-full h-full object-cover"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition flex items-end justify-between p-3">
+                            <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition flex items-end justify-between p-3">
                               <div className="min-w-0 pr-2">
                                 <p className="text-xs text-white font-bold truncate">
                                   {imageFileName || "Banner Image"}
                                 </p>
-                                <p className="text-[10px] text-slate-300">
+                                <p className="text-[10px] text-black/65">
                                   Ready to attach to event
                                 </p>
                               </div>
@@ -933,7 +906,7 @@ export default function AdminEventsScreen() {
                                   setEventImageUrl("");
                                   setImageFileName("");
                                 }}
-                                className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition cursor-pointer shadow-xs shrink-0"
+                                className="p-1.5 bg-black hover:bg-black text-white rounded-md transition cursor-pointer shrink-0"
                                 title="Remove banner"
                               >
                                 <TrashIcon className="w-4 h-4" />
@@ -944,23 +917,23 @@ export default function AdminEventsScreen() {
                       </div>
 
                       {/* Email Broadcast Toggle Switch (Only send if admin turns ON) */}
-                      <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="p-3.5 rounded-lg bg-black/5 border border-black/15 space-y-2">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2.5">
                             <div
-                              className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${
+                              className={`w-8 h-8 rounded-md flex items-center justify-center transition ${
                                 sendEmailNotification
-                                  ? "bg-slate-900 text-[#F7BC0F]"
-                                  : "bg-slate-200 text-slate-400"
+                                  ? "bg-black text-brand"
+                                  : "bg-black/10 text-black/65"
                               }`}
                             >
                               <EnvelopeIcon className="w-4 h-4 stroke-[2]" />
                             </div>
                             <div>
-                              <p className="text-xs font-heading font-bold text-slate-800">
+                              <p className="text-xs font-heading font-bold text-black">
                                 Email Broadcast to Volunteers
                               </p>
-                              <p className="text-[10px] text-slate-500">
+                              <p className="text-[10px] text-black/65">
                                 {sendEmailNotification ? "Enabled — email alerts will be sent" : "Disabled — no emails will be sent"}
                               </p>
                             </div>
@@ -973,19 +946,19 @@ export default function AdminEventsScreen() {
                             aria-checked={sendEmailNotification}
                             onClick={() => setSendEmailNotification(!sendEmailNotification)}
                             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                              sendEmailNotification ? "bg-slate-900" : "bg-slate-300"
+                              sendEmailNotification ? "bg-black" : "bg-black/10"
                             }`}
                           >
                             <span
                               aria-hidden="true"
-                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white ring-0 transition duration-200 ease-in-out ${
                                 sendEmailNotification ? "translate-x-5" : "translate-x-0"
                               }`}
                             />
                           </button>
                         </div>
 
-                        <p className="text-[11px] text-slate-500 leading-relaxed border-t border-slate-200/60 pt-2">
+                        <p className="text-[11px] text-black/65 leading-relaxed border-t border-black/15 pt-2">
                           {sendEmailNotification
                             ? "When posted, registered student & alumni volunteers will immediately receive an email alert with an invitation to accept."
                             : "No email alerts will be sent. Volunteers can only discover this event when browsing their volunteer dashboard."}
@@ -996,18 +969,18 @@ export default function AdminEventsScreen() {
                 </div>
 
                 {/* Fixed Footer */}
-                <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0 bg-slate-50">
+                <div className="px-6 py-3 border-t border-black/15 flex items-center justify-end gap-3 shrink-0 bg-black/5">
                   <button
                     type="button"
                     onClick={() => setIsEventModalOpen(false)}
-                    className="px-4 py-2 text-xs font-heading font-bold text-slate-600 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+                    className="px-4 py-2 text-xs font-heading font-bold text-black hover:bg-black/10 rounded-md transition cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || readingBanner}
-                    className="px-5 py-2.5 text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-xs border border-[#e5ad0c] flex items-center gap-1.5 disabled:opacity-50"
+                    className="px-5 py-2.5 text-xs font-heading font-bold text-black bg-brand hover:brightness-95 rounded-md transition cursor-pointer border border-brand flex items-center gap-1.5 disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <span>Publishing & Notifying...</span>
@@ -1027,10 +1000,10 @@ export default function AdminEventsScreen() {
 
       {/* DETAIL VIEW POPUP MODAL */}
       {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-3 sm:p-5">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-5">
+          <div className="bg-white rounded-lg border border-black/15 shadow-sm max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {selectedEvent.imageUrl && (
-              <div className="relative w-full h-44 bg-slate-100 shrink-0">
+              <div className="relative w-full h-44 bg-black/5 shrink-0">
                 <Image
                   src={selectedEvent.imageUrl}
                   alt={selectedEvent.title}
@@ -1041,7 +1014,7 @@ export default function AdminEventsScreen() {
                 <button
                   type="button"
                   onClick={() => setSelectedEvent(null)}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-900/60 text-white hover:bg-slate-900 flex items-center justify-center backdrop-blur-xs transition cursor-pointer"
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 text-white hover:bg-black flex items-center justify-center transition cursor-pointer"
                 >
                   <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
                 </button>
@@ -1050,64 +1023,64 @@ export default function AdminEventsScreen() {
 
             <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-heading font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                <span className="text-[10px] font-heading font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-black/5 text-black border border-black/15">
                   {selectedEvent.mode === "remote" ? "Remote Event" : "Offline Event"}
                 </span>
                 {((selectedEvent.acceptedStudents?.length || 0) + (selectedEvent.acceptedAlumni?.length || 0)) > 0 ? (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                    <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-brand/15 text-black border border-brand/60 flex items-center gap-1">
+                    <CheckCircleIcon className="w-3.5 h-3.5 text-black stroke-[2.5]" />
                     <span>
                       {(selectedEvent.acceptedStudents?.length || 0) + (selectedEvent.acceptedAlumni?.length || 0)} Accepted Volunteers
                     </span>
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-black/5 text-black border border-black/15">
                     0 Accepted Volunteers
                   </span>
                 )}
               </div>
 
-              <h2 className="font-heading font-bold text-xl text-slate-900">
+              <h2 className="font-heading font-bold text-xl text-black">
                 {selectedEvent.title}
               </h2>
 
-              <p className="text-xs text-slate-600 leading-relaxed font-primary">
+              <p className="text-xs text-black leading-relaxed font-primary">
                 {selectedEvent.description}
               </p>
 
               {/* Task Highlight */}
               {selectedEvent.taskToComplete && (
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
-                  <span className="font-bold text-slate-800">Assigned Task: </span>
+                <div className="p-3 bg-black/5 border border-black/15 rounded-md text-xs text-black">
+                  <span className="font-bold text-black">Assigned Task: </span>
                   <span>{selectedEvent.taskToComplete}</span>
                 </div>
               )}
 
               {/* Volunteer Quota Counter Cards */}
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="block text-[10px] font-bold uppercase text-slate-500">
+                <div className="p-3 rounded-md bg-black/5 border border-black/15">
+                  <span className="block text-[10px] font-bold uppercase text-black/65">
                     Student Volunteers (1st-come)
                   </span>
                   <div className="mt-1 flex items-baseline gap-1">
-                    <span className="text-xl font-heading font-black text-slate-900">
+                    <span className="text-xl font-heading font-bold text-black">
                       {selectedEvent.acceptedStudents?.length || 0}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-black/65">
                       / {selectedEvent.studentVolunteersNeeded || 0} accepted
                     </span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="block text-[10px] font-bold uppercase text-slate-500">
+                <div className="p-3 rounded-md bg-black/5 border border-black/15">
+                  <span className="block text-[10px] font-bold uppercase text-black/65">
                     Alumni Volunteers (1st-come)
                   </span>
                   <div className="mt-1 flex items-baseline gap-1">
-                    <span className="text-xl font-heading font-black text-slate-900">
+                    <span className="text-xl font-heading font-bold text-black">
                       {selectedEvent.acceptedAlumni?.length || 0}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-black/65">
                       / {selectedEvent.alumniVolunteersNeeded || 0} accepted
                     </span>
                   </div>
@@ -1116,9 +1089,9 @@ export default function AdminEventsScreen() {
 
               {/* Accepted Volunteers List in View Modal */}
               {((selectedEvent.acceptedStudents?.length || 0) + (selectedEvent.acceptedAlumni?.length || 0)) > 0 && (
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
-                    <CheckCircleIcon className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
+                <div className="pt-3 border-t border-black/15 space-y-2">
+                  <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-black flex items-center gap-1.5">
+                    <CheckCircleIcon className="w-4 h-4 text-black stroke-[2.5]" />
                     <span>
                       Accepted Volunteers ({(selectedEvent.acceptedStudents?.length || 0) + (selectedEvent.acceptedAlumni?.length || 0)})
                     </span>
@@ -1130,12 +1103,12 @@ export default function AdminEventsScreen() {
                     ].map((vol: any, idx: number) => (
                       <div
                         key={vol.email || idx}
-                        className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between text-xs"
+                        className="p-3 rounded-md bg-brand/15 border border-brand/60 flex items-center justify-between text-xs"
                       >
                         <div>
-                          <p className="font-bold text-slate-900">{vol.name || "Volunteer"}</p>
-                          <p className="text-[11px] text-slate-600">{vol.email}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">
+                          <p className="font-bold text-black">{vol.name || "Volunteer"}</p>
+                          <p className="text-[11px] text-black">{vol.email}</p>
+                          <p className="text-[10px] text-black/65 mt-0.5">
                             {vol.college || vol.company || "Maatram Foundation Volunteer"}
                           </p>
                         </div>
@@ -1143,8 +1116,8 @@ export default function AdminEventsScreen() {
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                               vol.volunteerRole === "Alumni"
-                                ? "bg-purple-100 text-purple-800 border border-purple-200"
-                                : "bg-blue-100 text-blue-800 border border-blue-200"
+                                ? "bg-brand/15 text-black border border-brand/60"
+                                : "bg-brand/15 text-black border border-brand/60"
                             }`}
                           >
                             {vol.volunteerRole}
@@ -1152,14 +1125,14 @@ export default function AdminEventsScreen() {
 
                           {vol.assignment_approved ? (
                             <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                                <CheckCircleIcon className="w-3 h-3 text-emerald-600 stroke-[2.5]" />
+                              <span className="text-[10px] font-bold text-black bg-brand/15 border border-brand/60 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                <CheckCircleIcon className="w-3 h-3 text-black stroke-[2.5]" />
                                 <span>Approved ({vol.assigned_count ?? 10} assigned)</span>
                               </span>
                               <button
                                 type="button"
                                 onClick={() => handleViewAssignments(selectedEvent, vol)}
-                                className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 transition cursor-pointer"
+                                className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-black bg-brand/15 hover:bg-brand/30 border border-brand/60 transition cursor-pointer"
                               >
                                 View List
                               </button>
@@ -1169,7 +1142,7 @@ export default function AdminEventsScreen() {
                               type="button"
                               disabled={isApprovingAssignment && approvingEmail === vol.email}
                               onClick={() => handleApproveAssignment(selectedEvent.id, vol.email)}
-                              className="px-2.5 py-1 rounded-xl text-[10px] font-bold text-slate-900 bg-[#F7BC0F] hover:bg-[#e5ad0c] border border-amber-500 shadow-xs transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                              className="px-2.5 py-1 rounded-md text-[10px] font-bold text-black bg-brand hover:brightness-95 border border-brand transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
                             >
                               <CheckCircleIcon className="w-3.5 h-3.5 stroke-[2.2]" />
                               <span>
@@ -1187,20 +1160,20 @@ export default function AdminEventsScreen() {
               )}
 
               {/* Details List */}
-              <div className="space-y-2 pt-3 border-t border-slate-100 text-xs text-slate-700">
+              <div className="space-y-2 pt-3 border-t border-black/15 text-xs text-black">
                 {selectedEvent.mode === "remote" ? (
                   <div className="flex items-center gap-2">
-                    <ClockIcon className="w-4 h-4 text-slate-500 stroke-[2]" />
+                    <ClockIcon className="w-4 h-4 text-black/65 stroke-[2]" />
                     <span>Duration: <strong>{selectedEvent.duration || "Self-paced"}</strong></span>
                   </div>
                 ) : (
                   <>
                     <div className="flex items-center gap-2">
-                      <CalendarDaysIcon className="w-4 h-4 text-slate-500 stroke-[2]" />
+                      <CalendarDaysIcon className="w-4 h-4 text-black/65 stroke-[2]" />
                       <span>Date: <strong>{selectedEvent.date}</strong> ({selectedEvent.time || "Scheduled slot"})</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <MapPinIcon className="w-4 h-4 text-slate-500 stroke-[2]" />
+                      <MapPinIcon className="w-4 h-4 text-black/65 stroke-[2]" />
                       <span>Venue: <strong>{selectedEvent.location}</strong></span>
                     </div>
                   </>
@@ -1208,13 +1181,13 @@ export default function AdminEventsScreen() {
 
                 {selectedEvent.eligibleYears && (
                   <div className="flex items-center gap-2">
-                    <UserGroupIcon className="w-4 h-4 text-slate-400 stroke-[2]" />
+                    <UserGroupIcon className="w-4 h-4 text-black/65 stroke-[2]" />
                     <span>Eligible Student Years: <strong>{selectedEvent.eligibleYears.map(y => `Year ${y}`).join(", ")}</strong></span>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-4 border-t border-black/15">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -1223,14 +1196,14 @@ export default function AdminEventsScreen() {
                       setSelectedEvent(null);
                       openEditModal(ev);
                     }}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-heading font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-md text-xs font-heading font-semibold text-black bg-black/5 hover:bg-black/10 transition cursor-pointer"
                   >
                     Edit Event
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDeleteEvent(selectedEvent)}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-heading font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-md text-xs font-heading font-semibold text-black bg-brand/15 hover:bg-brand/15 transition cursor-pointer"
                   >
                     Delete Event
                   </button>
@@ -1239,7 +1212,7 @@ export default function AdminEventsScreen() {
                 <button
                   type="button"
                   onClick={() => setSelectedEvent(null)}
-                  className="px-4 py-1.5 rounded-xl text-xs font-heading font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                  className="px-4 py-1.5 rounded-md text-xs font-heading font-bold text-black hover:bg-black/5 transition cursor-pointer"
                 >
                   Close
                 </button>
@@ -1251,26 +1224,26 @@ export default function AdminEventsScreen() {
 
       {/* Assigned Applicants Inspection Modal */}
       {assignedViewModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-xl border border-black/15 shadow-sm max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-black/15 flex items-center justify-between bg-black/5">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-800">
+                <div className="w-10 h-10 rounded-lg bg-brand/15 border border-brand/60 flex items-center justify-center text-black">
                   <ClipboardDocumentCheckIcon className="w-5 h-5 stroke-[2.2]" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-black text-base text-slate-900">
+                  <h3 className="font-heading font-bold text-base text-black">
                     Assigned Applicants ({assignedApplicantsList.length})
                   </h3>
-                  <p className="text-xs text-slate-500">
-                    Volunteer: <strong className="text-slate-800">{assignedViewVolunteer?.name}</strong> ({assignedViewVolunteer?.email})
+                  <p className="text-xs text-black/65">
+                    Volunteer: <strong className="text-black">{assignedViewVolunteer?.name}</strong> ({assignedViewVolunteer?.email})
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setAssignedViewModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+                className="p-1.5 text-black/65 hover:text-black rounded-md hover:bg-black/5 transition cursor-pointer"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -1278,42 +1251,42 @@ export default function AdminEventsScreen() {
 
             <div className="p-5 flex-1 overflow-y-auto space-y-3">
               {isLoadingAssignments ? (
-                <div className="p-8 text-center text-slate-500 text-xs">
+                <div className="p-8 text-center text-black/65 text-xs">
                   Loading assigned applicants...
                 </div>
               ) : assignedApplicantsList.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 text-xs bg-slate-50 rounded-2xl border border-slate-200">
+                <div className="p-8 text-center text-black/65 text-xs bg-black/5 rounded-lg border border-black/15">
                   No applicants assigned to this volunteer yet.
                 </div>
               ) : (
                 assignedApplicantsList.map((app: any, idx: number) => (
                   <div
                     key={app.id || app.application_number || idx}
-                    className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-amber-300 transition text-xs space-y-1.5"
+                    className="p-4 rounded-lg bg-white border border-black/15 hover:border-brand/60 transition text-xs space-y-1.5"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 text-sm">{app.name}</span>
-                          <span className="font-mono text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-semibold">
+                          <span className="font-bold text-black text-sm">{app.name}</span>
+                          <span className="font-mono text-[10px] bg-black/5 text-black px-2 py-0.5 rounded-md font-semibold">
                             {app.application_number || `#${idx + 1}`}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
+                        <p className="text-[11px] text-black/65 mt-0.5">
                           {app.district || "Tamil Nadu"} • {app.stream || app.degree || "Higher Secondary"}
                         </p>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand/15 text-black border border-brand/60 uppercase">
                         {app.status || "Pending Verification"}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-4 text-[11px] text-slate-600 pt-1 border-t border-slate-100">
+                    <div className="flex items-center gap-4 text-[11px] text-black pt-1 border-t border-black/15">
                       {app.phone && (
-                        <span>Phone: <strong className="font-mono text-slate-800">{app.phone}</strong></span>
+                        <span>Phone: <strong className="font-mono text-black">{app.phone}</strong></span>
                       )}
                       {app.match_reason && (
-                        <span className="text-amber-800 font-medium italic">
+                        <span className="text-black font-medium italic">
                           Match: {app.match_reason}
                         </span>
                       )}
@@ -1323,11 +1296,11 @@ export default function AdminEventsScreen() {
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <div className="p-4 border-t border-black/15 bg-black/5 flex justify-end">
               <button
                 type="button"
                 onClick={() => setAssignedViewModalOpen(false)}
-                className="px-5 py-2 rounded-xl text-xs font-heading font-bold text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+                className="px-5 py-2 rounded-md text-xs font-heading font-bold text-black bg-white hover:bg-black/5 border border-black/15 transition cursor-pointer"
               >
                 Close
               </button>
@@ -1352,7 +1325,6 @@ export default function AdminEventsScreen() {
       <SignOutModal
         isOpen={isSignOutModalOpen}
         onClose={() => setIsSignOutModalOpen(false)}
-        onConfirm={() => router.push("/")}
       />
     </div>
   );

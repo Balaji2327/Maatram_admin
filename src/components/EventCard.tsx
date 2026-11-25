@@ -79,65 +79,13 @@ export default function EventCard({
   const totalAccepted = allAccepted.length;
 
   return (
-    <div className="group @container min-w-0 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow flex flex-col justify-between overflow-hidden">
+    <div className="group @container min-w-0 bg-white rounded-lg border border-black/15 hover:shadow-sm transition-shadow flex flex-col justify-between overflow-hidden">
       <div onClick={() => onView?.(event)} className="cursor-pointer">
-        <header className="space-y-4 border-b border-slate-200 bg-slate-50 p-5">
-        {event.imageUrl ? (
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="relative flex items-center gap-1.5">
-              <span className={`text-[10px] font-heading font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-2xs backdrop-blur-xs flex items-center gap-1.5 ${
-                isRemote ? "bg-blue-600 text-white" : "bg-emerald-600 text-white"
-              }`}>
-                {isRemote ? (
-                  <>
-                    <GlobeAltIcon className="w-3.5 h-3.5 stroke-[2.2] shrink-0" />
-                    <span>Remote</span>
-                  </>
-                ) : (
-                  <>
-                    <MapPinIcon className="w-3.5 h-3.5 stroke-[2.2] shrink-0" />
-                    <span>Offline</span>
-                  </>
-                )}
-              </span>
-            </div>
-            <div className="relative">
-              {totalAccepted > 0 ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsAcceptedModalOpen(true);
-                  }}
-                  title="Click to view accepted volunteers list"
-                  className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border shadow-2xs backdrop-blur-xs bg-emerald-600/95 hover:bg-emerald-700 text-white border-emerald-500 flex items-center gap-1 cursor-pointer transition transform hover:scale-105"
-                >
-                  <CheckCircleIcon className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>{totalAccepted} Accepted {totalAccepted === 1 ? "Volunteer" : "Volunteers"}</span>
-                </button>
-              ) : (
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border shadow-2xs backdrop-blur-xs bg-slate-900/80 text-white border-slate-700">
-                  Waiting for Volunteers
-                </span>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className={`text-[10px] font-heading font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${
-              isRemote ? "bg-blue-50 text-blue-800 border-blue-200" : "bg-emerald-50 text-emerald-800 border-emerald-200"
-            }`}>
-              {isRemote ? (
-                <>
-                  <GlobeAltIcon className="w-3.5 h-3.5 text-blue-600 stroke-[2.2] shrink-0" />
-                  <span>Remote</span>
-                </>
-              ) : (
-                <>
-                  <MapPinIcon className="w-3.5 h-3.5 text-emerald-600 stroke-[2.2] shrink-0" />
-                  <span>Offline</span>
-                </>
-              )}
+        <header className="space-y-4 border-b border-brand/35 bg-brand/10 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-black">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-brand px-2 py-1 font-semibold text-black">
+              {isRemote ? <GlobeAltIcon className="size-4" /> : <MapPinIcon className="size-4" />}
+              {isRemote ? "Remote" : "Offline"}
             </span>
             {totalAccepted > 0 ? (
               <button
@@ -146,52 +94,48 @@ export default function EventCard({
                   e.stopPropagation();
                   setIsAcceptedModalOpen(true);
                 }}
-                title="Click to view accepted volunteers list"
-                className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 flex items-center gap-1 cursor-pointer transition transform hover:scale-105"
+                className="inline-flex items-center gap-1.5 font-medium underline decoration-black/30 underline-offset-4 hover:decoration-black"
               >
-                <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                <span>{totalAccepted} Accepted {totalAccepted === 1 ? "Volunteer" : "Volunteers"}</span>
+                <CheckCircleIcon className="size-4" />
+                {totalAccepted} accepted {totalAccepted === 1 ? "volunteer" : "volunteers"}
               </button>
             ) : (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200">
-                0 Accepted Volunteers
-              </span>
+              <span className="text-black/65">No accepted volunteers</span>
             )}
           </div>
-        )}
           <div className="flex items-center gap-4">
             {event.imageUrl && (
-              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-black/5">
             <Image
               src={event.imageUrl}
               alt={event.title}
               fill
               unoptimized
               sizes="80px"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover"
             />
               </div>
             )}
             <div className="min-w-0 flex-1 space-y-2">
-          <h3 className="font-heading font-extrabold text-xl leading-tight tracking-tight text-slate-900 break-words">
+          <h3 className="font-heading font-bold text-xl leading-tight tracking-tight text-black break-words">
             {event.title}
           </h3>
-              <div className="grid gap-1.5 text-xs text-slate-600">
+              <div className="grid gap-1.5 text-xs text-black">
             {/* Remote Duration or Offline Date/Time */}
             {isRemote ? (
               <div className="flex flex-wrap items-center gap-2">
-                <ClockIcon className="w-4 h-4 text-[#F7BC0F] shrink-0 stroke-[2]" />
-                <span className="font-medium text-slate-800">Duration: {event.duration || "Self-paced"}</span>
+                <ClockIcon className="w-4 h-4 text-black/65 shrink-0 stroke-[2]" />
+                <span className="font-medium text-black">Duration: {event.duration || "Self-paced"}</span>
               </div>
             ) : (
               <div className="flex flex-wrap items-center gap-2">
-                <CalendarDaysIcon className="w-4 h-4 text-[#F7BC0F] shrink-0 stroke-[2]" />
-                <span className="font-medium text-slate-800">{event.date}</span>
+                <CalendarDaysIcon className="w-4 h-4 text-black/65 shrink-0 stroke-[2]" />
+                <span className="font-medium text-black">{event.date}</span>
                 {event.time && (
                   <>
-                    <span className="text-slate-300">•</span>
-                    <div className="flex items-center gap-1 text-slate-600">
-                      <ClockIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="text-black/65">•</span>
+                    <div className="flex items-center gap-1 text-black">
+                      <ClockIcon className="w-3.5 h-3.5 text-black/65 shrink-0" />
                       <span>{event.time}</span>
                     </div>
                   </>
@@ -202,7 +146,7 @@ export default function EventCard({
             {/* Location (for Offline) */}
             {!isRemote && (
               <div className="flex flex-wrap items-center gap-2">
-                <MapPinIcon className="w-4 h-4 text-[#F7BC0F] shrink-0 stroke-[2]" />
+                <MapPinIcon className="w-4 h-4 text-black/65 shrink-0 stroke-[2]" />
                 <span className="break-words">{event.location}</span>
               </div>
             )}
@@ -212,13 +156,13 @@ export default function EventCard({
         </header>
         <div className="grid gap-4 p-5 @min-[30rem]:grid-cols-[minmax(0,1fr)_11rem]">
           <div className="min-w-0 space-y-3">
-          <p className="text-sm text-slate-600 font-primary leading-relaxed break-words">
+          <p className="text-sm text-black font-primary leading-relaxed break-words">
             {event.description}
           </p>
           {/* Volunteer Task Snippet */}
           {event.taskToComplete && (
-            <div className="px-3 py-2.5 rounded-r-lg bg-amber-50/70 border-l-[3px] border-[#F7BC0F] text-xs text-amber-950 flex items-start gap-2">
-              <ClipboardDocumentCheckIcon className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="pl-3 py-1 border-l-[3px] border-brand text-xs text-black flex items-start gap-2">
+              <ClipboardDocumentCheckIcon className="w-4 h-4 text-black shrink-0 mt-0.5" />
               <div className="min-w-0">
                 <span className="font-bold">Task: </span>
                 <span className="break-words">{event.taskToComplete}</span>
@@ -226,26 +170,26 @@ export default function EventCard({
             </div>
           )}
           </div>
-          <section aria-label="Volunteer places" className="space-y-2 border-t border-slate-200 pt-3 @min-[30rem]:border-l @min-[30rem]:border-t-0 @min-[30rem]:pl-4 @min-[30rem]:pt-0">
+          <section aria-label="Volunteer places" className="space-y-2 border-t border-black/15 pt-3 @min-[30rem]:border-l @min-[30rem]:border-t-0 @min-[30rem]:pl-4 @min-[30rem]:pt-0">
             {/* Volunteer Quotas (Separate student and alumni counts) */}
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-white border border-slate-200 px-3 py-2 rounded-lg">
-                <span className="block text-[10px] text-slate-500 font-semibold uppercase">Students</span>
-                <span className="font-extrabold text-slate-900 font-heading">
-                  {sAccepted} / {sNeeded} <span className="font-normal text-slate-500">spots</span>
+              <div className="min-w-0">
+                <span className="block text-[10px] text-black/65 font-semibold uppercase">Students</span>
+                <span className="font-bold text-black font-heading">
+                  {sAccepted} / {sNeeded} <span className="font-normal text-black/65">spots</span>
                 </span>
               </div>
-              <div className="bg-white border border-slate-200 px-3 py-2 rounded-lg">
-                <span className="block text-[10px] text-slate-500 font-semibold uppercase">Alumni</span>
-                <span className="font-extrabold text-slate-900 font-heading">
-                  {aAccepted} / {aNeeded} <span className="font-normal text-slate-500">spots</span>
+              <div className="min-w-0">
+                <span className="block text-[10px] text-black/65 font-semibold uppercase">Alumni</span>
+                <span className="font-bold text-black font-heading">
+                  {aAccepted} / {aNeeded} <span className="font-normal text-black/65">spots</span>
                 </span>
               </div>
             </div>
             {/* Eligible Years */}
             {event.eligibleYears && event.eligibleYears.length > 0 && (
-              <div className="text-[11px] text-slate-500 pt-1">
-                <span className="font-bold text-slate-700">Eligible: </span>
+              <div className="text-[11px] text-black/65 pt-1">
+                <span className="font-bold text-black">Eligible: </span>
                 {event.eligibleYears.map((yr) => `Year ${yr}`).join(", ")}
               </div>
             )}
@@ -254,11 +198,11 @@ export default function EventCard({
       </div>
 
       {/* Footer / Admin Actions */}
-      <div className="px-5 py-3.5 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between">
+      <div className="px-5 py-3.5 bg-white border-t border-black/15 flex items-center justify-between">
         <button
           type="button"
           onClick={() => onView?.(event)}
-          className="text-xs font-heading font-bold text-slate-700 hover:text-slate-950 transition cursor-pointer"
+          className="rounded-sm text-xs font-heading font-bold text-black underline decoration-brand decoration-2 underline-offset-4 hover:decoration-black focus-visible:outline-black cursor-pointer"
         >
           View Details &rarr;
         </button>
@@ -272,7 +216,7 @@ export default function EventCard({
                 onEdit(event);
               }}
               title="Edit event"
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer"
+              className="p-1.5 rounded-lg text-black/65 hover:text-black hover:bg-black/10 transition cursor-pointer"
             >
               <PencilSquareIcon className="w-4 h-4" />
             </button>
@@ -286,7 +230,7 @@ export default function EventCard({
                 onDelete(event);
               }}
               title="Delete event"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+              className="p-1.5 rounded-lg text-black/65 hover:text-black hover:bg-brand/15 transition cursor-pointer"
             >
               <TrashIcon className="w-4 h-4" />
             </button>
@@ -300,23 +244,23 @@ export default function EventCard({
             e.stopPropagation();
             setIsAcceptedModalOpen(false);
           }}
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 animate-in fade-in duration-200"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 max-h-[85vh] overflow-hidden flex flex-col"
+            className="bg-white rounded-xl max-w-lg w-full p-6 shadow-sm border border-black/15 space-y-5 max-h-[85vh] overflow-hidden flex flex-col"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 shrink-0">
+            <div className="flex items-center justify-between pb-3.5 border-b border-black/15 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 border border-emerald-300">
+                <div className="w-10 h-10 rounded-lg bg-brand/15 text-black flex items-center justify-center shrink-0 border border-brand/60">
                   <CheckCircleIcon className="w-6 h-6 stroke-[2.2]" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-black text-base text-slate-900">
+                  <h3 className="font-heading font-bold text-base text-black">
                     Accepted Volunteers ({totalAccepted})
                   </h3>
-                  <p className="text-xs text-slate-500 truncate max-w-xs sm:max-w-sm">
+                  <p className="text-xs text-black/65 truncate max-w-xs sm:max-w-sm">
                     {event.title}
                   </p>
                 </div>
@@ -325,7 +269,7 @@ export default function EventCard({
               <button
                 type="button"
                 onClick={() => setIsAcceptedModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+                className="p-1.5 text-black/65 hover:text-black rounded-md hover:bg-black/5 transition cursor-pointer"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -333,16 +277,16 @@ export default function EventCard({
 
             {/* Quota Progress Summary */}
             <div className="grid grid-cols-2 gap-3 shrink-0">
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                <span className="block text-[10px] font-bold uppercase text-slate-500">Student Spots</span>
-                <span className="font-heading font-extrabold text-slate-900 text-sm mt-0.5 block">
-                  {sAccepted} / {sNeeded} <span className="font-normal text-xs text-slate-500">accepted</span>
+              <div className="p-3 rounded-lg bg-black/5 border border-black/15">
+                <span className="block text-[10px] font-bold uppercase text-black/65">Student Spots</span>
+                <span className="font-heading font-bold text-black text-sm mt-0.5 block">
+                  {sAccepted} / {sNeeded} <span className="font-normal text-xs text-black/65">accepted</span>
                 </span>
               </div>
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                <span className="block text-[10px] font-bold uppercase text-slate-500">Alumni Spots</span>
-                <span className="font-heading font-extrabold text-slate-900 text-sm mt-0.5 block">
-                  {aAccepted} / {aNeeded} <span className="font-normal text-xs text-slate-500">accepted</span>
+              <div className="p-3 rounded-lg bg-black/5 border border-black/15">
+                <span className="block text-[10px] font-bold uppercase text-black/65">Alumni Spots</span>
+                <span className="font-heading font-bold text-black text-sm mt-0.5 block">
+                  {aAccepted} / {aNeeded} <span className="font-normal text-xs text-black/65">accepted</span>
                 </span>
               </div>
             </div>
@@ -352,32 +296,32 @@ export default function EventCard({
               {allAccepted.map((vol: any, idx: number) => (
                 <div
                   key={vol.email || idx}
-                  className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/90 flex items-center justify-between text-xs"
+                  className="p-3.5 rounded-lg bg-brand/15 border border-brand/60 flex items-center justify-between text-xs"
                 >
                   <div className="space-y-0.5 truncate mr-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 text-sm">{vol.name || "Volunteer"}</span>
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.2 rounded-full">
+                      <span className="font-bold text-black text-sm">{vol.name || "Volunteer"}</span>
+                      <span className="text-[10px] font-bold text-black bg-brand/15 px-2 py-0.2 rounded-md">
                         Confirmed
                       </span>
                     </div>
 
                     <a
                       href={`mailto:${vol.email}`}
-                      className="text-slate-600 hover:text-amber-600 flex items-center gap-1 font-mono text-[11px] truncate"
+                      className="text-black hover:text-black flex items-center gap-1 font-mono text-[11px] truncate"
                     >
-                      <EnvelopeIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <EnvelopeIcon className="w-3.5 h-3.5 text-black/65 shrink-0" />
                       <span className="truncate">{vol.email}</span>
                     </a>
 
                     {(vol.college || vol.company) && (
-                      <p className="text-[11px] text-slate-500 truncate">
+                      <p className="text-[11px] text-black/65 truncate">
                         {vol.college || vol.company} {vol.year_of_study ? `(${vol.year_of_study})` : ""}
                       </p>
                     )}
 
                     {vol.accepted_at && (
-                      <p className="text-[10px] text-slate-400 font-mono">
+                      <p className="text-[10px] text-black/65 font-mono">
                         Accepted on: {new Date(vol.accepted_at).toLocaleString()}
                       </p>
                     )}
@@ -385,10 +329,10 @@ export default function EventCard({
 
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
                     <span
-                      className={`px-2.5 py-0.5 rounded-xl text-[10px] font-heading font-bold uppercase tracking-wider ${
+                      className={`px-2.5 py-0.5 rounded-md text-[10px] font-heading font-bold uppercase tracking-wider ${
                         vol.volunteerRole === "Alumni"
-                          ? "bg-purple-100 text-purple-800 border border-purple-200"
-                          : "bg-blue-100 text-blue-800 border border-blue-200"
+                          ? "bg-brand/15 text-black border border-brand/60"
+                          : "bg-brand/15 text-black border border-brand/60"
                       }`}
                     >
                       {vol.volunteerRole}
@@ -397,8 +341,8 @@ export default function EventCard({
                     {/* Admin Approval & AI Batch Assignment Controls */}
                     {vol.assignment_approved ? (
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                          <CheckCircleIcon className="w-3 h-3 text-emerald-600 stroke-[2.5]" />
+                        <span className="text-[10px] font-bold text-black bg-brand/15 border border-brand/60 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                          <CheckCircleIcon className="w-3 h-3 text-black stroke-[2.5]" />
                           <span>Approved ({vol.assigned_count ?? 10} assigned)</span>
                         </span>
                         {onViewAssignments && (
@@ -408,7 +352,7 @@ export default function EventCard({
                               e.stopPropagation();
                               onViewAssignments(event, vol);
                             }}
-                            className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 transition cursor-pointer"
+                            className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-black bg-brand/15 hover:bg-brand/30 border border-brand/60 transition cursor-pointer"
                           >
                             View List
                           </button>
@@ -422,7 +366,7 @@ export default function EventCard({
                           e.stopPropagation();
                           onApproveAssignment(event.id, vol.email);
                         }}
-                        className="px-2.5 py-1 rounded-xl text-[10px] font-bold text-slate-900 bg-[#F7BC0F] hover:bg-[#e5ad0c] border border-amber-500 shadow-xs transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                        className="px-2.5 py-1 rounded-md text-[10px] font-bold text-black bg-brand hover:brightness-95 border border-brand transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
                       >
                         <CheckCircleIcon className="w-3.5 h-3.5 stroke-[2.2]" />
                         <span>
@@ -432,7 +376,7 @@ export default function EventCard({
                         </span>
                       </button>
                     ) : (
-                      <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
+                      <span className="text-[10px] text-black font-semibold bg-brand/15 border border-brand/60 px-2 py-0.5 rounded-lg">
                         Pending Admin Approval
                       </span>
                     )}
@@ -442,11 +386,11 @@ export default function EventCard({
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-2 border-t border-slate-100 flex justify-end shrink-0">
+            <div className="pt-2 border-t border-black/15 flex justify-end shrink-0">
               <button
                 type="button"
                 onClick={() => setIsAcceptedModalOpen(false)}
-                className="px-5 py-2.5 rounded-xl text-xs font-heading font-bold text-slate-900 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+                className="px-5 py-2.5 rounded-md text-xs font-heading font-bold text-black bg-black/5 hover:bg-black/10 transition cursor-pointer"
               >
                 Close
               </button>

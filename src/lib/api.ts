@@ -1,3 +1,4 @@
+import { createSessionReader } from "./sessionExpiry";
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -269,14 +270,12 @@ export const applicationApi = {
 };
 
 // Admin Storage helpers
-export function getAdminToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("maatram_admin_token");
-}
+export const getAdminToken = createSessionReader("maatram_admin_token", "/admin/login", clearAdminToken);
 
 export function setAdminToken(token: string) {
   if (typeof window !== "undefined") {
     localStorage.setItem("maatram_admin_token", token);
+    getAdminToken();
   }
 }
 
@@ -300,6 +299,10 @@ export function clearAdminToken() {
   if (typeof window !== "undefined") {
     localStorage.removeItem("maatram_admin_token");
     localStorage.removeItem("maatram_admin_user");
+    Object.keys(adminDataCache).forEach(key => delete adminDataCache[key]);
+    for (const key of Object.keys(sessionStorage)) {
+      if (key.startsWith("maatram_admin_") || key === "admin_review_applicant" || key === "admin_selected_applicant_id") sessionStorage.removeItem(key);
+    }
   }
 }
 

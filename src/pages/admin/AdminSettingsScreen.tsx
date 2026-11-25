@@ -353,7 +353,7 @@ export default function AdminSettingsScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-primary flex">
+    <div className="min-h-screen bg-white text-black font-primary flex">
       {/* 1. Yellow & White Sidebar */}
       <AdminSidebar
         activeTab="settings"
@@ -361,22 +361,22 @@ export default function AdminSettingsScreen() {
       />
 
       {/* 2. Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC]">
-        <main className="w-full px-6 lg:px-10 py-8 space-y-8 flex-1">
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
+        <main className="w-full px-4 sm:px-6 lg:px-10 py-8 space-y-8 flex-1">
           {/* Header Banner */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+              <h1 className="font-heading font-bold text-2xl sm:text-3xl text-black tracking-tight">
                 Account & Security Settings
               </h1>
-              <p className="font-primary text-xs sm:text-sm text-slate-600 mt-1">
+              <p className="font-primary text-xs sm:text-sm text-black mt-1">
                 Manage login credentials, authentication methods, recovery options, and account security.
               </p>
             </div>
           </div>
 
           {emailUpdateSuccess && (
-            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+            <div className="p-4 rounded-lg bg-brand/15 border border-brand/60 text-black text-xs font-semibold">
               {emailUpdateSuccess}
             </div>
           )}
@@ -384,23 +384,23 @@ export default function AdminSettingsScreen() {
           {/* 1. SECTION: LOGIN & ACCOUNT ACCESS */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <div className="lg:col-span-4">
-              <h2 className="font-heading font-bold text-sm text-slate-900">
+              <h2 className="font-heading font-bold text-sm text-black">
                 Login & Account Access
               </h2>
-              <p className="font-primary text-xs text-slate-500 mt-1">
+              <p className="font-primary text-xs text-black/65 mt-1">
                 Manage the credentials used to access your administrator portal.
               </p>
             </div>
 
-            <div className="lg:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 lg:p-7 shadow-xs space-y-5">
+            <div className="lg:col-span-8 bg-white border border-black/15 rounded-xl p-6 lg:p-7 space-y-5">
               {/* Login Email Row */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-5 border-b border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-5 border-b border-black/15">
                 <div>
-                  <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-black/65 mb-1">
                     LOGIN EMAIL
                   </p>
                   <div className="flex items-center gap-2.5">
-                    <span className="font-mono font-bold text-xs sm:text-sm text-slate-900">
+                    <span className="font-mono font-bold text-xs sm:text-sm text-black">
                       {adminEmail}
                     </span>
                   </div>
@@ -414,7 +414,7 @@ export default function AdminSettingsScreen() {
                       setEmailError("");
                       setShowEmailModal(true);
                     }}
-                    className="px-4 py-2 rounded-xl text-xs font-heading font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 transition cursor-pointer shadow-2xs"
+                    className="px-4 py-2 rounded-md text-xs font-heading font-bold text-black bg-white hover:bg-black/5 border border-black/15 hover:border-black/15 transition cursor-pointer"
                   >
                     Change login email
                   </button>
@@ -426,9 +426,9 @@ export default function AdminSettingsScreen() {
                 <button
                   type="button"
                   onClick={() => setShowPasswordModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-heading font-bold text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 transition cursor-pointer shadow-2xs"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-xs font-heading font-bold text-black bg-white hover:bg-black/5 border border-black/15 hover:border-black/15 transition cursor-pointer"
                 >
-                  <LockClosedIcon className="w-4 h-4 text-[#F7BC0F] stroke-[2]" />
+                  <LockClosedIcon className="w-4 h-4 text-brand stroke-[2]" />
                   <span>Change password</span>
                 </button>
               </div>
@@ -438,50 +438,50 @@ export default function AdminSettingsScreen() {
           {/* 2. SECTION: MULTI-FACTOR AUTHENTICATION */}
           <div>
             {twoFaSuccessMsg && (
-              <div className="mb-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+              <div className="mb-4 p-4 rounded-lg bg-brand/15 border border-brand/60 text-black text-xs font-semibold">
                 {twoFaSuccessMsg}
               </div>
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               <div className="lg:col-span-4">
-                <h2 className="font-heading font-bold text-sm text-slate-900">
+                <h2 className="font-heading font-bold text-sm text-black">
                   Multi-Factor Authentication
                 </h2>
-                <p className="font-primary text-xs text-slate-500 mt-1">
+                <p className="font-primary text-xs text-black/65 mt-1">
                   Add an extra layer of protection to your account.
                 </p>
               </div>
 
               <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Authenticator app card */}
-                <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
+                <div className="bg-white border border-black/15 rounded-xl p-5 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-800">
-                        <DevicePhoneMobileIcon className="w-4 h-4 text-[#F7BC0F] stroke-[2]" />
+                      <div className="w-8 h-8 rounded-md bg-brand/15 border border-brand/60 flex items-center justify-center text-black">
+                        <DevicePhoneMobileIcon className="w-4 h-4 text-brand stroke-[2]" />
                       </div>
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${is2FAEnabled
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : "bg-slate-100 text-slate-600 border border-slate-200"
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${is2FAEnabled
+                          ? "bg-brand/15 text-black border border-brand/60"
+                          : "bg-black/5 text-black border border-black/15"
                           }`}
                       >
                         {is2FAEnabled ? "Enabled" : "Disabled"}
                       </span>
                     </div>
-                    <h3 className="font-heading font-bold text-xs sm:text-sm text-slate-900">
+                    <h3 className="font-heading font-bold text-xs sm:text-sm text-black">
                       Authenticator app
                     </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-black/65 mt-0.5">
                       Primary two-factor authentication method.
                     </p>
                   </div>
-                  <div className="pt-4 mt-4 border-t border-slate-100">
+                  <div className="pt-4 mt-4 border-t border-black/15">
                     <button
                       type="button"
                       onClick={handleToggle2FA}
-                      className="w-full py-2 rounded-xl text-xs font-heading font-bold text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+                      className="w-full py-2 rounded-md text-xs font-heading font-bold text-black bg-black/5 hover:bg-black/10 border border-black/15 transition cursor-pointer"
                     >
                       {is2FAEnabled ? "Disable" : "Manage"}
                     </button>
@@ -489,28 +489,28 @@ export default function AdminSettingsScreen() {
                 </div>
 
                 {/* Email 2FA card */}
-                <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
+                <div className="bg-white border border-black/15 rounded-xl p-5 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-800">
-                        <EnvelopeIcon className="w-4 h-4 text-[#F7BC0F] stroke-[2]" />
+                      <div className="w-8 h-8 rounded-md bg-brand/15 border border-brand/60 flex items-center justify-center text-black">
+                        <EnvelopeIcon className="w-4 h-4 text-brand stroke-[2]" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand/15 text-black border border-brand/60">
                         Enabled
                       </span>
                     </div>
-                    <h3 className="font-heading font-bold text-xs sm:text-sm text-slate-900">
+                    <h3 className="font-heading font-bold text-xs sm:text-sm text-black">
                       Email
                     </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-black/65 mt-0.5">
                       Secondary two-factor authentication method.
                     </p>
                   </div>
-                  <div className="pt-4 mt-4 border-t border-slate-100">
+                  <div className="pt-4 mt-4 border-t border-black/15">
                     <button
                       type="button"
                       onClick={() => alert("Email verification is linked to your login email.")}
-                      className="w-full py-2 rounded-xl text-xs font-heading font-bold text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+                      className="w-full py-2 rounded-md text-xs font-heading font-bold text-black bg-black/5 hover:bg-black/10 border border-black/15 transition cursor-pointer"
                     >
                       Manage
                     </button>
@@ -526,23 +526,23 @@ export default function AdminSettingsScreen() {
               {/* 3. SECTION: ADD NEW ADMINISTRATOR */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <div className="lg:col-span-4">
-                  <h2 className="font-heading font-bold text-sm text-slate-900">
+                  <h2 className="font-heading font-bold text-sm text-black">
                     Add New Administrator
                   </h2>
-                  <p className="font-primary text-xs text-slate-500 mt-1">
+                  <p className="font-primary text-xs text-black/65 mt-1">
                     Grant dashboard access to new foundation staff, coordinators, or reviewers.
                   </p>
                 </div>
 
-                <div className="lg:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 lg:p-7 shadow-xs space-y-5">
+                <div className="lg:col-span-8 bg-white border border-black/15 rounded-xl p-6 lg:p-7 space-y-5">
                   {adminSuccessMsg && (
-                    <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                    <div className="p-4 rounded-lg bg-brand/15 border border-brand/60 text-black text-xs font-semibold">
                       {adminSuccessMsg}
                     </div>
                   )}
 
                   {adminErrorMsg && (
-                    <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold">
+                    <div className="p-4 rounded-lg bg-brand/15 border border-brand/60 text-black text-xs font-semibold">
                       {adminErrorMsg}
                     </div>
                   )}
@@ -551,8 +551,8 @@ export default function AdminSettingsScreen() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Full Name */}
                       <div>
-                        <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                          Full Name <span className="text-red-500">*</span>
+                        <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                          Full Name <span className="text-black/65">*</span>
                         </label>
                         <input
                           type="text"
@@ -560,14 +560,14 @@ export default function AdminSettingsScreen() {
                           value={newAdminName}
                           onChange={(e) => setNewAdminName(e.target.value)}
                           placeholder="e.g. Ramesh Kumar"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                          className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                         />
                       </div>
 
                       {/* Email Address */}
                       <div>
-                        <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                          Email Address <span className="text-red-500">*</span>
+                        <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                          Email Address <span className="text-black/65">*</span>
                         </label>
                         <input
                           type="email"
@@ -575,14 +575,14 @@ export default function AdminSettingsScreen() {
                           value={newAdminEmail}
                           onChange={(e) => setNewAdminEmail(e.target.value)}
                           placeholder="admin@maatramedu.org"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                          className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                         />
                       </div>
 
                       {/* Temporary Password */}
                       <div>
-                        <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                          Temporary Password <span className="text-red-500">*</span>
+                        <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                          Temporary Password <span className="text-black/65">*</span>
                         </label>
                         <input
                           type="password"
@@ -590,19 +590,19 @@ export default function AdminSettingsScreen() {
                           value={newAdminPassword}
                           onChange={(e) => setNewAdminPassword(e.target.value)}
                           placeholder="••••••••"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                          className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                         />
                       </div>
 
                       {/* Role */}
                       <div>
-                        <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
+                        <label className="block text-xs font-heading font-bold text-black mb-1.5">
                           Admin Role
                         </label>
                         <select
                           value={newAdminRole}
                           onChange={(e) => setNewAdminRole(e.target.value as any)}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                          className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                         >
                           <option value="admin">Admin (Full Access)</option>
                           <option value="reviewer">Reviewer (View & Verify Only)</option>
@@ -611,11 +611,11 @@ export default function AdminSettingsScreen() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+                    <div className="flex items-center justify-end pt-3 border-t border-black/15">
                       <button
                         type="submit"
                         disabled={isSubmittingAdmin}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-xs border border-[#e5ad0c]"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-heading font-bold text-black bg-brand hover:brightness-95 rounded-md transition cursor-pointer border border-brand"
                       >
                         <span>{isSubmittingAdmin ? "Adding Admin..." : "Add Administrator"}</span>
                       </button>
@@ -627,19 +627,19 @@ export default function AdminSettingsScreen() {
               {/* 4. SECTION: ACTIVE ADMINISTRATORS */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <div className="lg:col-span-4">
-                  <h2 className="font-heading font-bold text-sm text-slate-900">
+                  <h2 className="font-heading font-bold text-sm text-black">
                     Active Administrators
                   </h2>
-                  <p className="font-primary text-xs text-slate-500 mt-1">
+                  <p className="font-primary text-xs text-black/65 mt-1">
                     List of authorized admin accounts on the Maatram Portal.
                   </p>
                 </div>
 
-                <div className="lg:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 lg:p-7 shadow-xs">
+                <div className="lg:col-span-8 bg-white border border-black/15 rounded-xl p-6 lg:p-7">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="border-b border-slate-200 text-slate-500 font-heading text-[11px] uppercase tracking-wider bg-slate-50/70">
+                        <tr className="border-b border-black/15 text-black/65 font-heading text-[11px] uppercase tracking-wider bg-black/5">
                           <th className="py-3 px-4">Name</th>
                           <th className="py-3 px-4">Email</th>
                           <th className="py-3 px-4">Role</th>
@@ -648,29 +648,29 @@ export default function AdminSettingsScreen() {
                           <th className="py-3 px-4 text-right">Action</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 font-medium">
+                      <tbody className="divide-y divide-black/15 font-medium">
                         {adminList.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
+                            <td colSpan={6} className="py-8 text-center text-black/65 text-xs">
                               No administrators added yet. Use the form above to add a new administrator.
                             </td>
                           </tr>
                         ) : (
                           adminList.map((admin) => (
-                            <tr key={admin.id} className="hover:bg-amber-50/30 transition">
-                              <td className="py-3.5 px-4 font-bold text-slate-900">
+                            <tr key={admin.id} className="hover:bg-brand/15 transition">
+                              <td className="py-3.5 px-4 font-bold text-black">
                                 {admin.name}
                               </td>
-                              <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">
+                              <td className="py-3.5 px-4 text-black font-mono text-[11px]">
                                 {admin.email}
                               </td>
                               <td className="py-3.5 px-4">
                                 <span
-                                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${admin.role === "super_admin"
-                                    ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${admin.role === "super_admin"
+                                    ? "bg-brand/15 text-black border border-brand/60"
                                     : admin.role === "admin"
-                                      ? "bg-amber-100 text-amber-900 border border-amber-200"
-                                      : "bg-blue-100 text-blue-800 border border-blue-200"
+                                      ? "bg-brand/15 text-black border border-brand/60"
+                                      : "bg-brand/15 text-black border border-brand/60"
                                     }`}
                                 >
                                   {admin.role.replace("_", " ")}
@@ -678,16 +678,16 @@ export default function AdminSettingsScreen() {
                               </td>
                               <td className="py-3.5 px-4">
                                 {admin.twoFactorEnabled ? (
-                                  <span className="text-emerald-700 font-semibold text-[11px]">
+                                  <span className="text-black font-semibold text-[11px]">
                                     Enabled
                                   </span>
                                 ) : (
-                                  <span className="text-slate-400 font-semibold text-[11px]">
+                                  <span className="text-black/65 font-semibold text-[11px]">
                                     Disabled
                                   </span>
                                 )}
                               </td>
-                              <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
+                              <td className="py-3.5 px-4 text-black/65 font-mono text-[11px]">
                                 {admin.createdAt}
                               </td>
                               <td className="py-3.5 px-4 text-right">
@@ -695,12 +695,12 @@ export default function AdminSettingsScreen() {
                                   <button
                                     type="button"
                                     onClick={() => handleRevokeAdmin(admin.id, admin.name)}
-                                    className="text-red-600 hover:text-red-800 font-bold hover:underline cursor-pointer"
+                                    className="text-black hover:text-black font-bold hover:underline cursor-pointer"
                                   >
                                     Revoke
                                   </button>
                                 ) : (
-                                  <span className="text-slate-400 text-[11px]">Primary Owner</span>
+                                  <span className="text-black/65 text-[11px]">Primary Owner</span>
                                 )}
                               </td>
                             </tr>
@@ -718,26 +718,26 @@ export default function AdminSettingsScreen() {
 
       {/* 2FA SETUP MODAL (QR CODE) */}
       {showQrModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl border border-amber-200 shadow-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-heading font-bold text-base text-slate-900">Set Up Authenticator App</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl border border-brand/60 shadow-sm max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-black/15">
+              <h3 className="font-heading font-bold text-base text-black">Set Up Authenticator App</h3>
               <button
                 type="button"
                 onClick={() => setShowQrModal(false)}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-sm"
+                className="text-black/65 hover:text-black cursor-pointer font-bold text-sm"
               >
                 <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-black">
               Scan this QR code with Google Authenticator or Microsoft Authenticator, then enter the 6-digit code below.
             </p>
 
             {/* QR Code Graphic */}
-            <div className="flex flex-col items-center justify-center p-6 bg-amber-50/50 rounded-2xl border-2 border-dashed border-amber-200">
-              <div className="w-44 h-44 bg-white rounded-2xl border border-slate-200 p-2 flex items-center justify-center shadow-xs overflow-hidden">
+            <div className="flex flex-col items-center justify-center p-6 bg-brand/15 rounded-lg border-2 border-dashed border-brand/60">
+              <div className="w-44 h-44 bg-white rounded-lg border border-black/15 p-2 flex items-center justify-center overflow-hidden">
                 {qrCodeUrl ? (
                   <img
                     src={qrCodeUrl}
@@ -746,12 +746,12 @@ export default function AdminSettingsScreen() {
                   />
                 ) : (
                   <div className="text-center p-4">
-                    <QrCodeIcon className="w-12 h-12 text-amber-500 mx-auto mb-1 stroke-1" />
-                    <p className="text-[10px] text-slate-500 font-mono">Generating QR...</p>
+                    <QrCodeIcon className="w-12 h-12 text-black/65 mx-auto mb-1 stroke-1" />
+                    <p className="text-[10px] text-black/65 font-mono">Generating QR...</p>
                   </div>
                 )}
               </div>
-              <p className="text-[11px] font-mono font-bold text-slate-700 mt-3 tracking-wider bg-white px-3 py-1 rounded-lg border border-slate-200 select-all">
+              <p className="text-[11px] font-mono font-bold text-black mt-3 tracking-wider bg-white px-3 py-1 rounded-lg border border-black/15 select-all">
                 KEY: {twoFactorSecret}
               </p>
             </div>
@@ -759,7 +759,7 @@ export default function AdminSettingsScreen() {
             {/* Verification Code Form */}
             <form onSubmit={handleConfirm2FA} className="space-y-4">
               <div>
-                <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-heading font-bold text-black mb-1.5">
                   Enter 6-Digit Code
                 </label>
                 <input
@@ -769,7 +769,7 @@ export default function AdminSettingsScreen() {
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
                   placeholder="123456"
-                  className="w-full text-center tracking-[0.5em] font-mono text-lg font-bold py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20"
+                  className="w-full text-center tracking-[0.5em] font-mono text-lg font-bold py-2.5 rounded-md border border-black/15 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                 />
               </div>
 
@@ -777,13 +777,13 @@ export default function AdminSettingsScreen() {
                 <button
                   type="button"
                   onClick={() => setShowQrModal(false)}
-                  className="px-4 py-2 text-xs font-heading font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-heading font-bold text-black hover:bg-black/5 rounded-md transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-xs border border-[#e5ad0c]"
+                  className="px-5 py-2 text-xs font-heading font-bold text-black bg-brand hover:brightness-95 rounded-md transition cursor-pointer border border-brand"
                 >
                   Verify & Activate
                 </button>
@@ -795,10 +795,10 @@ export default function AdminSettingsScreen() {
 
       {/* CHANGE PASSWORD MODAL */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-heading font-bold text-base text-slate-900">Change Password</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl border border-black/15 shadow-sm max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-black/15">
+              <h3 className="font-heading font-bold text-base text-black">Change Password</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -806,28 +806,28 @@ export default function AdminSettingsScreen() {
                   setPasswordError("");
                   setPasswordMsg("");
                 }}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-sm"
+                className="text-black/65 hover:text-black cursor-pointer font-bold text-sm"
               >
                 <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
               </button>
             </div>
 
             {passwordMsg && (
-              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+              <div className="p-3.5 rounded-md bg-brand/15 border border-brand/60 text-black text-xs font-semibold">
                 {passwordMsg}
               </div>
             )}
 
             {passwordError && (
-              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold">
+              <div className="p-3.5 rounded-md bg-brand/15 border border-brand/60 text-black text-xs font-semibold">
                 {passwordError}
               </div>
             )}
 
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                  Current Password <span className="text-red-500">*</span>
+                <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                  Current Password <span className="text-black/65">*</span>
                 </label>
                 <input
                   type="password"
@@ -835,13 +835,13 @@ export default function AdminSettingsScreen() {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                  className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                  New Password <span className="text-red-500">*</span>
+                <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                  New Password <span className="text-black/65">*</span>
                 </label>
                 <input
                   type="password"
@@ -849,13 +849,13 @@ export default function AdminSettingsScreen() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                  className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                  Confirm New Password <span className="text-red-500">*</span>
+                <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                  Confirm New Password <span className="text-black/65">*</span>
                 </label>
                 <input
                   type="password"
@@ -863,11 +863,11 @@ export default function AdminSettingsScreen() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                  className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-black/15">
                 <button
                   type="button"
                   onClick={() => {
@@ -875,14 +875,14 @@ export default function AdminSettingsScreen() {
                     setPasswordError("");
                     setPasswordMsg("");
                   }}
-                  className="px-4 py-2 text-xs font-heading font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-heading font-bold text-black hover:bg-black/5 rounded-md transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingPassword}
-                  className="px-5 py-2 text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-xs border border-[#e5ad0c]"
+                  className="px-5 py-2 text-xs font-heading font-bold text-black bg-brand hover:brightness-95 rounded-md transition cursor-pointer border border-brand"
                 >
                   {isSavingPassword ? "Updating..." : "Update Password"}
                 </button>
@@ -894,18 +894,18 @@ export default function AdminSettingsScreen() {
 
       {/* CHANGE LOGIN EMAIL MODAL */}
       {showEmailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl border border-black/15 shadow-sm max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-black/15">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
-                  <EnvelopeIcon className="w-4 h-4 text-[#F7BC0F] stroke-[2]" />
+                <div className="w-8 h-8 rounded-md bg-brand/15 border border-brand/60 flex items-center justify-center text-black">
+                  <EnvelopeIcon className="w-4 h-4 text-brand stroke-[2]" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-bold text-base text-slate-900">
+                  <h3 className="font-heading font-bold text-base text-black">
                     Change Login Email
                   </h3>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-black/65">
                     Update your primary administrator credentials.
                   </p>
                 </div>
@@ -916,31 +916,31 @@ export default function AdminSettingsScreen() {
                   setShowEmailModal(false);
                   setEmailError("");
                 }}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold text-sm w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center"
+                className="text-black/65 hover:text-black cursor-pointer font-bold text-sm w-7 h-7 rounded-lg hover:bg-black/5 flex items-center justify-center"
               >
                 <XMarkIcon className="inline-block h-[1em] w-[1em] align-[-0.125em]" aria-hidden={false} role="img" aria-label="Close" />
               </button>
             </div>
 
             {emailError && (
-              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold">
+              <div className="p-3.5 rounded-md bg-brand/15 border border-brand/60 text-black text-xs font-semibold">
                 {emailError}
               </div>
             )}
 
             <form onSubmit={handleSaveEmail} className="space-y-4">
               <div>
-                <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-heading font-bold text-black mb-1.5">
                   Current Email
                 </label>
-                <div className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-600 font-mono">
+                <div className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-black/5 text-xs text-black font-mono">
                   {adminEmail}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-heading font-bold text-slate-700 mb-1.5">
-                  New Login Email <span className="text-red-500">*</span>
+                <label className="block text-xs font-heading font-bold text-black mb-1.5">
+                  New Login Email <span className="text-black/65">*</span>
                 </label>
                 <input
                   type="email"
@@ -952,28 +952,28 @@ export default function AdminSettingsScreen() {
                     if (emailError) setEmailError("");
                   }}
                   placeholder="new.admin@maatramedu.org"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#F7BC0F] focus:ring-2 focus:ring-[#F7BC0F]/20 transition"
+                  className="w-full px-3.5 py-2.5 rounded-md border border-black/15 bg-white text-xs text-black placeholder:text-black/65 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                 />
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="text-[11px] text-black/65 mt-1">
                   You will use this email address to sign in to the Maatram Portal.
                 </p>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-black/15">
                 <button
                   type="button"
                   onClick={() => {
                     setShowEmailModal(false);
                     setEmailError("");
                   }}
-                  className="px-4 py-2 text-xs font-heading font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-heading font-bold text-black hover:bg-black/5 rounded-md transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingEmail}
-                  className="px-5 py-2 text-xs font-heading font-bold text-slate-950 bg-[#F7BC0F] hover:bg-[#e5ad0c] rounded-xl transition cursor-pointer shadow-xs border border-[#e5ad0c] disabled:opacity-50"
+                  className="px-5 py-2 text-xs font-heading font-bold text-black bg-brand hover:brightness-95 rounded-md transition cursor-pointer border border-brand disabled:opacity-50"
                 >
                   {isSavingEmail ? "Saving..." : "Update Email"}
                 </button>
@@ -987,10 +987,6 @@ export default function AdminSettingsScreen() {
       <SignOutModal
         isOpen={isSignOutModalOpen}
         onClose={() => setIsSignOutModalOpen(false)}
-        onConfirm={() => {
-          adminApi.logout();
-          router.push("/");
-        }}
       />
     </div>
   );

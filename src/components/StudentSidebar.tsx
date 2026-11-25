@@ -38,15 +38,15 @@ export default function StudentSidebar({
   ];
 
   return (
-    <aside className="w-[72px] bg-white text-slate-800 shrink-0 flex flex-col justify-between border-r border-slate-200/90 min-h-screen shadow-2xs sticky top-0 h-screen select-none z-30">
+    <aside className="w-[72px] bg-white text-black shrink-0 flex flex-col justify-between border-r border-black/15 sticky top-0 h-dvh select-none z-30">
       {/* Top Branding Section & Nav */}
       <div className="flex flex-col flex-1 min-h-0">
         {/* Top App Logo Box */}
-        <div className="h-16 border-b border-slate-100 flex items-center justify-center p-2 shrink-0">
+        <div className="h-16 border-b border-black/15 flex items-center justify-center p-2 shrink-0">
           <button
             type="button"
             onClick={() => onTabChange("dashboard")}
-            className="flex items-center justify-center transition-transform hover:scale-105 cursor-pointer focus:outline-none"
+            className="flex items-center justify-center transition-transform cursor-pointer focus:outline-none"
             title="Maatram Foundation"
           >
             <Image
@@ -65,9 +65,9 @@ export default function StudentSidebar({
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
-            const activeBg = "bg-amber-50/80";
-            const activeText = "text-amber-800";
-            const activeBar = "bg-[#F7BC0F]";
+            const activeBg = "bg-brand/15";
+            const activeText = "text-black";
+            const activeBar = "bg-brand";
 
             return (
               <button
@@ -77,7 +77,7 @@ export default function StudentSidebar({
                 className={`group relative w-full flex flex-col items-center justify-center py-2.5 px-1 transition-colors cursor-pointer focus:outline-none ${
                   isActive
                     ? `${activeBg} ${activeText}`
-                    : "text-slate-700 hover:text-slate-950 hover:bg-slate-50"
+                    : "text-black hover:text-black hover:bg-black/5"
                 }`}
                 title={item.description}
               >
@@ -88,15 +88,15 @@ export default function StudentSidebar({
 
                 {/* Icon */}
                 <Icon
-                  className={`w-5 h-5 stroke-[1.8] transition-transform duration-200 group-hover:scale-110 ${
-                    isActive ? activeText : "text-slate-900"
+                  className={`w-5 h-5 stroke-[1.8] transition-transform duration-200 ${
+                    isActive ? activeText : "text-black"
                   }`}
                 />
 
                 {/* All-Caps Label Underneath */}
                 <span
-                  className={`text-[8px] font-mono font-extrabold tracking-tight mt-1 uppercase text-center leading-tight line-clamp-1 max-w-[68px] ${
-                    isActive ? `${activeText} font-black` : "text-slate-800"
+                  className={`text-[10px] font-primary font-semibold mt-1 text-center leading-tight line-clamp-1 max-w-[68px] ${
+                    isActive ? `${activeText} font-bold` : "text-black"
                   }`}
                 >
                   {item.label}
@@ -108,25 +108,25 @@ export default function StudentSidebar({
       </div>
 
       {/* Bottom Section: Profile Button (close to Signout) & Sign Out Button */}
-      <div className="border-t border-slate-100 flex flex-col items-center py-2 shrink-0 gap-1">
+      <div className="border-t border-black/15 flex flex-col items-center py-2 shrink-0 gap-1">
         {/* Profile Nav Item (Close to Sign Out) */}
         <button
           type="button"
           onClick={() => onTabChange("profile")}
           className={`group relative w-full flex flex-col items-center justify-center py-2 px-1 transition-colors cursor-pointer focus:outline-none ${
             activeTab === "profile"
-              ? "bg-amber-50/80 text-amber-800"
-              : "text-slate-700 hover:text-slate-950 hover:bg-slate-50"
+              ? "bg-brand/15 text-black"
+              : "text-black hover:text-black hover:bg-black/5"
           }`}
           title={`Profile - Signed in as ${studentName} (${applicationNumber})`}
         >
           {activeTab === "profile" && (
-            <span className="absolute right-0 top-0 bottom-0 w-[3px] bg-[#F7BC0F] rounded-l" />
+            <span className="absolute right-0 top-0 bottom-0 w-[3px] bg-brand rounded-l" />
           )}
 
           {studentPhoto ? (
-            <div className={`w-6 h-6 rounded-full overflow-hidden border transition-transform duration-200 group-hover:scale-110 ${
-              activeTab === "profile" ? "border-amber-700 ring-2 ring-[#F7BC0F]/40" : "border-slate-300"
+            <div className={`w-6 h-6 rounded-full overflow-hidden border transition-transform duration-200 ${
+              activeTab === "profile" ? "border-brand ring-2 ring-brand/40" : "border-black/15"
             }`}>
               <img
                 src={studentPhoto}
@@ -136,15 +136,15 @@ export default function StudentSidebar({
             </div>
           ) : (
             <UserCircleIcon
-              className={`w-5 h-5 stroke-[1.8] transition-transform duration-200 group-hover:scale-110 ${
-                activeTab === "profile" ? "text-amber-800" : "text-slate-900"
+              className={`w-5 h-5 stroke-[1.8] transition-transform duration-200 ${
+                activeTab === "profile" ? "text-black" : "text-black"
               }`}
             />
           )}
 
           <span
-            className={`text-[8px] font-mono font-extrabold tracking-tight mt-1 uppercase text-center leading-tight ${
-              activeTab === "profile" ? "text-amber-800 font-black" : "text-slate-800"
+            className={`text-[10px] font-primary font-semibold mt-1 text-center leading-tight ${
+              activeTab === "profile" ? "text-black font-bold" : "text-black"
             }`}
           >
             PROFILE
@@ -155,11 +155,11 @@ export default function StudentSidebar({
         <button
           type="button"
           onClick={onSignOutClick}
-          className="group w-full flex flex-col items-center justify-center py-2 px-1 text-slate-500 hover:text-red-600 hover:bg-red-50/60 transition cursor-pointer"
+          className="group w-full flex flex-col items-center justify-center py-2 px-1 text-black/65 hover:text-black hover:bg-brand/15 transition cursor-pointer"
           title="Sign Out"
         >
-          <ArrowLeftOnRectangleIcon className="w-4 h-4 stroke-[2] text-slate-600 group-hover:text-red-600 transition-transform duration-200 group-hover:scale-110" />
-          <span className="text-[8px] font-mono font-extrabold tracking-tight mt-1 uppercase text-center text-slate-600 group-hover:text-red-600">
+          <ArrowLeftOnRectangleIcon className="w-4 h-4 stroke-[2] text-black group-hover:text-black transition-transform duration-200" />
+          <span className="text-[10px] font-primary font-semibold mt-1 text-center text-black group-hover:text-black">
             SIGNOUT
           </span>
         </button>

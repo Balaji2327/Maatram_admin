@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function AdminApplicationsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-xs text-slate-500 font-bold">Loading applications...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center text-xs text-black/65 font-bold">Loading applications...</div>}>
       <AdminApplicationsScreen />
     </Suspense>
   );
