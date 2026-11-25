@@ -2915,11 +2915,7 @@ export default function AdminApplicationsScreen() {
                         {[
                           { label: "Student Photograph", url: selectedApplicant.studentPhoto || selectedApplicant.student_photo },
                           { label: "10th Marksheet", url: selectedApplicant.document10thMarksheet || selectedApplicant.document_10th_marksheet },
-                          { label: "11th Marksheet", url: selectedApplicant.document11thMarksheet || selectedApplicant.document_11th_marksheet },
                           { label: "12th Marksheet", url: selectedApplicant.document12thMarksheet || selectedApplicant.document_12th_marksheet },
-                          { label: "Community Certificate", url: selectedApplicant.documentCommunityCertificate || selectedApplicant.document_community_certificate },
-                          { label: "Income Certificate", url: selectedApplicant.documentIncomeCertificate || selectedApplicant.document_income_certificate },
-                          { label: "Parent ID Proof", url: selectedApplicant.documentParentIdProof || selectedApplicant.document_parent_id_proof },
                           { label: "Aadhaar Document", url: selectedApplicant.documentAadhaarCard || selectedApplicant.document_aadhaar_card },
                         ].map((doc, idx) => (
                           <div key={idx} className="p-3 bg-white rounded-md border border-black/15 flex flex-col justify-between gap-2">
