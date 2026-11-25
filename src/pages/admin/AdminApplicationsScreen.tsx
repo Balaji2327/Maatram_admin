@@ -30,7 +30,6 @@ import {
   ChatBubbleLeftEllipsisIcon,
   TableCellsIcon,
   CheckBadgeIcon,
-  ArrowTopRightOnSquareIcon,
   UserPlusIcon,
   XCircleIcon,
   VideoCameraIcon,
@@ -41,7 +40,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import * as XLSX from "xlsx";
-import { adminApi, getPhysicalPhotoUrl, getAdminToken, getAdminCachedData, setAdminCachedData } from "../../lib/api";
+import { adminApi, applicationDocumentUrl, getPhysicalPhotoUrl, getAdminToken, getAdminCachedData, setAdminCachedData } from "../../lib/api";
 import SignOutModal from "../../components/SignOutModal";
 import AdminSidebar, { AdminTab } from "../../components/AdminSidebar";
 
@@ -54,64 +53,95 @@ const PHYSICAL_PHOTO_SLOTS = [
   { key: "backward", title: "Backward" },
 ];
 
-// Default Active Volunteers Roster for Televerification
-const DEFAULT_VOLUNTEERS = [
-  {
-    id: "vol-1",
-    name: "Karthik Raja",
-    email: "karthik.alumni@maatram.org",
-    role: "alumni",
-    phone: "9840123456",
-    company: "Zoho Corporation",
-    designation: "Senior Software Engineer",
-    batch: "2018 - 2022",
-    assigned_count: 3,
-  },
-  {
-    id: "vol-2",
-    name: "Priyadharshini S",
-    email: "priya.alumni@maatram.org",
-    role: "alumni",
-    phone: "9789123456",
-    company: "Tata Consultancy Services",
-    designation: "Systems Engineer",
-    batch: "2019 - 2023",
-    assigned_count: 5,
-  },
-  {
-    id: "vol-3",
-    name: "Vigneshwaran M",
-    email: "vignesh.student@maatram.org",
-    role: "student",
-    phone: "9444123456",
-    college: "Anna University (CEG)",
-    department: "Mechanical Engineering",
-    year_of_study: "Final Year",
-    assigned_count: 2,
-  },
-  {
-    id: "vol-4",
-    name: "Ananya Ramesh",
-    email: "ananya.student@maatram.org",
-    role: "student",
-    phone: "9884123456",
-    college: "PSG College of Technology",
-    department: "Electronics & Communication",
-    year_of_study: "3rd Year",
-    assigned_count: 1,
-  },
-  {
-    id: "vol-5",
-    name: "Saravanan K",
-    email: "saravanan.alumni@maatram.org",
-    role: "alumni",
-    phone: "9600123456",
-    company: "Freshworks",
-    designation: "Product Associate",
-    batch: "2017 - 2021",
-    assigned_count: 4,
-  },
-];
+function eventRoster(event: any, directory: any[]) {
+  if (!event) return [];
+  const byKey = new Map<string, any>();
+  const normalize = (value: unknown) => String(value ?? "").trim().toLowerCase();
+  for (const person of directory) {
+    for (const key of [person.email, person.user_id, person.id]) {
+      if (key) byKey.set(normalize(key), person);
+    }
+  }
+  const enrolled = new Map<string, any>();
+  const groups = [
+    [event.accepted_students ?? event.acceptedStudents, "student"],
+    [event.accepted_alumni ?? event.acceptedAlumni, "alumni"],
+    [event.accepted_volunteers ?? event.acceptedVolunteers, ""],
+    [event.registered_volunteers ?? event.registeredVolunteers, ""],
+    [event.participants ?? event.volunteers, ""],
+  ] as const;
+  for (const [entries, role] of groups) {
+    if (!Array.isArray(entries)) continue;
+    for (const item of entries) {
+      if (!item) continue;
+      const entry = typeof item === "string" ? (item.includes("@") ? { email: item } : { id: item }) : item;
+      const keys = [entry.email, entry.volunteer_email, entry.user_id, entry.volunteer_id, entry.id];
+      const person = keys.map(key => byKey.get(normalize(key))).find(Boolean);
+      const email = normalize(entry.email || entry.volunteer_email || person?.email);
+      if (!email || enrolled.has(email)) continue;
+      enrolled.set(email, { ...person, ...entry, id: email, email,
+        name: entry.name || person?.name || email,
+        role: role || entry.role || person?.role,
+      });
+    }
+  }
+  return Array.from(enrolled.values());
+}
+
+function UploadPreview({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const isImage = /^data:image\//i.test(url) || /\.(png|jpe?g|gif|webp|avif)(?:$|[?#])/i.test(url);
+  const [source, setSource] = useState(isImage ? url : "");
+  const [pdf, setPdf] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const element = dialog.current;
+    element?.showModal();
+    return () => element?.close();
+  }, []);
+
+  useEffect(() => {
+    if (isImage) return;
+    const controller = new AbortController();
+    let objectUrl = "";
+    async function load() {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) throw new Error("Document unavailable");
+      const file = await response.blob();
+      const isPdf = (await file.slice(0, 5).text()) === "%PDF-";
+      if (!isPdf && !file.type.startsWith("image/")) throw new Error("Unsupported format");
+      if (controller.signal.aborted) return;
+      objectUrl = URL.createObjectURL(isPdf ? file.slice(0, file.size, "application/pdf") : file);
+      setPdf(isPdf);
+      setSource(objectUrl);
+    }
+    load().catch(() => { if (!controller.signal.aborted) setFailed(true); });
+    return () => {
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [url, isImage]);
+
+  return (
+    <dialog ref={dialog} aria-labelledby="upload-preview-title" onCancel={onClose}
+      onClick={event => { if (event.target === event.currentTarget) onClose(); }}
+      className="fixed inset-0 m-auto w-[94vw] max-w-4xl rounded-lg border border-black/15 p-0 backdrop:bg-black/70">
+      <div className="flex items-center justify-between border-b border-black/15 px-4 py-3">
+        <h2 id="upload-preview-title" className="font-heading text-sm font-bold">{title}</h2>
+        <button type="button" autoFocus onClick={onClose} aria-label="Close preview" className="rounded p-2 hover:bg-black/5">
+          <XMarkIcon className="h-5 w-5" />
+        </button>
+      </div>
+      <div className="flex h-[72dvh] items-center justify-center bg-black/5">
+        {failed ? <p role="alert">This document could not be displayed.</p>
+          : !source ? <p role="status">Loading document…</p>
+          : pdf ? <iframe title={title} src={source} className="h-full w-full border-0" />
+          : <img src={source} alt={title} onError={() => setFailed(true)} className="max-h-full max-w-full object-contain" />}
+      </div>
+    </dialog>
+  );
+}
 
 export default function AdminApplicationsScreen() {
   const router = useRouter();
@@ -224,7 +254,9 @@ export default function AdminApplicationsScreen() {
   const [assignVolunteerPhase, setAssignVolunteerPhase] = useState<"televerification" | "physical">("televerification");
   const [volunteersList, setVolunteersList] = useState<any[]>([]);
   const [eventsList, setEventsList] = useState<any[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string>("all");
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const rosterRequest = useRef(0);
+  const [rosterError, setRosterError] = useState("");
   const [isLoadingVolunteers, setIsLoadingVolunteers] = useState(false);
   const [volunteerSearchQuery, setVolunteerSearchQuery] = useState("");
   const [volunteerRoleFilter, setVolunteerRoleFilter] = useState<"all" | "alumni" | "student">("all");
@@ -245,46 +277,26 @@ export default function AdminApplicationsScreen() {
     setVolunteerRoleFilter("all");
     setIsAssignVolunteerModalOpen(true);
 
-    // Immediate check against session cache or current eventsList to pick the best matching event
-    let currentEvents = eventsList;
-    if (!currentEvents || currentEvents.length === 0) {
-      try {
-        const cached = sessionStorage.getItem("maatram_admin_events_cache");
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            currentEvents = parsed;
-            setEventsList(parsed);
-          }
-        }
-      } catch {}
+    const request = ++rosterRequest.current;
+    setEventsList([]);
+    setSelectedEventId("");
+    setRosterError("");
+    setIsLoadingVolunteers(true);
+    try {
+      const [events, directory] = await Promise.all([
+        adminApi.getEvents(), adminApi.getRegisteredVolunteers().catch(() => null),
+      ]);
+      if (request !== rosterRequest.current) return;
+      if (!events.success || !Array.isArray(events.data)) throw new Error("Could not load event enrollments.");
+      setEventsList(events.data);
+      setVolunteersList(directory?.success && Array.isArray(directory.data) ? directory.data : []);
+      const previous = phase === "physical" ? selectedApplicant?.physical_event_id : selectedApplicant?.tele_event_id;
+      if (events.data.some((ev: any) => String(ev.id) === String(previous))) setSelectedEventId(String(previous));
+    } catch {
+      if (request === rosterRequest.current) setRosterError("Could not load event enrollments. Close and reopen to try again.");
+    } finally {
+      if (request === rosterRequest.current) setIsLoadingVolunteers(false);
     }
-
-    const applicantEventId =
-      phase === "physical"
-        ? (selectedApplicant?.physical_event_id || selectedApplicant?.event_id)
-        : (selectedApplicant?.tele_event_id || selectedApplicant?.event_id);
-
-    const applicantEventTitle =
-      phase === "physical"
-        ? (selectedApplicant?.physical_event_title || selectedApplicant?.event_title)
-        : (selectedApplicant?.tele_event_title || selectedApplicant?.event_title);
-
-    const matched = currentEvents.find((ev) =>
-      (applicantEventId && String(ev.id) === String(applicantEventId)) ||
-      (applicantEventTitle && (
-        ev.title?.toLowerCase() === String(applicantEventTitle).toLowerCase() ||
-        ev.name?.toLowerCase() === String(applicantEventTitle).toLowerCase()
-      ))
-    ) || currentEvents[0];
-
-    if (matched) {
-      setSelectedEventId(String(matched.id));
-    } else {
-      setSelectedEventId("");
-    }
-
-    await Promise.all([loadVolunteers(), loadEvents()]);
   };
 
   const selectedApplicantRef = useRef<any | null>(null);
@@ -356,7 +368,6 @@ export default function AdminApplicationsScreen() {
     if (cachedApplications) setApplications(cachedApplications);
 
     fetchApplications();
-    loadEvents();
 
     const handleFocus = () => {
       fetchApplications();
@@ -482,195 +493,10 @@ export default function AdminApplicationsScreen() {
   };
 
   // Load registered volunteers from backend (with default fallback)
-  const loadVolunteers = async () => {
-    setIsLoadingVolunteers(true);
-    try {
-      const res = await adminApi.getRegisteredVolunteers();
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-        setVolunteersList(res.data);
-      } else {
-        setVolunteersList(DEFAULT_VOLUNTEERS);
-      }
-    } catch {
-      setVolunteersList(DEFAULT_VOLUNTEERS);
-    } finally {
-      setIsLoadingVolunteers(false);
-    }
-  };
-
-  const loadEvents = async () => {
-    try {
-      const res = await adminApi.getEvents();
-      if (res.success && Array.isArray(res.data)) {
-        setEventsList(res.data);
-        if (
-          !selectedEventId ||
-          !res.data.some((event: any) => String(event.id) === String(selectedEventId))
-        ) {
-          setSelectedEventId(res.data[0]?.id ? String(res.data[0].id) : "");
-        }
-        if (typeof window !== "undefined") {
-          try {
-            sessionStorage.setItem("maatram_admin_events_cache", JSON.stringify(res.data));
-          } catch {}
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load events for volunteer assignment:", err);
-    }
-  };
-
-  // Only events returned by the backend are available for assignment, filtered by phase
-  const phaseEvents = useMemo(() => {
-    if (!Array.isArray(eventsList)) return [];
-    if (assignVolunteerPhase === "physical") {
-      const physicalMatches = eventsList.filter((ev: any) => {
-        const text = `${ev.title || ""} ${ev.name || ""} ${ev.category || ""} ${ev.description || ""} ${ev.mode || ""}`.toLowerCase();
-        return (
-          text.includes("physical") ||
-          text.includes("field") ||
-          text.includes("home visit") ||
-          text.includes("in-person") ||
-          text.includes("offline")
-        );
-      });
-      return physicalMatches.length > 0 ? physicalMatches : eventsList;
-    } else {
-      const teleMatches = eventsList.filter((ev: any) => {
-        const text = `${ev.title || ""} ${ev.name || ""} ${ev.category || ""} ${ev.description || ""} ${ev.mode || ""}`.toLowerCase();
-        return (
-          text.includes("tele") ||
-          text.includes("calling") ||
-          text.includes("remote") ||
-          text.includes("online")
-        );
-      });
-      return teleMatches.length > 0 ? teleMatches : eventsList;
-    }
-  }, [eventsList, assignVolunteerPhase]);
-
-  // Filtered volunteers for assignment modal
+  const selectedEvent = eventsList.find(event => String(event.id) === selectedEventId);
+  const enrolledVolunteers = useMemo(() => eventRoster(selectedEvent, volunteersList), [selectedEvent, volunteersList]);
   const filteredVolunteers = useMemo(() => {
-    let list = volunteersList.length > 0 ? [...volunteersList] : [...DEFAULT_VOLUNTEERS];
-
-    const getAssignmentMap = (event: any) =>
-      event.volunteer_assignments ||
-      event.volunteerAssignments ||
-      event.assignments ||
-      {};
-
-    const getRegisteredEntries = (event: any) => [
-      ...(event.accepted_students || event.acceptedStudents || []),
-      ...(event.accepted_alumni || event.acceptedAlumni || []),
-      ...(event.accepted_volunteers || event.acceptedVolunteers || []),
-      ...(event.registered_volunteers || event.registeredVolunteers || []),
-      ...(event.participants || event.volunteers || []),
-    ];
-
-    const getEntryKeys = (entry: any) => {
-      if (typeof entry === "string") return [entry.toLowerCase().trim()];
-      return [
-        entry?.id,
-        entry?.volunteer_id,
-        entry?.user_id,
-        entry?.email,
-        entry?.volunteer_email,
-        entry?.name,
-      ].filter(Boolean).map((value: unknown) => String(value).toLowerCase().trim());
-    };
-
-    if (!selectedEventId) {
-      return [];
-    }
-
-    // Filter strictly by the chosen event from the dropdown
-    if (selectedEventId && selectedEventId !== "general_pool") {
-      if (selectedEventId === "all") {
-        // Show volunteers registered across any phase event
-        const targetEvents = phaseEvents.length > 0 ? phaseEvents : eventsList;
-        const allRegisteredEntries = targetEvents.flatMap(getRegisteredEntries);
-        const allRegisteredKeys = allRegisteredEntries.flatMap(getEntryKeys);
-        const allAssignedEmails = targetEvents
-          .flatMap((ev) => Object.keys(getAssignmentMap(ev)))
-          .map((em) => em.toLowerCase().trim());
-
-        // Synthesize any registered entry not already in list
-        const existingEmails = new Set(list.map((v) => (v.email || "").toLowerCase().trim()));
-        allRegisteredEntries.forEach((entry: any) => {
-          const entryEmail = (entry.email || entry.volunteer_email || (typeof entry === "string" ? entry : "")).toLowerCase().trim();
-          if (entryEmail && !existingEmails.has(entryEmail)) {
-            existingEmails.add(entryEmail);
-            list.push({
-              id: entry.id || entry.user_id || `vol_ev_${entryEmail}`,
-              name: entry.name || entryEmail.split("@")[0] || "Registered Volunteer",
-              email: entryEmail,
-              phone: entry.phone || "+91 98765 43210",
-              college: entry.college || "Anna University",
-              department: entry.department || "Engineering",
-              role: entry.role || "student",
-              year_of_study: entry.year_of_study || entry.year || "1st Year",
-            });
-          }
-        });
-
-        if (allRegisteredKeys.length > 0 || allAssignedEmails.length > 0) {
-          list = list.filter((volunteer) => {
-            const volunteerKeys = [
-              volunteer.id,
-              volunteer.user_id,
-              volunteer.email,
-              volunteer.name,
-            ].filter(Boolean).map((value: unknown) => String(value).toLowerCase().trim());
-            return volunteerKeys.some(
-              (key) => allRegisteredKeys.includes(key) || allAssignedEmails.includes(key)
-            );
-          });
-        }
-      } else {
-        // A specific event is selected from the dropdown: THAT event alone's registered volunteers will show!
-        const chosenEvent = eventsList.find((ev) => String(ev.id) === String(selectedEventId));
-        if (chosenEvent) {
-          const registeredEntries = getRegisteredEntries(chosenEvent);
-          const registeredKeys = registeredEntries.flatMap(getEntryKeys);
-          const assignedVolunteerEmails = Object.keys(getAssignmentMap(chosenEvent))
-            .map((email) => email.toLowerCase().trim());
-
-          // Synthesize any registered entry from this event not yet in list
-          const existingEmails = new Set(list.map((v) => (v.email || "").toLowerCase().trim()));
-          registeredEntries.forEach((entry: any) => {
-            const entryEmail = (entry.email || entry.volunteer_email || (typeof entry === "string" ? entry : "")).toLowerCase().trim();
-            if (entryEmail && !existingEmails.has(entryEmail)) {
-              existingEmails.add(entryEmail);
-              list.push({
-                id: entry.id || entry.user_id || `vol_ev_${entryEmail}`,
-                name: entry.name || entryEmail.split("@")[0] || "Registered Volunteer",
-                email: entryEmail,
-                phone: entry.phone || "+91 98765 43210",
-                college: entry.college || "Anna University",
-                department: entry.department || "Engineering",
-                role: entry.role || (chosenEvent.accepted_alumni?.some((a: any) => (a.email || a) === entryEmail) ? "alumni" : "student"),
-                year_of_study: entry.year_of_study || entry.year || "1st Year",
-              });
-            }
-          });
-
-          list = list.filter((volunteer) => {
-            const volunteerKeys = [
-              volunteer.id,
-              volunteer.user_id,
-              volunteer.email,
-              volunteer.name,
-            ].filter(Boolean).map((value: unknown) => String(value).toLowerCase().trim());
-            return volunteerKeys.some(
-              (key) => registeredKeys.includes(key) || assignedVolunteerEmails.includes(key)
-            );
-          });
-        } else {
-          list = [];
-        }
-      }
-    }
-
+    let list = enrolledVolunteers;
     if (volunteerRoleFilter !== "all") {
       list = list.filter((v) => v.role?.toLowerCase() === volunteerRoleFilter);
     }
@@ -688,28 +514,26 @@ export default function AdminApplicationsScreen() {
       );
     }
     return list;
-  }, [volunteersList, volunteerRoleFilter, volunteerSearchQuery, selectedEventId, phaseEvents, eventsList]);
+  }, [enrolledVolunteers, volunteerRoleFilter, volunteerSearchQuery]);
 
   // Handle Volunteer Assignment
   const handleAssignVolunteer = async () => {
     if (!selectedApplicant || !selectedVolunteerId) return;
-    const vol = (volunteersList.length > 0 ? volunteersList : DEFAULT_VOLUNTEERS).find(
-      (v) => String(v.id) === String(selectedVolunteerId)
-    ) || filteredVolunteers.find((v) => String(v.id) === String(selectedVolunteerId));
-    if (!vol) return;
+    const vol = filteredVolunteers.find(v => v.id === selectedVolunteerId);
+    if (!vol || !selectedEvent) return;
 
     setIsAssigningVolunteer(true);
     try {
       const volAffiliation = vol.company || vol.college || (vol.role === "alumni" ? "Maatram Alumni Network" : "Maatram Scholar");
       const volRole = vol.role === "alumni" ? "Alumni Volunteer" : "Student Volunteer";
 
-      const selectedEv = eventsList.find((ev) => String(ev.id) === String(selectedEventId));
+      const selectedEv = selectedEvent;
       const eventIdToAssign = selectedEv ? String(selectedEv.id) : undefined;
       const eventTitleToAssign = selectedEv ? (selectedEv.title || selectedEv.name) : undefined;
 
       if (assignVolunteerPhase === "physical") {
         const nextStatus = "physical_verification_in_progress";
-        await adminApi.assignVolunteer(selectedApplicant.id, {
+        const result = await adminApi.assignVolunteer(selectedApplicant.id, {
           phase: "physical",
           name: vol.name,
           email: vol.email || "",
@@ -719,6 +543,7 @@ export default function AdminApplicationsScreen() {
           eventId: eventIdToAssign,
           eventTitle: eventTitleToAssign,
         });
+        if (!result.success) throw new Error(result.message || "Assignment failed.");
 
         const updatedApp = {
           ...selectedApplicant,
@@ -767,7 +592,7 @@ export default function AdminApplicationsScreen() {
           nextStatus = "under_review";
         }
 
-        await adminApi.assignVolunteer(selectedApplicant.id, {
+        const result = await adminApi.assignVolunteer(selectedApplicant.id, {
           phase: "tele",
           name: vol.name,
           email: vol.email || "",
@@ -777,6 +602,7 @@ export default function AdminApplicationsScreen() {
           eventId: eventIdToAssign,
           eventTitle: eventTitleToAssign,
         });
+        if (!result.success) throw new Error(result.message || "Assignment failed.");
 
         const updatedApp = {
           ...selectedApplicant,
@@ -2729,65 +2555,6 @@ export default function AdminApplicationsScreen() {
                   );
                 })()}
 
-                {/* Quick Jump Navigation Strip */}
-                <div className="flex border border-black/15 bg-black/5 p-1.5 rounded-lg gap-2 overflow-x-auto text-xs font-heading font-bold text-black">
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById("sec-personal")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
-                  >
-                    1. Personal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById("sec-family")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
-                  >
-                    2. Family
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById("sec-siblings")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
-                  >
-                    3. Siblings
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById("sec-address")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
-                  >
-                    4. Address
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById("sec-academic")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
-                  >
-                    5. Educational
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById("sec-financial")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
-                  >
-                    6. Financial
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById("sec-background")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
-                  >
-                    7. Background & Goals
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById("sec-documents")?.scrollIntoView({ behavior: "smooth" })}
-                    className="py-1.5 px-3 rounded-md bg-black/5 hover:bg-brand/20 hover:text-black transition cursor-pointer whitespace-nowrap"
-                  >
-                    8. Documents
-                  </button>
-                </div>
 
                 {/* Single Scroll Sections Container */}
                 <div className="space-y-8 text-xs text-black">
@@ -3146,9 +2913,13 @@ export default function AdminApplicationsScreen() {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-3">
                         {[
-                          { label: "Student Photograph", url: selectedApplicant.studentPhoto },
+                          { label: "Student Photograph", url: selectedApplicant.studentPhoto || selectedApplicant.student_photo },
                           { label: "10th Marksheet", url: selectedApplicant.document10thMarksheet || selectedApplicant.document_10th_marksheet },
+                          { label: "11th Marksheet", url: selectedApplicant.document11thMarksheet || selectedApplicant.document_11th_marksheet },
                           { label: "12th Marksheet", url: selectedApplicant.document12thMarksheet || selectedApplicant.document_12th_marksheet },
+                          { label: "Community Certificate", url: selectedApplicant.documentCommunityCertificate || selectedApplicant.document_community_certificate },
+                          { label: "Income Certificate", url: selectedApplicant.documentIncomeCertificate || selectedApplicant.document_income_certificate },
+                          { label: "Parent ID Proof", url: selectedApplicant.documentParentIdProof || selectedApplicant.document_parent_id_proof },
                           { label: "Aadhaar Document", url: selectedApplicant.documentAadhaarCard || selectedApplicant.document_aadhaar_card },
                         ].map((doc, idx) => (
                           <div key={idx} className="p-3 bg-white rounded-md border border-black/15 flex flex-col justify-between gap-2">
@@ -3158,14 +2929,14 @@ export default function AdminApplicationsScreen() {
                                 <span className="font-bold text-black text-[11px] flex items-center gap-1">
                                   <CheckBadgeIcon className="w-3.5 h-3.5 text-black/65" /> Uploaded
                                 </span>
-                                <a
-                                  href={doc.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <button
+                                  type="button"
+                                  aria-label={`View ${doc.label}`}
+                                  onClick={() => setPreviewImage({ url: applicationDocumentUrl(doc.url), title: doc.label })}
                                   className="inline-flex items-center gap-1 text-[11px] font-bold text-black hover:text-black hover:underline"
                                 >
-                                  <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" /> View
-                                </a>
+                                  <EyeIcon className="w-3.5 h-3.5" /> View
+                                </button>
                               </div>
                             ) : (
                               <div className="pt-1 border-t border-black/15 text-black/65 text-[11px] italic">
@@ -3963,14 +3734,10 @@ export default function AdminApplicationsScreen() {
                 </div>
                 <div>
                   <h3 className="font-heading font-bold text-base text-black tracking-wide uppercase">
-                    {assignVolunteerPhase === "physical"
-                      ? "Assign Volunteer for Physical Verification (Phase 2)"
-                      : "Assign Volunteer for Televerification (Phase 1)"}
+                    Assign volunteer
                   </h3>
                   <p className="text-xs text-black/65">
-                    {assignVolunteerPhase === "physical"
-                      ? "Allocate this application to an active volunteer for in-person / home verification."
-                      : "Allocate this application to an active volunteer for telephonic screening and review."}
+                    Choose an event to see its enrolled volunteers. Application phase: {assignVolunteerPhase === "physical" ? "Physical verification" : "Televerification"}.
                   </p>
                 </div>
               </div>
@@ -4042,27 +3809,12 @@ export default function AdminApplicationsScreen() {
                       </span>
                       <select
                         value={selectedEventId}
-                        onChange={(e) => setSelectedEventId(e.target.value)}
+                        aria-label="Event" disabled={isLoadingVolunteers || isAssigningVolunteer}
+                        onChange={(e) => { setSelectedEventId(e.target.value); setSelectedVolunteerId(null); }}
                         className="text-xs font-semibold bg-white text-black rounded-lg px-2.5 py-1.5 border border-black/15 focus:outline-none focus:ring-2 focus:ring-brand max-w-[230px] truncate cursor-pointer"
                       >
-                        {phaseEvents.length > 0 ? (
-                          phaseEvents.map((ev) => {
-                            const regCount = (
-                              (ev.accepted_students?.length || ev.acceptedStudents?.length || 0) +
-                              (ev.accepted_alumni?.length || ev.acceptedAlumni?.length || 0) +
-                              (ev.accepted_volunteers?.length || ev.acceptedVolunteers?.length || 0)
-                            );
-                            return (
-                              <option key={ev.id} value={String(ev.id)}>
-                                {ev.title || ev.name} ({ev.location || ev.mode || "Offline"} · {regCount} vol)
-                              </option>
-                            );
-                          })
-                        ) : (
-                          <option value="" disabled>
-                            No events available
-                          </option>
-                        )}
+                        <option value="" disabled>{isLoadingVolunteers ? "Loading events..." : eventsList.length ? "Select an event" : "No events available"}</option>
+                        {eventsList.map(ev => <option key={ev.id} value={String(ev.id)}>{ev.title || ev.name}</option>)}
                       </select>
                     </div>
 
@@ -4075,7 +3827,7 @@ export default function AdminApplicationsScreen() {
                           volunteerRoleFilter === "all" ? "bg-white text-black " : "hover:text-black"
                         }`}
                       >
-                        All Volunteers
+                        All
                       </button>
                       <button
                         type="button"
@@ -4084,7 +3836,7 @@ export default function AdminApplicationsScreen() {
                           volunteerRoleFilter === "alumni" ? "bg-white text-black " : "hover:text-black"
                         }`}
                       >
-                        Alumni Volunteers
+                        Alumni
                       </button>
                       <button
                         type="button"
@@ -4093,25 +3845,23 @@ export default function AdminApplicationsScreen() {
                           volunteerRoleFilter === "student" ? "bg-white text-black " : "hover:text-black"
                         }`}
                       >
-                        Student Volunteers
+                        Student
                       </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Event Context Strip */}
-                {selectedEventId && (
+                {selectedEvent && (
                   <div className="flex items-center justify-between px-3.5 py-1.5 bg-brand/15 border border-brand/60 rounded-md text-xs">
                     <div className="flex items-center gap-1.5 text-black truncate mr-2">
                       <span className="font-bold shrink-0">Selected Event:</span>
                       <span className="font-medium text-black truncate">
-                        {eventsList.find((ev) => String(ev.id) === String(selectedEventId))?.title ||
-                          eventsList.find((ev) => String(ev.id) === String(selectedEventId))?.name ||
-                          "Selected Event"}
+                        {selectedEvent.title || selectedEvent.name}
                       </span>
                     </div>
                     <span className="text-black font-bold bg-white px-2 py-0.5 rounded-md border border-brand/60 shrink-0 text-[11px]">
-                      {filteredVolunteers.length} volunteer{filteredVolunteers.length === 1 ? "" : "s"} enrolled
+                      {enrolledVolunteers.length} volunteer{enrolledVolunteers.length === 1 ? "" : "s"} enrolled
                     </span>
                   </div>
                 )}
@@ -4124,19 +3874,7 @@ export default function AdminApplicationsScreen() {
                     </div>
                   ) : filteredVolunteers.length === 0 ? (
                     <div className="col-span-2 py-8 px-4 text-center text-xs font-medium text-black/65 bg-brand/15 rounded-md border border-dashed border-brand/60 space-y-2">
-                      <p className="font-bold text-black">
-                        No volunteers registered for this event yet.
-                      </p>
-                      <p className="text-black/65 text-[11px] max-w-md mx-auto">
-                        Only volunteers who registered / accepted this verification event in their portal appear here.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedEventId("general_pool")}
-                        className="inline-block mt-1 px-3 py-1.5 bg-white hover:bg-brand/15 border border-brand/60 rounded-lg text-black font-bold text-xs transition cursor-pointer"
-                      >
-                        Show All Volunteers (General Pool)
-                      </button>
+                      <p>{rosterError || (!selectedEvent ? "Select an event to view its volunteers." : enrolledVolunteers.length ? "No enrolled volunteers match these filters." : "No volunteers enrolled in this event.")}</p>
                     </div>
                   ) : (
                     filteredVolunteers.map((vol) => {
@@ -4182,7 +3920,7 @@ export default function AdminApplicationsScreen() {
                                 <p className="text-[11px] text-black/65 truncate max-w-[200px]">
                                   {isAlumni
                                     ? `${vol.designation || "Alumni"} • ${vol.company || "Maatram Alumni"}`
-                                    : `${vol.department || "Scholar"} • ${vol.college || "Anna University"}`}
+                                    : `${vol.department || "Scholar"} • ${vol.college || ""}`}
                                 </p>
                               </div>
                             </div>
@@ -4218,12 +3956,12 @@ export default function AdminApplicationsScreen() {
             {/* Modal Footer */}
             <div className="p-5 border-t border-black/15 bg-black/5 flex items-center justify-between gap-4">
               <div className="text-xs">
-                {selectedVolunteerId ? (
+                {filteredVolunteers.some(v => v.id === selectedVolunteerId) ? (
                   <span className="text-black">
                     Ready to assign to:{" "}
                     <span className="font-bold text-black">
                       {
-                        (volunteersList.length > 0 ? volunteersList : DEFAULT_VOLUNTEERS).find(
+                        filteredVolunteers.find(
                           (v) => String(v.id) === String(selectedVolunteerId)
                         )?.name
                       }
@@ -4247,7 +3985,7 @@ export default function AdminApplicationsScreen() {
                 </button>
                 <button
                   type="button"
-                  disabled={!selectedVolunteerId || isAssigningVolunteer}
+                  disabled={!filteredVolunteers.some(v => v.id === selectedVolunteerId) || isAssigningVolunteer}
                   onClick={handleAssignVolunteer}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand disabled:opacity-50 disabled:cursor-not-allowed text-black font-heading font-bold text-xs uppercase tracking-wider rounded-md transition hover:shadow-sm cursor-pointer"
                 >
@@ -4366,38 +4104,7 @@ export default function AdminApplicationsScreen() {
         </div>
       )}
 
-      {/* Lightbox Modal for Physical Verification Photo Preview */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div
-            className="bg-white rounded-lg max-w-3xl w-full overflow-hidden shadow-sm border border-black/15"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 py-3 border-b border-black/15 bg-black/5">
-              <span className="font-heading font-bold text-sm text-black">
-                {previewImage.title}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPreviewImage(null)}
-                className="p-1 rounded-lg text-black/65 hover:text-black hover:bg-black/10 transition cursor-pointer"
-              >
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4 bg-black flex items-center justify-center max-h-[75vh]">
-              <img
-                src={previewImage.url}
-                alt={previewImage.title}
-                className="max-h-[70vh] w-auto max-w-full object-contain rounded-lg"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {previewImage && <UploadPreview key={previewImage.url} {...previewImage} onClose={() => setPreviewImage(null)} />}
     </div>
   );
 }
