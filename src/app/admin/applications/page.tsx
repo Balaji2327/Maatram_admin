@@ -1,4 +1,5 @@
 import React, { Suspense } from "react";
+import PageLoader from "../../../components/PageLoader";
 import AdminApplicationsScreen from "../../../pages/admin/AdminApplicationsScreen";
 
 export const metadata = {
@@ -8,7 +9,7 @@ export const metadata = {
 
 export default function AdminApplicationsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center text-xs text-black/65 font-bold">Loading applications...</div>}>
+    <Suspense fallback={<PageLoader />}>
       <AdminApplicationsScreen />
     </Suspense>
   );

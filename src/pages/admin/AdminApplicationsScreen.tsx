@@ -47,6 +47,7 @@ import {
 import * as XLSX from "xlsx";
 import { adminApi, applicationDocumentUrl, getPhysicalPhotoUrl, getAdminToken, getAdminCachedData, setAdminCachedData } from "../../lib/api";
 import SignOutModal from "../../components/SignOutModal";
+import PageLoader from "../../components/PageLoader";
 import AdminSidebar, { AdminTab } from "../../components/AdminSidebar";
 
 // 5 Mandatory Photos for Physical Verification
@@ -1587,9 +1588,7 @@ export default function AdminApplicationsScreen() {
         {/* Main Content Area */}
         <main className="w-full px-4 sm:px-6 lg:px-10 py-8 space-y-6 flex-1">
           {isRestoringApplicant && !selectedApplicant ? (
-            <div className="min-h-[60vh] flex items-center justify-center">
-              <div className="text-sm font-semibold text-black/65">Loading application...</div>
-            </div>
+            <PageLoader />
           ) : selectedApplicant ? (
             /* ================= FULL PAGE APPLICATION DOCUMENT VIEW ================= */
             <div className="w-full space-y-6 animate-in fade-in duration-200">
