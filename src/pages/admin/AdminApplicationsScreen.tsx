@@ -197,8 +197,6 @@ const profileHeadings = {
   "Family details": ["Family Information", HomeModernIcon],
   "Siblings": ["Siblings Information", UserGroupIcon],
   "Address and residence": ["Address Information", MapPinIcon],
-  "Financial information": ["Financial Information", CurrencyRupeeIcon],
-  "Background and goals": ["Personal & Background Information", UserCircleIcon],
   "Education": ["Educational Information", AcademicCapIcon],
 } as const;
 
@@ -1119,23 +1117,6 @@ export default function AdminApplicationsScreen() {
         "Preferred Course (1st)": a.preferred_branch || (Array.isArray(a.preferred_courses) ? a.preferred_courses[0] : ""),
         "Preferred Course (2nd)": a.secondBranch || (Array.isArray(a.preferred_courses) ? a.preferred_courses[1] : ""),
         "Preferred College Location": a.preferredCollegeLocation || (Array.isArray(a.preferred_districts) ? a.preferred_districts.join(", ") : ""),
-
-        // F. Financial Information
-        "Income Sources": a.incomeSources || "",
-        "Family Debts": a.familyDebts || "",
-        "Existing Education Loans": a.educationLoans || "",
-        "Financial Difficulties Faced": a.financialDifficulties || "",
-        "Why Student Needs Financial Support": a.whyNeedSupport || "",
-        "Ability to Afford College Without Support": a.affordabilityWithoutSupport || "",
-
-        // G. Personal & Background Information
-        "Orphan Status": a.orphan ? "Yes" : "No",
-        "Single Parent Status": a.single_parent ? "Yes" : "No",
-        "First Generation Learner": a.first_graduate ? "Yes" : "No",
-        "Special Family Circumstances": a.specialCircumstances || "",
-        "Career Ambition": a.careerAmbition || a.career_aspiration || "",
-        "Willing to Relocate in TN": a.willingToRelocateTN ? "Yes" : "No",
-        "Future Goals": a.futureGoals || "",
         "Hostel Required": a.hostel_required || a.need_hostel ? "Yes" : "No",
         "Submission Date": a.created_at ? new Date(a.created_at).toLocaleString() : "",
       };
