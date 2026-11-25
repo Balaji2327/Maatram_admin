@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
+import { preload } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -23,6 +24,7 @@ import {
   PhoneIcon,
   EnvelopeIcon,
   ArrowDownTrayIcon,
+  ArrowTopRightOnSquareIcon,
   PrinterIcon,
   ShieldCheckIcon,
   BuildingLibraryIcon,
@@ -88,9 +90,19 @@ function eventRoster(event: any, directory: any[]) {
   return Array.from(enrolled.values());
 }
 
+function isPreviewImage(url: string) {
+  return /^data:image\//i.test(url) || /\.(png|jpe?g|gif|webp|avif)(?:$|[?#])/i.test(url);
+}
+
+function warmPreview(value: string) {
+  const url = applicationDocumentUrl(value);
+  if (isPreviewImage(url) && !url.startsWith("data:")) preload(url, { as: "image" });
+}
+
 function UploadPreview({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const isImage = /^data:image\//i.test(url) || /\.(png|jpe?g|gif|webp|avif)(?:$|[?#])/i.test(url);
+  const isImage = isPreviewImage(url);
+  const [ready, setReady] = useState(false);
   const [source, setSource] = useState(isImage ? url : "");
   const [pdf, setPdf] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -126,18 +138,39 @@ function UploadPreview({ url, title, onClose }: { url: string; title: string; on
   return (
     <dialog ref={dialog} aria-labelledby="upload-preview-title" onCancel={onClose}
       onClick={event => { if (event.target === event.currentTarget) onClose(); }}
-      className="fixed inset-0 m-auto w-[94vw] max-w-4xl rounded-lg border border-black/15 p-0 backdrop:bg-black/70">
-      <div className="flex items-center justify-between border-b border-black/15 px-4 py-3">
-        <h2 id="upload-preview-title" className="font-heading text-sm font-bold">{title}</h2>
-        <button type="button" autoFocus onClick={onClose} aria-label="Close preview" className="rounded p-2 hover:bg-black/5">
-          <XMarkIcon className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="flex h-[72dvh] items-center justify-center bg-black/5">
-        {failed ? <p role="alert">This document could not be displayed.</p>
-          : !source ? <p role="status">Loading document…</p>
-          : pdf ? <iframe title={title} src={source} className="h-full w-full border-0" />
-          : <img src={source} alt={title} onError={() => setFailed(true)} className="max-h-full max-w-full object-contain" />}
+      className="fixed inset-0 m-auto w-[calc(100%_-_2rem)] max-w-2xl max-h-[90vh] rounded-xl border border-black/15 bg-white p-0 shadow-sm backdrop:bg-black/70">
+      <div className="flex max-h-[90vh] flex-col overflow-hidden">
+        <header className="p-4 sm:p-5 border-b border-black/15 flex items-center justify-between bg-black/5">
+          <div className="flex items-center gap-2">
+            <DocumentTextIcon className="w-5 h-5 text-brand" />
+            <h2 id="upload-preview-title" className="font-heading font-bold text-sm text-black">{title}</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {source && /^(?:https?:|blob:|data:image\/|\/(?!\/))/i.test(source) && (
+              <a href={source} target="_blank" rel="noopener noreferrer" title="Open in new window" aria-label="Open in new window"
+                className="cursor-pointer p-1.5 text-black/65 hover:text-black hover:bg-black/10 rounded-md">
+                <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+              </a>
+            )}
+            <button type="button" autoFocus onClick={onClose} aria-label="Close preview"
+              className="cursor-pointer p-1.5 text-black/65 hover:text-black hover:bg-black/10 rounded-md">
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+        <div className="relative p-4 flex-1 overflow-auto flex items-center justify-center bg-black/5 min-h-[min(300px,45vh)]">
+          {!ready && !failed && <span role="status" className="absolute text-xs text-black/65">Loading document…</span>}
+          {failed ? <p role="alert" className="text-xs text-black/65">This document could not be displayed.</p>
+            : source && (pdf ? <iframe title={title} src={source} onLoad={() => setReady(true)}
+                className={`w-full h-[65vh] rounded-md border border-black/15 bg-white ${ready ? "" : "invisible"}`} />
+              : <img src={source} alt={title} fetchPriority="high" onLoad={() => setReady(true)} onError={() => setFailed(true)}
+                  className={`max-h-[70vh] w-auto object-contain rounded-md border border-black/15 ${ready ? "" : "invisible"}`} />)}
+        </div>
+        <footer className="p-3 border-t border-black/15 flex justify-end bg-white">
+          <button type="button" onClick={onClose} className="px-5 py-2 bg-black text-white font-heading font-bold text-xs rounded-md cursor-pointer">
+            Close Preview
+          </button>
+        </footer>
       </div>
     </dialog>
   );
@@ -2928,8 +2961,11 @@ export default function AdminApplicationsScreen() {
                                 <button
                                   type="button"
                                   aria-label={`View ${doc.label}`}
+                                  onPointerEnter={() => warmPreview(doc.url)}
+                                  onFocus={() => warmPreview(doc.url)}
+                                  onPointerDown={() => warmPreview(doc.url)}
                                   onClick={() => setPreviewImage({ url: applicationDocumentUrl(doc.url), title: doc.label })}
-                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-black hover:text-black hover:underline"
+                                  className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-bold text-black hover:underline"
                                 >
                                   <EyeIcon className="w-3.5 h-3.5" /> View
                                 </button>
