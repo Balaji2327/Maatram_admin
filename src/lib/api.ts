@@ -389,6 +389,9 @@ export const adminApi = {
     );
   },
 
+  saveVideoInterviewSuggestion: (id: string, suggestion: string) =>
+    callApi(() => apiClient.patch(`/admin/applications/${encodeURIComponent(id)}/video-interview-suggestion`, { suggestion })),
+
   updateVolunteerSuggestion: async (
     id: string,
     suggestion: string,

@@ -48,6 +48,7 @@ import * as XLSX from "xlsx";
 import { adminApi, applicationDocumentUrl, getPhysicalPhotoUrl, getAdminToken, getAdminCachedData, setAdminCachedData } from "../../lib/api";
 import SignOutModal from "../../components/SignOutModal";
 import PageLoader from "../../components/PageLoader";
+import VideoSuggestionRecorder from "../../components/VideoSuggestionRecorder";
 import AdminSidebar, { AdminTab } from "../../components/AdminSidebar";
 
 // 5 Mandatory Photos for Physical Verification
@@ -58,6 +59,45 @@ const PHYSICAL_PHOTO_SLOTS = [
   { key: "with_student", title: "With student" },
   { key: "backward", title: "Backward" },
 ];
+
+function VideoInterviewSuggestion({ id, saved, onSaved }: {
+  id: string;
+  saved: string;
+  onSaved: (suggestion: string) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [dictating, setDictating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const value = draft ?? saved;
+
+  async function save() {
+    setSaving(true);
+    setMessage("");
+    const response = await adminApi.saveVideoInterviewSuggestion(id, value.trim());
+    if (response.success) {
+      onSaved(value.trim());
+      setDraft(null);
+      setMessage("Suggestion saved.");
+    } else {
+      setMessage(response.message || "Could not save the suggestion. Try again.");
+    }
+    setSaving(false);
+  }
+
+  return <fieldset disabled={saving} className="space-y-2 border-t border-black/15 pt-3">
+    <label htmlFor="video-interview-suggestion" className="block text-sm font-bold">Phase 3 interview suggestion</label>
+    <textarea id="video-interview-suggestion" rows={3} value={value}
+      className="w-full rounded-md border border-black/20 p-2 text-sm"
+      onChange={event => { setDraft(event.target.value); setMessage(""); }} />
+    <VideoSuggestionRecorder applicationId={id} onBusy={setDictating}
+      onText={text => { setDraft(previous => [previous ?? saved, text].filter(Boolean).join("\n")); setMessage(""); }} />
+    <button type="button" disabled={saving || dictating || !value.trim() || value.trim() === saved}
+      className="rounded-md bg-black px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+      onClick={() => void save()}>{saving ? "Saving…" : "Save suggestion"}</button>
+    <span role="status" className="ml-2 text-xs">{message}</span>
+  </fieldset>;
+}
 
 function eventRoster(event: any, directory: any[]) {
   if (!event) return [];
@@ -417,13 +457,29 @@ export default function AdminApplicationsScreen() {
     setSelectedVolunteerId(null);
     setVolunteerSearchQuery("");
     setVolunteerRoleFilter("all");
+    setRosterError("");
+
+    const cachedEvents = eventsList.length > 0 ? eventsList : getAdminCachedData<any[]>("volunteer_events") || [];
+    const cachedVolunteers = volunteersList.length > 0 ? volunteersList : getAdminCachedData<any[]>("registered_volunteers") || [];
+
+    if (cachedEvents.length > 0) {
+      setEventsList(cachedEvents);
+      if (cachedVolunteers.length > 0) setVolunteersList(cachedVolunteers);
+      const previous = phase === "physical" ? selectedApplicant?.physical_event_id : selectedApplicant?.tele_event_id;
+      if (cachedEvents.some((ev: any) => String(ev.id) === String(previous))) {
+        setSelectedEventId(String(previous));
+      } else {
+        setSelectedEventId("");
+      }
+      setIsLoadingVolunteers(false);
+    } else {
+      setSelectedEventId("");
+      setIsLoadingVolunteers(true);
+    }
+
     setIsAssignVolunteerModalOpen(true);
 
     const request = ++rosterRequest.current;
-    setEventsList([]);
-    setSelectedEventId("");
-    setRosterError("");
-    setIsLoadingVolunteers(true);
     try {
       const [events, directory] = await Promise.all([
         adminApi.getEvents(), adminApi.getRegisteredVolunteers().catch(() => null),
@@ -431,11 +487,19 @@ export default function AdminApplicationsScreen() {
       if (request !== rosterRequest.current) return;
       if (!events.success || !Array.isArray(events.data)) throw new Error("Could not load event enrollments.");
       setEventsList(events.data);
-      setVolunteersList(directory?.success && Array.isArray(directory.data) ? directory.data : []);
+      setAdminCachedData("volunteer_events", events.data);
+      if (directory?.success && Array.isArray(directory.data)) {
+        setVolunteersList(directory.data);
+        setAdminCachedData("registered_volunteers", directory.data);
+      }
       const previous = phase === "physical" ? selectedApplicant?.physical_event_id : selectedApplicant?.tele_event_id;
-      if (events.data.some((ev: any) => String(ev.id) === String(previous))) setSelectedEventId(String(previous));
+      if (events.data.some((ev: any) => String(ev.id) === String(previous))) {
+        setSelectedEventId(String(previous));
+      }
     } catch {
-      if (request === rosterRequest.current) setRosterError("Could not load event enrollments. Close and reopen to try again.");
+      if (request === rosterRequest.current && cachedEvents.length === 0) {
+        setRosterError("Could not load event enrollments. Close and reopen to try again.");
+      }
     } finally {
       if (request === rosterRequest.current) setIsLoadingVolunteers(false);
     }
@@ -508,6 +572,26 @@ export default function AdminApplicationsScreen() {
 
     const cachedApplications = getAdminCachedData<any>("applications")?.data;
     if (cachedApplications) setApplications(cachedApplications);
+
+    const cachedEvents = getAdminCachedData<any[]>("volunteer_events");
+    if (cachedEvents) setEventsList(cachedEvents);
+    const cachedVolunteers = getAdminCachedData<any[]>("registered_volunteers");
+    if (cachedVolunteers) setVolunteersList(cachedVolunteers);
+
+    // Preload events & volunteers in the background so Assign Volunteer opens instantly
+    Promise.all([
+      adminApi.getEvents().catch(() => null),
+      adminApi.getRegisteredVolunteers().catch(() => null),
+    ]).then(([evRes, volRes]) => {
+      if (evRes?.success && Array.isArray(evRes.data)) {
+        setEventsList(evRes.data);
+        setAdminCachedData("volunteer_events", evRes.data);
+      }
+      if (volRes?.success && Array.isArray(volRes.data)) {
+        setVolunteersList(volRes.data);
+        setAdminCachedData("registered_volunteers", volRes.data);
+      }
+    });
 
     fetchApplications();
 
@@ -637,8 +721,56 @@ export default function AdminApplicationsScreen() {
   // Load registered volunteers from backend (with default fallback)
   const selectedEvent = eventsList.find(event => String(event.id) === selectedEventId);
   const enrolledVolunteers = useMemo(() => eventRoster(selectedEvent, volunteersList), [selectedEvent, volunteersList]);
+  const getVolunteerLocationMatch = (vol: any) => {
+    const appDistrict = String(selectedApplicant?.district || "").trim().toLowerCase();
+    const appVillage = String(selectedApplicant?.village_town || selectedApplicant?.villageTown || "").trim().toLowerCase();
+    const appPin = String(selectedApplicant?.pincode || "").trim();
+
+    const volAvailable = vol?.available_for_physical !== false;
+    const volDistrict = String(vol?.base_district || vol?.district || "").trim().toLowerCase();
+    const volCovered = String(vol?.covered_locations || "").trim().toLowerCase();
+    const volPin = String(vol?.pincode || "").trim();
+
+    const coveredTokens = volCovered
+      .split(",")
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+
+    const exactVillageMatch =
+      Boolean(appVillage) &&
+      (coveredTokens.some((t: string) => t.includes(appVillage) || appVillage.includes(t)) ||
+        (volDistrict && volDistrict === appVillage));
+    const exactPinMatch = Boolean(appPin && volPin && (volPin === appPin || volPin.slice(0, 4) === appPin.slice(0, 4)));
+    const districtMatch =
+      Boolean(appDistrict) &&
+      ((volDistrict && (volDistrict === appDistrict || volDistrict.includes(appDistrict) || appDistrict.includes(volDistrict))) ||
+        coveredTokens.some((t: string) => t.includes(appDistrict)));
+
+    let score = volAvailable ? 1 : 0;
+    let label = volAvailable ? "Available" : "Unavailable";
+    let tone: "exact" | "district" | "available" | "unavailable" = volAvailable ? "available" : "unavailable";
+
+    if (volAvailable && districtMatch && (exactVillageMatch || exactPinMatch)) {
+      score = 3;
+      label = exactPinMatch && !exactVillageMatch ? "District & PIN Match" : "District & Village Match";
+      tone = "exact";
+    } else if (volAvailable && districtMatch) {
+      score = 2;
+      label = "Same District Match";
+      tone = "district";
+    }
+
+    return { score, label, tone, volAvailable, districtMatch };
+  };
+
   const filteredVolunteers = useMemo(() => {
-    let list = enrolledVolunteers;
+    let list = [...enrolledVolunteers];
+    if (assignVolunteerPhase === "physical") {
+      list = list.filter((v) => {
+        const m = getVolunteerLocationMatch(v);
+        return m.volAvailable && m.districtMatch;
+      });
+    }
     if (volunteerRoleFilter !== "all") {
       list = list.filter((v) => v.role?.toLowerCase() === volunteerRoleFilter);
     }
@@ -652,11 +784,17 @@ export default function AdminApplicationsScreen() {
           v.company?.toLowerCase().includes(q) ||
           v.college?.toLowerCase().includes(q) ||
           v.designation?.toLowerCase().includes(q) ||
-          v.department?.toLowerCase().includes(q)
+          v.department?.toLowerCase().includes(q) ||
+          v.base_district?.toLowerCase().includes(q) ||
+          v.covered_locations?.toLowerCase().includes(q) ||
+          v.pincode?.includes(q)
       );
     }
+    if (assignVolunteerPhase === "physical") {
+      list.sort((a, b) => getVolunteerLocationMatch(b).score - getVolunteerLocationMatch(a).score);
+    }
     return list;
-  }, [enrolledVolunteers, volunteerRoleFilter, volunteerSearchQuery]);
+  }, [enrolledVolunteers, volunteerRoleFilter, volunteerSearchQuery, assignVolunteerPhase, selectedApplicant]);
 
   // Handle Volunteer Assignment
   const handleAssignVolunteer = async () => {
@@ -2301,6 +2439,13 @@ export default function AdminApplicationsScreen() {
                           )}
                         </div>
 
+                        {phaseBadge !== "Phase 3 Active" && selectedApplicant.video_volunteer_suggestion && (
+                          <div className="rounded-md border border-brand/60 bg-white p-3.5">
+                            <h5 className="text-xs font-bold">Phase 3 interview suggestion</h5>
+                            <p className="mt-1 whitespace-pre-wrap text-sm">{selectedApplicant.video_volunteer_suggestion}</p>
+                          </div>
+                        )}
+
                         {/* Phase 3 Auto-Generated Google Meet Link Card */}
                         {(selectedApplicant.status === "physical_verification_done" ||
                           selectedApplicant.status === "home_visit_done" ||
@@ -2364,6 +2509,14 @@ export default function AdminApplicationsScreen() {
                                 </a>
                               </div>
                             </div>
+                            <VideoInterviewSuggestion key={selectedApplicant.id} id={selectedApplicant.id}
+                              saved={selectedApplicant.video_volunteer_suggestion || ""}
+                              onSaved={suggestion => {
+                                const update = (app: any) => app?.id === selectedApplicant.id
+                                  ? { ...app, video_volunteer_suggestion: suggestion } : app;
+                                setSelectedApplicant(update);
+                                setApplications(previous => previous.map(update));
+                              }} />
                           </div>
                         )}
 
@@ -3560,6 +3713,16 @@ export default function AdminApplicationsScreen() {
                   <span className="px-2.5 py-1 bg-white border border-black/15 rounded-lg font-medium text-black">
                     District: <span className="font-bold">{selectedApplicant.district || "Tamil Nadu"}</span>
                   </span>
+                  {(selectedApplicant.village_town || selectedApplicant.villageTown) && (
+                    <span className="px-2.5 py-1 bg-white border border-black/15 rounded-lg font-medium text-black">
+                      City/Village: <span className="font-bold">{selectedApplicant.village_town || selectedApplicant.villageTown}</span>
+                    </span>
+                  )}
+                  {selectedApplicant.pincode && (
+                    <span className="px-2.5 py-1 bg-white border border-black/15 rounded-lg font-medium text-black">
+                      PIN: <span className="font-bold font-mono">{selectedApplicant.pincode}</span>
+                    </span>
+                  )}
                   <span className="px-2.5 py-1 bg-white border border-black/15 rounded-lg font-medium text-black">
                     Mobile: <span className="font-bold">{selectedApplicant.mobile_number || "N/A"}</span>
                   </span>
@@ -3576,7 +3739,7 @@ export default function AdminApplicationsScreen() {
                       type="text"
                       value={volunteerSearchQuery}
                       onChange={(e) => setVolunteerSearchQuery(e.target.value)}
-                      placeholder="Search by name, company, college..."
+                      placeholder="Search by name, city/village, district, PIN..."
                       className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-black/15 rounded-md focus:outline-none focus:ring-2 focus:ring-brand font-medium"
                     />
                   </div>
@@ -3656,12 +3819,13 @@ export default function AdminApplicationsScreen() {
                     </div>
                   ) : filteredVolunteers.length === 0 ? (
                     <div className="col-span-2 py-8 px-4 text-center text-xs font-medium text-black/65 bg-brand/15 rounded-md border border-dashed border-brand/60 space-y-2">
-                      <p>{rosterError || (!selectedEvent ? "Select an event to view its volunteers." : enrolledVolunteers.length ? "No enrolled volunteers match these filters." : "No volunteers enrolled in this event.")}</p>
+                      <p>{rosterError || (!selectedEvent ? "Select an event to view its volunteers." : enrolledVolunteers.length ? (assignVolunteerPhase === "physical" ? `No available physical verification volunteers match district "${selectedApplicant.district || "this applicant"}".` : "No enrolled volunteers match these filters.") : "No volunteers enrolled in this event.")}</p>
                     </div>
                   ) : (
                     filteredVolunteers.map((vol) => {
                       const isSelected = String(selectedVolunteerId) === String(vol.id);
                       const isAlumni = vol.role?.toLowerCase() === "alumni";
+                      const match = assignVolunteerPhase === "physical" ? getVolunteerLocationMatch(vol) : null;
 
                       return (
                         <div
@@ -3718,14 +3882,44 @@ export default function AdminApplicationsScreen() {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between text-[11px] text-black/65 border-t border-black/15 pt-2">
-                            <span className="flex items-center gap-1">
-                              <PhoneIcon className="w-3 h-3 text-black/65" />
-                              {vol.phone || "Phone verified"}
-                            </span>
-                            <span className="text-black font-bold bg-brand/15 px-2 py-0.5 rounded-md border border-brand/60">
-                              {vol.assigned_count || 0} Assigned
-                            </span>
+                          <div className="space-y-1.5 border-t border-black/15 pt-2">
+                            {assignVolunteerPhase === "physical" && match && (
+                              <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px]">
+                                <span
+                                  className={`font-bold px-2 py-0.5 rounded-md border ${
+                                    match.tone === "exact"
+                                      ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                                      : match.tone === "district"
+                                      ? "bg-brand/20 text-black border-brand"
+                                      : match.tone === "available"
+                                      ? "bg-black/5 text-black border-black/15"
+                                      : "bg-rose-50 text-rose-700 border-rose-200"
+                                  }`}
+                                >
+                                  {match.label}
+                                </span>
+                                {(vol.base_district || vol.covered_locations) && (
+                                  <span className="text-black/70 font-medium truncate max-w-[180px]" title={`${vol.base_district || ""} ${vol.covered_locations || ""}`}>
+                                    {vol.base_district}{vol.covered_locations ? ` (${vol.covered_locations})` : ""}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            {assignVolunteerPhase === "physical" && (vol.available_days || vol.available_time_slot) && (
+                              <div className="text-[10px] text-black/65 font-medium">
+                                Availability: <span className="text-black font-semibold">{vol.available_days || "Weekends"}</span>
+                                {vol.available_time_slot ? ` • ${vol.available_time_slot}` : ""}
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between text-[11px] text-black/65">
+                              <span className="flex items-center gap-1">
+                                <PhoneIcon className="w-3 h-3 text-black/65" />
+                                {vol.phone || "Phone verified"}
+                              </span>
+                              <span className="text-black font-bold bg-brand/15 px-2 py-0.5 rounded-md border border-brand/60">
+                                {vol.assigned_count || 0} Assigned
+                              </span>
+                            </div>
                           </div>
                         </div>
                       );
